@@ -1,0 +1,63 @@
+<?php
+use Illuminate\Support\Facades\Route;
+
+// Diagnostic Ping
+Route::get('/ping', function() { return response()->json(['message' => 'pong', 'connection' => config('database.default')]); });
+
+// Global Webhooks — throttled to prevent abuse; Meta retries with backoff
+Route::middleware('throttle:60,1')->group(function () {
+    Route::post('/social/webhook', [\App\Http\Controllers\Api\CentralWebhookController::class, 'handle']);
+    Route::get('/social/webhook', [\App\Http\Controllers\Api\CentralWebhookController::class, 'verify']);
+});
+
+// Central Meta OAuth (Option B - Centralized Redirector)
+Route::get('/auth/facebook', [\App\Http\Controllers\Api\SocialiteController::class, 'redirectToFacebook']);
+Route::get('/auth/facebook/callback', [\App\Http\Controllers\Api\SocialiteController::class, 'handleFacebookCallback']);
+
+// Payment Webhooks
+Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleStripe']);
+Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);
+Route::post('/webhooks/flutterwave', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleFlutterwave']);
+
+Route::get('/debug-config', function() {
+    if (!config('app.debug')) {
+        return response()->json(['message' => 'Not available when APP_DEBUG is false'], 403);
+    }
+    return response()->json([
+        'connections' => array_keys(config('database.connections')),
+        'tenant_config_exists' => config()->has('database.connections.tenant'),
+        'default_connection' => config('database.default'),
+        'message' => 'If tenant is missing here, your server is strongly caching old code.'
+    ]);
+});
+
+// Public Tenant Auth (Central Domain Login)
+Route::middleware('throttle:6,1')->group(function () {
+    Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
+    Route::post('/login/token', [\App\Http\Controllers\Api\AuthController::class, 'loginWithToken']);
+    Route::post('/login/verify-2fa', [\App\Http\Controllers\Api\AuthController::class, 'verify2FA']);
+    Route::post('/auth/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
+    Route::post('/forgot-password', [\App\Http\Controllers\Api\AuthController::class, 'forgotPassword']);
+    Route::post('/reset-password', [\App\Http\Controllers\Api\AuthController::class, 'resetPassword']);
+});
+
+// Public CMS (Move here for global access)
+Route::group(['prefix' => 'public'], function () {
+    Route::get('/blogs', [\App\Http\Controllers\Api\PublicCMSController::class, 'getBlogs']);
+    Route::get('/blogs/{slug}', [\App\Http\Controllers\Api\PublicCMSController::class, 'getBlog']);
+    
+    Route::get('/customer-stories', [\App\Http\Controllers\Api\PublicCMSController::class, 'getCustomerStories']);
+    Route::get('/customer-stories/{slug}', [\App\Http\Controllers\Api\PublicCMSController::class, 'getCustomerStory']);
+
+    Route::get('/docs', [\App\Http\Controllers\Api\PublicCMSController::class, 'getDocs']);
+    Route::get('/help', [\App\Http\Controllers\Api\PublicCMSController::class, 'getHelp']);
+    
+    Route::get('/translations/{locale}', [\App\Http\Controllers\Api\SuperAdmin\TranslationController::class, 'fetch']);
+
+    // Business Directory
+    Route::get('/directory/categories', [\App\Http\Controllers\Api\DirectoryController::class, 'categories']);
+    Route::get('/directory/listings', [\App\Http\Controllers\Api\DirectoryController::class, 'index']);
+    Route::get('/directory/listings/{slug}', [\App\Http\Controllers\Api\DirectoryController::class, 'show']);
+    Route::post('/directory/listings/{id}/claim', [\App\Http\Controllers\Api\DirectoryController::class, 'claim']);
+    Route::post('/directory/listings/{id}/verify-claim', [\App\Http\Controllers\Api\DirectoryController::class, 'verifyClaim']);
+});
