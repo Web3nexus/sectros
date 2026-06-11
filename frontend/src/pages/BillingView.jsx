@@ -1,0 +1,460 @@
+import React, { useState, useEffect } from 'react';
+import { CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X } from 'lucide-react';
+import api from '../services/api';
+import { COUNTRIES } from '../utils/countries';
+
+const ADDON_ICONS = {
+  sms_credits: Smartphone,
+  additional_staff: Users,
+  white_label_website: GlobeIcon,
+};
+
+export default function BillingView() {
+  const [plans, setPlans] = useState([]);
+  const [status, setStatus] = useState(null);
+  const [addons, setAddons] = useState([]);
+  const [activeAddons, setActiveAddons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [subscribing, setSubscribing] = useState(null);
+  const [purchasingTopup, setPurchasingTopup] = useState(false);
+  const [purchasingAddon, setPurchasingAddon] = useState(null);
+  const [cancellingAddon, setCancellingAddon] = useState(null);
+  const [error, setError] = useState(null);
+  const [country, setCountry] = useState('');
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    let plansLoaded = false;
+
+    // Fetch Plans (Public)
+    try {
+      const plansRes = await api.get('billing/plans');
+      if (Array.isArray(plansRes.data)) {
+        setPlans(plansRes.data);
+        if (plansRes.data.length > 0) plansLoaded = true;
+      }
+    } catch (err) {
+      console.error("Failed to fetch plans", err);
+    }
+
+    // Fetch Status (Protected)
+    try {
+      const statusRes = await api.get('billing/status');
+      setStatus(statusRes.data);
+      setCountry(statusRes.data.country || '');
+    } catch (err) {
+      console.error("Failed to fetch billing status", err);
+      // Only show error if BOTH failed.
+      if (!plansLoaded) {
+        setError("Unable to load billing information. Please try again later.");
+      }
+    }
+
+    // Fetch Add-ons
+    try {
+      const [addonsRes, activeRes] = await Promise.allSettled([
+        api.get('addons'),
+        api.get('addons/active'),
+      ]);
+      if (addonsRes.status === 'fulfilled') setAddons(addonsRes.value.data);
+      if (activeRes.status === 'fulfilled') setActiveAddons(activeRes.value.data);
+    } catch (err) {
+      console.error("Failed to fetch add-ons", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleSubscribe = async (planSlug, interval = 'monthly') => {
+    if (!country) {
+      setError("Please select your country first to determine the best payment gateway.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    setSubscribing(planSlug);
+    setError(null);
+    try {
+      const res = await api.post('billing/subscribe', {
+        plan_slug: planSlug,
+        interval: interval,
+        country: country
+      });
+      
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      } else {
+        setError("Payment initialization failed. Please contact support.");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to start payment process.");
+    } finally {
+      setSubscribing(null);
+    }
+  };
+
+  const handleTopUp = async (amount) => {
+    setPurchasingTopup(true);
+    setError(null);
+    try {
+      await api.post('billing/purchase-credits', { amount });
+      await fetchData(); // Refresh the credit count
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to purchase credits.");
+    } finally {
+      setPurchasingTopup(false);
+    }
+  };
+
+  const handlePurchaseAddon = async (addon, quantity = 1) => {
+    if (!country) {
+      setError("Please select your country first to determine the best payment gateway.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    setPurchasingAddon(addon.slug);
+    setError(null);
+    try {
+      const res = await api.post(`addons/${addon.id}/purchase`, { quantity, country });
+      if (res.data.url) {
+        window.location.href = res.data.url;
+      } else if (res.data.message) {
+        await fetchData();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to purchase add-on.");
+    } finally {
+      setPurchasingAddon(null);
+    }
+  };
+
+  const handleCancelAddon = async (addon) => {
+    setCancellingAddon(addon.id);
+    setError(null);
+    try {
+      await api.post(`addons/${addon.id}/cancel`);
+      await fetchData();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to cancel add-on.");
+    } finally {
+      setCancellingAddon(null);
+    }
+  };
+
+  const isAddonActive = (addonId) => {
+    return activeAddons.some(a => a.addon_id === addonId && a.status === 'active');
+  };
+
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-muted-foreground gap-4">
+      <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      <p className="font-medium animate-pulse">Syncing billing registry...</p>
+    </div>
+  );
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+        <div>
+          <h1 className="text-3xl font-black text-foreground tracking-tight flex items-center gap-3">
+            <CreditCard className="w-8 h-8 text-primary" />
+            Billing & Subscription
+          </h1>
+          <p className="text-muted-foreground mt-2 text-lg">Manage your commercial plan and payment methods.</p>
+        </div>
+        
+        <div className="bg-white border border-border p-4 rounded-2xl flex items-center gap-4 shadow-sm">
+          <div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Regional Gateway</p>
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-muted-foreground" />
+              <select 
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="bg-transparent text-slate-800 font-bold text-sm outline-none cursor-pointer"
+              >
+                <option value="" disabled className="bg-white">Select Country</option>
+                {COUNTRIES.map(country => (
+                  <option key={country.code} value={country.code} className="bg-white">
+                    {country.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center gap-3 text-red-400 font-medium animate-in fade-in slide-in-from-top-2">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          {error}
+        </div>
+      )}
+
+      {/* Current Plan Overview */}
+      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-500/20">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-widest">
+              Current Active Tier
+            </div>
+            <h2 className="text-4xl font-black">{status?.plan_name || 'Free'}</h2>
+            <p className="text-blue-100 max-w-md">Your account is currently on the {status?.plan_name} model. Features are subject to this tier's limitations.</p>
+          </div>
+          
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-2xl w-full md:w-auto min-w-[240px]">
+            <div className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-4">Subscription Status</div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-xs font-bold text-white uppercase tracking-tight">{status?.status || 'Active'}</span>
+              <Shield className="w-4 h-4 text-blue-300" />
+            </div>
+            <div className="text-[10px] text-blue-200 mb-1">Billing Provider</div>
+            <div className="font-bold text-sm capitalize">{status?.provider || 'System Internal'}</div>
+
+            {/* AI Credits Usage Indicator */}
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <div className="flex justify-between items-end mb-2">
+                <div className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Base Credits Used</div>
+                <div className="text-xs font-bold text-white">{status?.ai_credits_used || 0} / {status?.ai_credits_limit ?? '∞'}</div>
+              </div>
+              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-4">
+                <div 
+                  className="h-full bg-blue-300 transition-all duration-500" 
+                  style={{ width: `${Math.min(((status?.ai_credits_used || 0) / (status?.ai_credits_limit || 1)) * 100, 100)}%` }}
+                />
+              </div>
+              
+              <div className="flex justify-between items-end mb-2">
+                <div className="text-[10px] font-black hover:text-amber-300 text-amber-400 uppercase tracking-widest">Rollover Top-Up Balance</div>
+                <div className="text-xs font-bold text-amber-400">{status?.ai_credits_topup || 0} left</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Upgrade Call to Action for Free Users */}
+        {(status?.plan_slug === 'free' || !status?.plan_slug) && (
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+            <div className="mb-4 sm:mb-0">
+              <p className="text-sm font-bold text-blue-100 italic">"Your account is limited by the Free tier. Unlock high-performance AI and premium management tools."</p>
+            </div>
+            <button 
+              onClick={() => document.getElementById('plans-selection').scrollIntoView({ behavior: 'smooth' })}
+              className="px-6 py-3 bg-white text-primary rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-50 transition-colors shadow-lg"
+            >
+              Choose a Premium Plan
+            </button>
+          </div>
+        )}
+        
+        {/* Background Decorative Element */}
+        <CreditCard className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 rotate-12" />
+      </div>
+
+      {/* Plan Selection — MUST come before Top Up so scroll-to works correctly */}
+      <div id="plans-selection" className="scroll-mt-6">
+        <h2 className="text-2xl font-black text-foreground mb-6 flex items-center gap-2">
+          <CreditCard className="w-6 h-6 text-primary" /> Choose Your Plan
+        </h2>
+        
+        {/* Responsive Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {(Array.isArray(plans) ? plans : []).map((plan) => (
+            <div key={plan.id} className={`bg-white border-2 rounded-3xl p-8 flex flex-col transition-all group relative shadow-sm ${
+              status?.plan_slug === plan.slug ? 'border-blue-500 bg-blue-50/50 shadow-md' : 'border-border hover:border-slate-300'
+            }`}>
+              {plan.slug === 'pro' && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg">
+                  Most Popular
+                </div>
+              )}
+
+              <div className="mb-8">
+                <h3 className="text-xl font-black text-foreground mb-2">{plan.name}</h3>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-black text-foreground">${plan.monthly_price}</span>
+                  <span className="text-muted-foreground text-sm">/month</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 mb-8 flex-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">What's included</p>
+                <ul className="space-y-3">
+                  {plan.features && typeof plan.features === 'object' && !Array.isArray(plan.features)
+                    ? Object.entries(plan.features)
+                        .filter(([, v]) => v === true)
+                        .map(([key]) => (
+                          <li key={key} className="flex items-center gap-3 text-sm text-slate-600">
+                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+                          </li>
+                        ))
+                    : Array.isArray(plan.features) && plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                          <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                          <span className="capitalize">{feature.replace(/_/g, ' ')}</span>
+                        </li>
+                      ))
+                  }
+                  <li className="flex items-center gap-3 text-sm font-bold text-primary pt-2 border-t border-border mt-2">
+                    <Zap className="w-4 h-4 text-blue-500 shrink-0" />
+                    <span>{plan.ai_credits_limit !== null && plan.ai_credits_limit !== undefined ? `${plan.ai_credits_limit.toLocaleString()} AI Credits/mo` : 'Unlimited AI Credits'}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button 
+                onClick={() => handleSubscribe(plan.slug)}
+                disabled={status?.plan_slug === plan.slug || subscribing === plan.slug}
+                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                  status?.plan_slug === plan.slug 
+                    ? 'bg-slate-100 text-muted-foreground cursor-default' 
+                    : 'bg-slate-100 text-foreground hover:bg-primary hover:text-white active:scale-95 transition-colors'
+                }`}
+              >
+                {subscribing === plan.slug ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : status?.plan_slug === plan.slug ? (
+                  'Current Plan'
+                ) : (
+                  <>
+                    Checkout Now <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Enterprise Flex — Now explicitly UNDER the pricing plans */}
+        <div className="max-w-xl mx-auto bg-slate-50 border-2 border-dashed border-border rounded-3xl p-8 flex flex-col items-center justify-center text-center space-y-4 mb-12">
+          <Zap className="w-10 h-10 text-amber-500" />
+          <div>
+            <h3 className="text-lg font-bold text-foreground">Enterprise Flex</h3>
+            <p className="text-muted-foreground text-sm mt-1">Need a specialized setup for 50+ locations?</p>
+          </div>
+          <button 
+            onClick={() => window.location.href = `mailto:${status?.sales_email || 'sales@sectros.com'}?subject=Enterprise%20Flex%20Inquiry`}
+            className="px-8 py-3 bg-white border border-border text-primary font-black text-xs uppercase tracking-widest rounded-xl hover:bg-blue-50 transition-colors shadow-sm"
+          >
+            Contact Sales Team
+          </button>
+        </div>
+      </div>
+
+      {/* AI Credit Top-Up Section */}
+      <div className="bg-white border text-center border-border rounded-3xl p-8 flex flex-col items-center justify-center space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-4">
+        <div>
+           <h3 className="text-xl font-black text-foreground flex items-center justify-center gap-2">
+              <Zap className="w-6 h-6 text-amber-500" /> Top Up AI Credits
+           </h3>
+           <p className="text-muted-foreground text-sm mt-2 max-w-lg mx-auto">
+             Need more capacity before your cycle resets? Buy non-expiring AI credits that carry over until you use them all.
+           </p>
+        </div>
+        
+        <div className="flex flex-wrap justify-center gap-4">
+           {[ {amount: 250, price: 10}, {amount: 1000, price: 35}, {amount: 5000, price: 150} ].map(pack => (
+              <button
+                 key={pack.amount}
+                 disabled={purchasingTopup}
+                 onClick={() => handleTopUp(pack.amount)}
+                 className="flex flex-col items-center p-4 bg-white border-2 border-border rounded-2xl hover:border-amber-500 hover:bg-amber-50 transition-all min-w-[140px] focus:outline-none focus:ring-4 focus:ring-amber-500/20 active:scale-95 disabled:opacity-50"
+              >
+                 <span className="text-2xl font-black text-foreground">{pack.amount.toLocaleString()}</span>
+                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1 mb-3">Credits</span>
+                 <div className="px-3 py-1 bg-slate-100 text-slate-700 font-bold text-sm rounded-lg w-full">
+                    ${pack.price}
+                 </div>
+              </button>
+           ))}
+        </div>
+        {purchasingTopup && <p className="text-sm font-medium text-amber-600 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin"/> Provisioning credits...</p>}
+      </div>
+
+      {/* Add-ons Section */}
+      {addons.length > 0 && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <ShoppingCart className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-black text-foreground">Add-ons</h2>
+          </div>
+          <p className="text-muted-foreground text-sm -mt-4">Enhance your plan with additional capabilities.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {addons.map((addon) => {
+              const Icon = ADDON_ICONS[addon.slug] || ShoppingCart;
+              const active = isAddonActive(addon.id);
+              const activeRecord = activeAddons.find(a => a.addon_id === addon.id);
+
+              return (
+                <div key={addon.id} className={`bg-white border-2 rounded-3xl p-6 flex flex-col transition-all shadow-sm ${active ? 'border-emerald-500 bg-emerald-50/50' : 'border-border hover:border-slate-300'}`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-foreground text-sm">{addon.name}</h3>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{addon.category}</p>
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground mb-4 flex-1">{addon.description}</p>
+
+                  <div className="flex items-baseline gap-1 mb-4">
+                    {addon.unit_price ? (
+                      <>
+                        <span className="text-2xl font-black text-foreground">${addon.unit_price}</span>
+                        <span className="text-xs text-muted-foreground">{addon.unit_label}</span>
+                      </>
+                    ) : addon.price ? (
+                      <>
+                        <span className="text-2xl font-black text-foreground">${addon.price}</span>
+                        <span className="text-xs text-muted-foreground">{addon.unit_label}</span>
+                      </>
+                    ) : null}
+                  </div>
+
+                  {active ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs">
+                        <CheckCircle className="w-4 h-4" />
+                        Active {activeRecord?.quantity > 1 ? `(${activeRecord.quantity}x)` : ''}
+                      </div>
+                      <button
+                        onClick={() => handleCancelAddon(addon)}
+                        disabled={cancellingAddon === addon.id}
+                        className="w-full py-2.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                      >
+                        {cancellingAddon === addon.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <X className="w-3 h-3" />} Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handlePurchaseAddon(addon)}
+                      disabled={purchasingAddon === addon.slug}
+                      className="w-full py-2.5 rounded-xl bg-slate-100 text-foreground hover:bg-primary hover:text-white font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+                    >
+                      {purchasingAddon === addon.slug ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>Add to Plan <ArrowRight className="w-3 h-3" /></>
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

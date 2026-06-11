@@ -1,0 +1,238 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
+import centralApi from '../services/centralApi';
+
+export const AuthContext = createContext();
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+    const [isImpersonating, setIsImpersonating] = useState(false);
+    const [businessType, setBusinessType] = useState('restaurant');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const isSaaSPath = window.location.pathname.startsWith('/securegate');
+        const savedUser = localStorage.getItem('auth_user');
+        const adminUser = localStorage.getItem('admin_user');
+        const imp = localStorage.getItem('is_impersonating') === 'true';
+        const savedType = localStorage.getItem('business_type') || 'restaurant';
+
+        // In a same-origin dev environment, we use the URL to decide which user context to load
+        if (isSaaSPath && adminUser) {
+            setUser(JSON.parse(adminUser));
+        } else if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        }
+
+        setIsImpersonating(imp);
+        setBusinessType(savedType);
+        setLoading(false);
+    }, []);
+
+  const login = async (credentials, type = 'tenant') => {
+    // Check if this is a token-based login (Impersonation)
+    if (credentials.token) {
+      localStorage.setItem('token', credentials.token);
+      localStorage.setItem('is_impersonating', 'true');
+      setIsImpersonating(true);
+      const baseURL = type === 'admin' ? '/central-api' : api.defaults.baseURL;
+      try {
+        const response = await api.get('user', {
+          baseURL,
+          headers: {
+            'Authorization': `Bearer ${credentials.token}`
+          }
+        });
+        const userData = response.data;
+        setUser(userData);
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+        return { success: true };
+      } catch (error) {
+        console.error('Auto-login with token failed:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('is_impersonating');
+        setIsImpersonating(false);
+        return { success: false, error: 'Invalid or expired impersonation token' };
+      }
+    }
+
+    const endpoint = type === 'admin' ? 'saas/login' : 'login';
+    try {
+      let response;
+      if (type === 'admin') {
+        // Always use centralApi for admin login — guaranteed /central-api/ base + no tenant token interference
+        response = await centralApi.post(endpoint, credentials);
+      } else {
+        const baseURL = '/central-api/';
+        response = await api.post(endpoint, credentials, { baseURL });
+      }
+      const data = response.data;
+      
+      if (data.requires_2fa) {
+        return { success: true, requires2FA: true, email: credentials.email, method: data.method };
+      }
+
+      const userData = data.user || data; 
+      
+      if (data.token) {
+        if (type === 'admin') {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', JSON.stringify(userData));
+          localStorage.setItem('auth_type', 'admin');
+        } else {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('auth_user', JSON.stringify(userData));
+          if (data.business_type) {
+            localStorage.setItem('business_type', data.business_type);
+            setBusinessType(data.business_type);
+          }
+        }
+      }
+      
+      setUser(userData);
+      return { 
+        success: true, 
+        tenant_domain: data.tenant_domain,
+        token: data.token 
+      };
+    } catch (error) {
+      console.error('Login failed:', error);
+      return { success: false, error: error.response?.data?.message || 'Login failed' };
+    }
+  };
+
+  const verify2FA = async (email, code, method = 'email', type = 'admin') => {
+    try {
+      const endpoint = type === 'admin' ? 'saas/login/verify-2fa' : 'login/verify-2fa';
+      let response;
+      if (type === 'admin') {
+        response = await centralApi.post(endpoint, { email, code, method });
+      } else {
+        response = await api.post(endpoint, { email, code, method }, { baseURL: '/central-api/' });
+      }
+      const data = response.data;
+      const userData = data.user || data;
+
+      if (data.token) {
+        if (type === 'admin') {
+          localStorage.setItem('admin_token', data.token);
+          localStorage.setItem('admin_user', JSON.stringify(userData));
+          localStorage.setItem('auth_type', 'admin');
+        } else {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('auth_user', JSON.stringify(userData));
+          if (data.business_type) {
+            localStorage.setItem('business_type', data.business_type);
+            setBusinessType(data.business_type);
+          }
+        }
+        setUser(userData);
+        return { 
+          success: true,
+          tenant_domain: data.tenant_domain,
+          token: data.token
+        };
+      }
+      return { success: false, error: 'Invalid verification code' };
+    } catch (error) {
+      return { success: false, error: error.response?.data?.message || 'Verification failed' };
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    setIsImpersonating(false);
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth_type');
+    localStorage.removeItem('tenant_domain');
+    localStorage.removeItem('is_impersonating');
+    localStorage.removeItem('admin_user');
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('business_type');
+    setBusinessType('restaurant');
+  };
+
+  const refreshUser = async () => {
+    try {
+      // Determine context and token based on impersonation and auth type
+      const isSaaSPath = window.location.pathname.startsWith('/securegate');
+      const token = isSaaSPath ? localStorage.getItem('admin_token') : localStorage.getItem('token');
+      const baseURL = isSaaSPath ? '/central-api' : api.defaults.baseURL;
+      
+      if (!token) return { success: false, error: 'No token found' };
+
+      const response = await api.get('user', {
+        baseURL,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      const userData = response.data;
+      setUser(userData);
+      
+      if (userData.business_type) {
+        localStorage.setItem('business_type', userData.business_type);
+        setBusinessType(userData.business_type);
+      }
+      
+      if (isSaaSPath) {
+        localStorage.setItem('admin_user', JSON.stringify(userData));
+      } else {
+        localStorage.setItem('auth_user', JSON.stringify(userData));
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('Failed to refresh user profile:', error);
+      return { success: false, error: 'Refresh failed' };
+    }
+  };
+
+  const stopImpersonating = () => {
+    // Clear tenant-side only
+    localStorage.removeItem('token');
+    localStorage.removeItem('auth_user');
+    localStorage.removeItem('is_impersonating');
+    localStorage.removeItem('tenant_domain');
+    setIsImpersonating(false);
+
+    // Restore admin identity for UI if we are in admin context
+    const isSaaSPath = window.location.pathname.startsWith('/securegate');
+    const adminUser = localStorage.getItem('admin_user');
+    if (isSaaSPath && adminUser) {
+        setUser(JSON.parse(adminUser));
+    } else {
+        setUser(null);
+    }
+    
+    api.defaults.baseURL = '/central-api'; 
+  };
+
+  return (
+    <AuthContext.Provider value={{ 
+      user, 
+      setUser,
+      isImpersonating, 
+      setIsImpersonating,
+      businessType,
+      setBusinessType,
+      loading, 
+      login, 
+      verify2FA, 
+      logout,
+      stopImpersonating,
+      refreshUser
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
