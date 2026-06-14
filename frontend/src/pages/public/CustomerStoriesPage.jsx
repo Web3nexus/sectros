@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, TrendingUp, ArrowRight, Quote, Star } from 'lucide-react';
+import {Building2, TrendingUp, ArrowRight, Quote, Briefcase} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/centralApi';
 
@@ -113,7 +113,7 @@ export default function CustomerStoriesPage() {
             ) : (
                 <motion.div variants={fadeIn} className="bg-card border border-border border-dashed rounded-[3rem] p-16 md:p-24 text-center">
                     <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mx-auto mb-8 transform -rotate-6">
-                        <Star className="w-10 h-10 text-amber-500" />
+                        <Briefcase className="w-10 h-10 text-amber-500" />
                     </div>
                     <h3 className="text-3xl font-bold text-foreground mb-4">Case studies coming soon.</h3>
                     <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">We are currently compiling metrics and interviews from our top enterprise clients. Check back in a few days to see how the industry is leveraging our OS.</p>

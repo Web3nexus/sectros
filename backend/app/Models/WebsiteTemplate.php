@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class WebsiteTemplate extends Model
 {
-    protected $connection = 'mysql'; // Central database
+    protected $connection = 'platform';
 
     protected $fillable = [
         'name',

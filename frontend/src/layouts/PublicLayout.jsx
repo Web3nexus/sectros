@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, ChevronDown, Sparkles, Book, Star, FileText, HelpCircle, Users, MessageCircle, ArrowRight, Layout, Calendar, Globe, Box, Grid, Briefcase } from 'lucide-react';
+import {Menu, X, ChevronDown, Briefcase, Book, FileText, HelpCircle, Users, MessageCircle, ArrowRight, Layout, Calendar, Globe, Box, Grid} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../hooks/useBranding';
@@ -94,7 +94,7 @@ export function PublicLayout() {
             ) : (
               <>
                 <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
-                  <Sparkles className="w-3.5 h-3.5 text-primary-foreground" />
+                  <Briefcase className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
                 <span className="text-lg lg:text-xl font-bold text-foreground tracking-tight whitespace-nowrap">{settings.platform_name}</span>
               </>
@@ -244,7 +244,7 @@ export function PublicLayout() {
                 ) : (
                   <>
                     <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center">
-                      <Sparkles className="w-4 h-4 text-white" />
+                      <Briefcase className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-xl font-bold text-foreground tracking-tight">{settings.platform_name}</span>
                   </>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Coffee, Utensils, GlassWater, Beef } from 'lucide-react';
+import {Briefcase, Coffee, Utensils, GlassWater, Beef} from 'lucide-react';
 
 export default function ServicesSection({ content, theme }) {
   const { 
@@ -237,7 +237,7 @@ export default function ServicesSection({ content, theme }) {
                    </div>
                    <div className="p-6">
                       <div className="flex text-[#B9975B] mb-3">
-                         {Array.from({ length: room.rating }).map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
+                         {Array.from({ length: room.rating }).map((_, i) => <Briefcase key={i} size={12} fill="currentColor" />)}
                       </div>
                       <h3 className="text-xl font-serif text-[#262626] font-medium mb-2">{room.name}</h3>
                       <p className="text-[#777777] text-sm leading-relaxed mb-4 font-sans">{room.desc}</p>

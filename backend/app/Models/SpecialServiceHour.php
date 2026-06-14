@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class SpecialServiceHour extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
     protected $fillable = [
+        'tenant_id',
         'event_date',
         'name',
         'open_time',

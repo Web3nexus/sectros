@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { AlertTriangle, X } from 'lucide-react';
+import {AlertTriangle, X} from 'lucide-react';
 
 export default function ConfirmationModal({ 
   isOpen, 

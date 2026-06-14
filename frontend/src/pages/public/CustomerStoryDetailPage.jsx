@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, TrendingUp, Quote, Loader2, Building2, CheckCircle2, Star } from 'lucide-react';
+import {ArrowLeft, TrendingUp, Quote, Loader2, Building2, CheckCircle2, Briefcase} from 'lucide-react';
 import centralApi from '../../services/centralApi';
 
 export default function CustomerStoryDetailPage() {
@@ -125,7 +125,7 @@ export default function CustomerStoryDetailPage() {
 
                     <div className="mb-20 pb-20 border-b border-border">
                         <h2 className="text-3xl font-bold text-foreground mb-10 tracking-tight flex items-center gap-4">
-                            <Star className="text-amber-400 fill-amber-400" /> The Result
+                            <Briefcase className="text-amber-400 fill-amber-400" /> The Result
                         </h2>
                         <p className="mb-8">{story.content}</p>
                         <p>

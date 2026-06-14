@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Minus, ChevronDown, Zap, Users, Globe, MessageSquare, ArrowRight, Star, HelpCircle, Smartphone, DollarSign } from 'lucide-react';
+import {Check, Minus, ChevronDown, Zap, Users, Globe, MessageSquare, ArrowRight, Briefcase, HelpCircle, Smartphone, DollarSign} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 
 const plans = [
@@ -214,7 +214,7 @@ export default function ModernPricing() {
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
-                    <Star className="h-3 w-3" />
+                    <Briefcase className="h-3 w-3" />
                     Most Popular
                   </span>
                 </div>

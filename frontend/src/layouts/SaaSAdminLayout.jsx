@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, BookOpen, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap } from 'lucide-react';
+import {LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, BookOpen, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap} from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
 import { useBranding } from '../hooks/useBranding';
@@ -47,23 +47,20 @@ export function SaaSAdminLayout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`border-r border-border flex flex-col h-screen fixed lg:sticky top-0 z-50 transition-all duration-300 ${
+      <aside className={`bg-card border-r border-border flex flex-col h-screen fixed lg:sticky top-0 z-50 transition-all duration-300 ${
         isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
-        <div className={`p-4 md:p-6 border-b border-border flex items-center justify-between lg:justify-center hover:bg-muted transition-colors`}>
-           <Link to="/securegate/dashboard" className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'}`} onClick={() => setIsMobileSidebarOpen(false)}>
+        <div className={`p-4 md:p-6 border-b border-border bg-card flex items-center justify-between lg:justify-center transition-colors`}>
+           <Link to="/securegate/dashboard" className={`flex flex-col items-center ${isSidebarCollapsed ? '' : 'w-full'}`} onClick={() => setIsMobileSidebarOpen(false)}>
               {settings.platform_logo_url ? (
-                 <img src={settings.platform_logo_url} alt={settings.platform_name} className={`h-8 w-auto object-contain ${isSidebarCollapsed ? 'mx-auto' : ''}`} />
+                 <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-10 w-auto object-contain mb-2" />
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center ring-2 ring-blue-600/20 shrink-0">
-                  <Building2 className="w-5 h-5 text-primary-foreground" />
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center ring-2 ring-blue-600/20 mb-2">
+                  <Building2 className="w-6 h-6 text-primary-foreground" />
                 </div>
               )}
               {!isSidebarCollapsed && (
-                <div className="overflow-hidden">
-                  <h1 className="text-foreground font-bold tracking-tight truncate">{settings.platform_name}</h1>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold shrink-0">Super Admin Control</p>
-                </div>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-widest font-semibold text-center">Super Admin</p>
               )}
            </Link>
            <button className="lg:hidden text-muted-foreground hover:text-foreground shrink-0" onClick={() => setIsMobileSidebarOpen(false)}>
@@ -108,7 +105,8 @@ export function SaaSAdminLayout() {
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
-        <header className="h-16 border-b border-border/50 bg-background/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 sticky top-0 z-10">
+        <div className="bg-card shrink-0">
+          <header className="h-16 border-b border-border/50 bg-card flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 mt-4 md:mt-6">
             <div className="flex items-center gap-4">
                 <button className="lg:hidden p-2 text-muted-foreground hover:bg-muted rounded-lg transition-all active:scale-90" onClick={() => setIsMobileSidebarOpen(true)}>
                   <Menu size={24} />
@@ -188,6 +186,7 @@ export function SaaSAdminLayout() {
                 </span>
             </div>
         </header>
+        </div>
         
         <div className="flex-1 overflow-auto p-4 md:p-8 relative">
             <Outlet />

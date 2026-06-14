@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Bot, MessageSquare, Instagram, Facebook, Star, Loader2, TrendingUp, CheckCircle, Clock, Search, Filter, Save, Settings, FileText, Plus, Trash2, FileUp, Database, Sparkles, ChevronRight, Activity, Globe } from 'lucide-react'
+import {Bot, MessageSquare, Instagram, Facebook, Briefcase, Loader2, TrendingUp, CheckCircle, Clock, Search, Filter, Save, Settings, FileText, Plus, Trash2, FileUp, Database, ChevronRight, Activity, Globe} from 'lucide-react'
 import api from '../services/api'
 import { Link } from 'react-router-dom'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
@@ -164,7 +164,7 @@ export default function AutomationView() {
   const tabs = [
     { id: 'overview', label: 'Monitor', icon: Activity },
     { id: 'social', label: 'Channels', icon: Globe },
-    { id: 'engine', label: 'AI Core', icon: Sparkles },
+    { id: 'engine', label: 'AI Core', icon: Briefcase },
     { id: 'knowledge', label: 'Knowledge', icon: Database },
   ];
 
@@ -190,7 +190,7 @@ export default function AutomationView() {
               Open Inbox
            </Link>
            <button onClick={testEngine} className="bg-primary text-primary-foreground px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2 shadow-xl shadow-slate-900/10 active:scale-95">
-               <Sparkles size={14} className="text-blue-400" />
+               <Briefcase size={14} className="text-blue-400" />
                Test Engine
             </button>
         </div>
@@ -240,7 +240,7 @@ export default function AutomationView() {
             <div className="bg-card p-8 rounded-[40px] shadow-2xl relative overflow-hidden">
                <div className="absolute top-0 right-0 p-8 opacity-10"><TrendingUp size={100} className="text-white" /></div>
                <div className="flex items-center justify-between mb-8 relative z-10 text-white">
-                  <div className="h-12 w-12 bg-white/10 text-white rounded-2xl flex items-center justify-center"><Star size={24} /></div>
+                  <div className="h-12 w-12 bg-white/10 text-white rounded-2xl flex items-center justify-center"><Briefcase size={24} /></div>
                    <span className="text-[10px] font-black text-black/60 uppercase tracking-widest">Feedback</span>
                 </div>
                 <div className="text-5xl font-black text-black tracking-tighter relative z-10">{stats.sentiment_score}% Positive</div>
@@ -295,7 +295,7 @@ export default function AutomationView() {
              <div className="space-y-6">
                 <div className="bg-white p-8 rounded-[40px] border border-border shadow-sm">
                    <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs mb-6 flex items-center gap-2">
-                      <Sparkles size={16} className="text-blue-500" /> Contextual AI Commands
+                      <Briefcase size={16} className="text-blue-500" /> Contextual AI Commands
                    </h3>
                    <div className="grid grid-cols-1 gap-4">
                       {config.aiCommands.map(cmd => (
@@ -368,7 +368,7 @@ export default function AutomationView() {
            <div className="lg:col-span-2 space-y-8">
               <div className="bg-card p-10 rounded-[48px] shadow-2xl relative overflow-hidden">
                  <div className="absolute -right-20 -top-20 opacity-5 pointer-events-none rotate-12">
-                    <Sparkles size={300} className="text-white" />
+                    <Briefcase size={300} className="text-white" />
                  </div>
                  <div className="relative z-10">
                     <div className="flex items-center gap-4 mb-8">
@@ -443,7 +443,7 @@ export default function AutomationView() {
                  </div>
               </div>
               <div className="bg-primary p-8 rounded-[40px] text-white shadow-xl shadow-blue-600/20">
-                 <Sparkles size={24} className="mb-4 opacity-50" />
+                 <Briefcase size={24} className="mb-4 opacity-50" />
                  <h4 className="font-black uppercase tracking-tighter text-lg mb-2">Advanced Logic</h4>
                  <p className="text-[10px] font-bold text-blue-100 leading-relaxed uppercase tracking-widest italic">Switching to 'Pro' tone enables more complex negotiation and {config.type === 'hotel' ? 'stay extensions' : 'upsells'} during interaction.</p>
               </div>

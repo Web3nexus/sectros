@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MessageCircle, Instagram, Twitter, MapPin, ArrowUpRight, Flame, Facebook } from 'lucide-react';
+import {MessageCircle, Instagram, Twitter, MapPin, ArrowUpRight, Flame, Facebook} from 'lucide-react';
 import centralApi from '../../services/centralApi';
 
 export default function CommunityPage() {

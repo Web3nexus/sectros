@@ -11,7 +11,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 {
     use HasDatabase, HasDomains;
 
-    protected $connection = 'mysql';
+    protected $connection = 'platform';
     
     public static function getCustomColumns(): array
     {

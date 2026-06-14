@@ -14,6 +14,9 @@ class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
 
     /**
      * The attributes that are mass assignable.
@@ -58,6 +61,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'features' => 'array',
+            'tenant_id' => 'string',
         ];
     }
 }

@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MenuCategory extends Model
 {
-    protected $fillable = ['name', 'description', 'image_url', 'sort_order', 'is_active'];
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
+    protected $fillable = ['tenant_id', 'name', 'description', 'image_url', 'sort_order', 'is_active'];
 
     public function items(): HasMany
     {

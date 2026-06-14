@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import {ShieldAlert, ArrowLeft} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AccessDenied() {

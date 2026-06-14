@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceLog extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
     protected $fillable = [
+        'tenant_id',
         'staff_profile_id',
         'shift_id',
         'check_in',

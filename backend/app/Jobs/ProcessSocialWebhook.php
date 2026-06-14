@@ -30,7 +30,7 @@ class ProcessSocialWebhook implements ShouldQueue
     public function handle(): void
     {
         try {
-            tenancy()->initialize($this->tenant);
+            \App\Services\TenantResolver::set($this->tenant);
 
             $req = new Request();
             $req->merge($this->payload);
@@ -38,10 +38,10 @@ class ProcessSocialWebhook implements ShouldQueue
             $controller = new AutomationController();
             $controller->handleSocialWebhook($req);
 
-            tenancy()->end();
+            \App\Services\TenantResolver::clear();
         } catch (\Exception $e) {
             Log::error('Background Webhook Processing Failed', ['error' => $e->getMessage()]);
-            tenancy()->end();
+            \App\Services\TenantResolver::clear();
         }
     }
 }

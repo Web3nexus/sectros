@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, BookOpen, Clock, Tag } from 'lucide-react';
+import {ArrowRight, BookOpen, Clock, Tag} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/centralApi';
 

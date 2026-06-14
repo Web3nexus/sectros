@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingBag, Menu, Search } from 'lucide-react';
+import {ShoppingBag, Menu, Search} from 'lucide-react';
 
 export default function NavbarSection({ content, theme }) {
   const { layout = 'tastenest-dark', logo = 'SECTROS', buttonText = 'Book Now', phone = '' } = content;

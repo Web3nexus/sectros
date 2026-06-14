@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, FileText, Globe, Mail } from 'lucide-react';
+import {Shield, Lock, Eye, FileText, Globe, Mail} from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
   const sections = [

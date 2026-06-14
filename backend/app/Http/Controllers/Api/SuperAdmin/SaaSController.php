@@ -137,18 +137,19 @@ class SaaSController extends Controller
     {
         $tenants = Tenant::with('domains')->get()
             ->map(function ($tenant) {
-                // Optional: for better performance in large systems, use a cached count or a dedicated column
-                $staffCount = 0;
-                $ownerUserId = null;
-                try {
-                    tenancy()->initialize($tenant);
-                    $staffCount = User::where('email', '!=', $tenant->owner_email)->count();
-                    $ownerUserId = User::where('email', $tenant->owner_email)->value('id');
-                    $twoFactorEnabled = User::where('email', $tenant->owner_email)->value('two_factor_method') !== 'none';
-                    tenancy()->end();
-                } catch (\Exception $e) {
-                    // Ignore if DB not ready
-                }
+                $staffCount = User::on('tenant')
+                    ->where('tenant_id', $tenant->id)
+                    ->where('email', '!=', $tenant->owner_email)
+                    ->count();
+                $ownerUserId = User::on('tenant')
+                    ->where('tenant_id', $tenant->id)
+                    ->where('email', $tenant->owner_email)
+                    ->value('id');
+                $twoFactorMethod = User::on('tenant')
+                    ->where('tenant_id', $tenant->id)
+                    ->where('email', $tenant->owner_email)
+                    ->value('two_factor_method');
+                $twoFactorEnabled = $twoFactorMethod && $twoFactorMethod !== 'none';
 
                 return [
                     'id' => $tenant->id,
@@ -228,33 +229,29 @@ class SaaSController extends Controller
 
             // --- AUTO-INITIALIZE OWNER ACCOUNT ---
             try {
-                tenancy()->initialize($tenant);
-                
-                // Create Owner User in Tenant DB
-                $ownerPassword = $validated['owner_password'] ?? \Illuminate\Support\Str::random(12); // Secure random password or provided
-                $user = User::updateOrCreate(
-                    ['email' => $validated['owner_email']],
+                $ownerPassword = $validated['owner_password'] ?? \Illuminate\Support\Str::random(12);
+
+                $user = User::on('tenant')->updateOrCreate(
+                    ['email' => $validated['owner_email'], 'tenant_id' => $tenant->id],
                     [
+                        'tenant_id' => $tenant->id,
                         'name' => $validated['owner_name'],
                         'password' => Hash::make($ownerPassword),
                         'role' => 'owner'
                     ]
                 );
 
-                // Assign owner role if using Spatie (explicit web guard)
                 if (class_exists(\Spatie\Permission\Models\Role::class)) {
-                    $role = \Spatie\Permission\Models\Role::firstOrCreate([
+                    $role = \Spatie\Permission\Models\Role::on('tenant')->firstOrCreate([
                         'name' => 'owner',
                         'guard_name' => 'web'
                     ]);
                     $user->assignRole($role);
                 }
 
-                tenancy()->end();
-                Log::info("Tenant owner account initialized successfuly", ['email' => $validated['owner_email'], 'temp_pass' => 'Standard provisioning applied']);
+                Log::info("Tenant owner account initialized successfully", ['email' => $validated['owner_email']]);
             } catch (\Exception $e) {
                 Log::error("Failed to auto-initialize owner account", ['error' => $e->getMessage()]);
-                // We don't fail the whole request since the tenant and domain are created
             }
 
             Log::info("Tenant created successfully", ['id' => $tenant->id]);
@@ -326,25 +323,25 @@ class SaaSController extends Controller
     public function getTenantStaff($id)
     {
         $tenant = Tenant::findOrFail($id);
-        
-        tenancy()->initialize($tenant);
-        
-        // Fetch real Users to see who has login access, mapping the owner properly
-        $staff = User::with('roles')->get()->map(function($user) use ($tenant) {
-            $isOwner = $user->email === $tenant->owner_email;
-            return [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'role' => $isOwner ? 'owner' : ($user->roles->first()?->name ?? 'staff'),
-                'is_active' => true,
-                'is_owner' => $isOwner,
-                'two_factor_enabled' => $user->two_factor_method !== 'none',
-                'created_at' => $user->created_at,
-            ];
-        });
-        
-        tenancy()->end();
+
+        $staff = User::on('tenant')
+            ->where('tenant_id', $tenant->id)
+            ->with('roles')
+            ->get()
+            ->map(function ($user) use ($tenant) {
+                $isOwner = $user->email === $tenant->owner_email;
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $isOwner ? 'owner' : ($user->roles->first()?->name ?? 'staff'),
+                    'is_active' => true,
+                    'is_owner' => $isOwner,
+                    'two_factor_enabled' => $user->two_factor_method !== 'none',
+                    'created_at' => $user->created_at,
+                ];
+            });
+
         return response()->json($staff);
     }
 
@@ -372,16 +369,14 @@ class SaaSController extends Controller
     {
         $tenant = Tenant::findOrFail($id);
         $request->validate(['enabled' => 'required|boolean']);
-        
-        tenancy()->initialize($tenant);
-        
-        $user = User::findOrFail($userId);
+
+        $user = User::on('tenant')
+            ->where('tenant_id', $tenant->id)
+            ->findOrFail($userId);
         $user->update([
             'two_factor_method' => $request->enabled ? 'email' : 'none'
         ]);
-        
-        tenancy()->end();
-        
+
         return response()->json(['message' => 'User 2FA updated successfully']);
     }
 
@@ -609,16 +604,6 @@ class SaaSController extends Controller
         }
 
         try {
-            // Initialize tenant context
-            tenancy()->initialize($tenant);
-
-            // 1. SELF-HEALING: Check if migrations have been run
-            if (!\Illuminate\Support\Facades\Schema::hasTable('users')) {
-                Log::info("Tenant database uninitialized during impersonation. Running migrations...", ['id' => $id]);
-                \Illuminate\Support\Facades\Artisan::call('tenants:migrate', ['--tenants' => [$id]]);
-            }
-
-            // 2. SELF-HEALING: Check if domain exists
             $domain = $tenant->domains->first()?->domain;
             if (!$domain) {
                 $centralDomain = config('tenancy.central_domains')[0] ?? 'sectroslr.test';
@@ -627,42 +612,33 @@ class SaaSController extends Controller
                 $domain = $newDomain;
             }
 
-            // 3. SELF-HEALING: Ensure Owner User exists in Tenant DB
-            $user = User::where('email', $ownerEmail)->first();
+            $user = User::on('tenant')->where('tenant_id', $tenant->id)->where('email', $ownerEmail)->first();
             if (!$user) {
-                Log::info("Owner missing from tenant DB during impersonation. Creating...", ['email' => $ownerEmail]);
-                $user = User::create([
+                Log::info("Owner missing during impersonation. Creating...", ['email' => $ownerEmail]);
+                $user = User::on('tenant')->create([
+                    'tenant_id' => $tenant->id,
                     'email' => $ownerEmail,
                     'name' => $tenant->owner_name ?? 'Restaurant Owner',
                     'password' => Hash::make(\Illuminate\Support\Str::random(16)),
                     'role' => 'owner'
                 ]);
+            }
 
-            // 4. PLAN SYNC: Re-sync roles and features from the central plan
-            $plan = SubscriptionPlan::where('slug', $tenant->plan)->first();
+            $plan = SubscriptionPlan::on('platform')->where('slug', $tenant->plan)->first();
             $updateData = ['role' => 'owner'];
             if ($plan) {
                 Log::info("Syncing plan features during impersonation", ['plan' => $tenant->plan, 'email' => $ownerEmail]);
                 $updateData['features'] = $plan->features;
-                
-                // Redundant sync to Tenant central record
                 $tenant->update(['features' => $plan->features]);
             }
             $user->update($updateData);
 
-            // Assign role (explicit web guard)
-            if (\Illuminate\Support\Facades\Schema::hasTable('roles')) {
-                if (class_exists(\Spatie\Permission\Models\Role::class)) {
-                    $role = \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'owner', 'guard_name' => 'web']);
-                    $user->assignRole($role);
-                }
-            }
+            if (class_exists(\Spatie\Permission\Models\Role::class)) {
+                $role = \Spatie\Permission\Models\Role::on('tenant')->firstOrCreate(['name' => 'owner', 'guard_name' => 'web']);
+                $user->assignRole($role);
             }
 
-            // Create a temporary token
             $token = $user->createToken('impersonation_token', ['*'], now('UTC')->addHours(24))->plainTextToken;
-
-            tenancy()->end();
 
             $protocol = request()->getScheme();
             return response()->json([
@@ -796,6 +772,8 @@ class SaaSController extends Controller
             'instagram_url' => $settings['instagram_url'] ?? 'https://instagram.com/sectros',
             'twitter_url' => $settings['twitter_url'] ?? 'https://twitter.com/sectros',
             'facebook_url' => $settings['facebook_url'] ?? 'https://facebook.com/sectros',
+            'youtube_url' => $settings['youtube_url'] ?? '',
+            'tiktok_url' => $settings['tiktok_url'] ?? '',
             'default_system_prompt' => $settings['default_system_prompt'] ?? 'You are an AI assistant for a restaurant. Determine if the user wants to make a reservation. If yes, extract details (date, time, party size) and output JSON: {"type": "reservation", "details": {"date": "YYYY-MM-DD", "time": "HH:MM", "party_size": int, "requests": "string"}}. Else, generate a friendly reply: {"type": "general", "reply": "..."}.',
             // Landing Page Content
             'landing_badge_text' => $settings['landing_badge_text'] ?? 'Now serving restaurants in 30+ cities',
@@ -820,8 +798,8 @@ class SaaSController extends Controller
             'landing_cta_section_body' => $settings['landing_cta_section_body'] ?? 'Join hundreds of restaurants already using Sectros. Get set up in under 5 minutes — no tech skills required.',
             'landing_cta_section_button' => $settings['landing_cta_section_button'] ?? 'Start your 14-day free trial',
             'website_theme' => $settings['website_theme'] ?? 'classic-ai',
-            'platform_logo_url' => $settings['platform_logo_url'] ?? '',
-            'platform_favicon_url' => $settings['platform_favicon_url'] ?? '',
+            'platform_logo_url' => $settings['platform_logo_url'] ?? '/brand/logo-black.png',
+            'platform_favicon_url' => $settings['platform_favicon_url'] ?? '/brand/icon-light.png',
         ]);
     }
 
@@ -869,7 +847,7 @@ class SaaSController extends Controller
             'openai_api_key', 'claude_api_key', 'ai_provider', 'global_ai_enabled',
             'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret',
             'meta_system_token',
-            'whatsapp_channel_url', 'community_url', 'instagram_url', 'twitter_url', 'facebook_url',
+            'whatsapp_channel_url', 'community_url', 'instagram_url', 'twitter_url', 'facebook_url', 'youtube_url', 'tiktok_url',
             'default_system_prompt',
             'landing_badge_text', 'landing_hero_title', 'landing_hero_subtitle',
             'landing_cta_primary', 'landing_cta_secondary', 'landing_trial_tagline',
@@ -909,21 +887,8 @@ class SaaSController extends Controller
     {
         $tenant = Tenant::findOrFail($id);
         Log::info("Self-healing sync started for tenant", ['id' => $id]);
-        
-        try {
-            tenancy()->initialize($tenant);
-            
-            // Self-healing: Check if migrations have been run
-            if (!\Illuminate\Support\Facades\Schema::hasTable('users')) {
-                Log::info("Tenant database uninitialized. Running migrations...", ['id' => $id]);
-                // Run migrations programmatically for this specific tenant
-                \Illuminate\Support\Facades\Artisan::call('tenants:migrate', [
-                    '--tenants' => [$id]
-                ]);
-                Log::info("Migrations completed for tenant", ['id' => $id]);
-            }
 
-            // Self-healing: Check if domain exists
+        try {
             if ($tenant->domains->isEmpty()) {
                 $centralDomain = config('tenancy.central_domains')[0] ?? 'sectroslr.test';
                 $newDomain = $id . '.' . $centralDomain;
@@ -931,38 +896,31 @@ class SaaSController extends Controller
                 Log::info("Self-healed missing domain during sync", ['id' => $id, 'domain' => $newDomain]);
             }
 
-            // Create or Update Owner User in Tenant DB
-            $user = User::updateOrCreate(
-                ['email' => $tenant->owner_email],
+            $user = User::on('tenant')->updateOrCreate(
+                ['email' => $tenant->owner_email, 'tenant_id' => $tenant->id],
                 [
+                    'tenant_id' => $tenant->id,
                     'name' => $tenant->owner_name ?? 'Restaurant Owner',
                     'password' => Hash::make(\Illuminate\Support\Str::random(16)),
                     'role' => 'owner'
                 ]
             );
 
-            // 4. PLAN SYNC: Re-sync roles and features from the central plan
-            $plan = SubscriptionPlan::where('slug', $tenant->plan)->first();
+            $plan = SubscriptionPlan::on('platform')->where('slug', $tenant->plan)->first();
             if ($plan) {
                 Log::info("Syncing plan features during manual sync", ['plan' => $tenant->plan, 'email' => $tenant->owner_email]);
                 $user->update(['features' => $plan->features]);
-                
-                // Redundant sync to Tenant central record
                 $tenant->update(['features' => $plan->features]);
             }
 
-            // Ensure roles table exists before trying to assign
-            if (\Illuminate\Support\Facades\Schema::hasTable('roles')) {
-                if (class_exists(\Spatie\Permission\Models\Role::class)) {
-                    $role = \Spatie\Permission\Models\Role::firstOrCreate([
-                        'name' => 'owner',
-                        'guard_name' => 'web'
-                    ]);
-                    $user->assignRole($role);
-                }
+            if (class_exists(\Spatie\Permission\Models\Role::class)) {
+                $role = \Spatie\Permission\Models\Role::on('tenant')->firstOrCreate([
+                    'name' => 'owner',
+                    'guard_name' => 'web'
+                ]);
+                $user->assignRole($role);
             }
 
-            tenancy()->end();
             Log::info("Sync completed successfully", ['user_id' => $user->id]);
             return response()->json(['message' => 'Owner account synced successfully', 'user_id' => $user->id]);
         } catch (\Exception $e) {
@@ -1535,29 +1493,25 @@ class SaaSController extends Controller
         ]);
 
         try {
-            tenancy()->initialize($tenant);
-            
-            $user = User::findOrFail($userId);
-            
+            $user = User::on('tenant')
+                ->where('tenant_id', $tenant->id)
+                ->findOrFail($userId);
+
             $password = $request->new_password ?: \Illuminate\Support\Str::random(12);
             $email = $request->new_email ?: $user->email;
-            
+
             $updateData = ['password' => Hash::make($password)];
             if ($request->filled('new_email')) {
                 $updateData['email'] = $email;
             }
-            
+
             $user->update($updateData);
 
-            // Special handling if this is the owner
             if ($user->email === $tenant->owner_email || $request->filled('new_email')) {
                 if ($request->filled('new_email')) {
-                     // Update tenant's record of the owner email to keep things synced
                      $tenant->update(['owner_email' => $email]);
                 }
             }
-
-            tenancy()->end();
 
             if ($request->send_email) {
                 // Determine domain

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Phone, Globe, Mail, Clock, Star, ArrowLeft, ShieldCheck, Share2, Heart, CheckCircle2, ChevronRight, Loader2, Calendar } from 'lucide-react';
+import {MapPin, Phone, Globe, Mail, Clock, Briefcase, ArrowLeft, ShieldCheck, Share2, Heart, CheckCircle2, ChevronRight, Loader2, Calendar} from 'lucide-react';
 import axios from 'axios';
 
 export default function DirectoryDetailPage() {
@@ -85,7 +85,7 @@ export default function DirectoryDetailPage() {
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-0.5">
                     {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={14} fill={i < Math.floor(listing.rating_avg) ? '#3b82f6' : 'none'} className={i < Math.floor(listing.rating_avg) ? 'text-primary' : 'text-white/30'} />
+                      <Briefcase key={i} size={14} fill={i < Math.floor(listing.rating_avg) ? '#3b82f6' : 'none'} className={i < Math.floor(listing.rating_avg) ? 'text-primary' : 'text-white/30'} />
                     ))}
                   </div>
                   <span className="text-white font-black">{listing.rating_avg}</span>
@@ -154,7 +154,7 @@ export default function DirectoryDetailPage() {
                         <h4 className="font-black text-slate-900 uppercase tracking-tight">{review.customer_name}</h4>
                         <div className="flex items-center gap-1 mt-1">
                           {[...Array(5)].map((_, j) => (
-                            <Star key={j} size={12} fill={j < review.rating ? '#3b82f6' : 'none'} className={j < review.rating ? 'text-primary' : 'text-slate-200'} />
+                            <Briefcase key={j} size={12} fill={j < review.rating ? '#3b82f6' : 'none'} className={j < review.rating ? 'text-primary' : 'text-slate-200'} />
                           ))}
                         </div>
                       </div>

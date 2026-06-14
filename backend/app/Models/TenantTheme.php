@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TenantTheme extends Model
 {
-    protected $connection = 'mysql'; // Central database
+    protected $connection = 'platform';
 
     protected $fillable = [
         'tenant_id',

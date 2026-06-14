@@ -1,14 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import {
-  Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle,
-  ArrowRight, Check, Shield, Clock, Key, Database,
-  Smartphone, Mail, Bell, CreditCard, Settings, Star,
-  MapPin, Search, ChevronRight, Clock3, DollarSign,
-  TrendingUp, PieChart, Activity, Globe, Github, MessageSquare,
-  Zap, RefreshCw, Layers, Lock, Server, Plus, X, Menu
-} from 'lucide-react';
+import {Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, ArrowRight, Check, Shield, Clock, Key, Database, Smartphone, Mail, Bell, CreditCard, Settings, Briefcase, MapPin, Search, ChevronRight, Clock3, DollarSign, TrendingUp, PieChart, Activity, Globe, Github, MessageSquare, Zap, RefreshCw, Layers, Lock, Server, Plus, X, Menu} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 
 const TAB_ICONS = {
@@ -627,7 +620,7 @@ function CRMContent({ badge, heading, paragraph }) {
         </p>
         <div className="space-y-4">
           {[
-            { icon: Star, title: 'Guest Profiles', desc: 'Comprehensive profiles with photos, contact info, and visit history.' },
+            { icon: Briefcase, title: 'Guest Profiles', desc: 'Comprehensive profiles with photos, contact info, and visit history.' },
             { icon: Search, title: 'Smart Search & Tags', desc: 'Find any guest instantly. Tag by preferences, VIP status, or dietary needs.' },
             { icon: MessageSquare, title: 'Communication History', desc: 'View every SMS, email, and note in a unified timeline.' },
             { icon: Bell, title: 'Automated Marketing', desc: 'Send birthday offers, re-engagement campaigns, and personalized promos.' },
@@ -757,7 +750,7 @@ function AutomationContent({ badge, heading, paragraph }) {
                 },
                 {
                   trigger: 'Guest is VIP',
-                  icon: Star,
+                  icon: Briefcase,
                   color: 'text-amber-700 bg-amber-50 border-amber-200',
                   arrow: true,
                 },

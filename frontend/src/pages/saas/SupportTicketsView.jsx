@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MessageSquare, Search, Filter, CheckCircle, Clock, AlertCircle, MoreVertical, X } from 'lucide-react';
+import {MessageSquare, Search, Filter, CheckCircle, Clock, AlertCircle, MoreVertical, X} from 'lucide-react';
 import api from '../../services/centralApi';
 
 export default function SupportTicketsView() {

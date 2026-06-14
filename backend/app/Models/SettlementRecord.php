@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class SettlementRecord extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
     protected $fillable = [
+        'tenant_id',
         'date',
         'opening_balance',
         'closing_balance',

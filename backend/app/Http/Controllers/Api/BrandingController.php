@@ -30,20 +30,26 @@ class BrandingController extends Controller
         }
 
         if (!isset($settings['social_instagram'])) {
-            $settings['social_instagram'] = 'https://instagram.com/sectros';
+            $settings['social_instagram'] = '';
         }
 
         if (!isset($settings['social_facebook'])) {
-            $settings['social_facebook'] = 'https://facebook.com/sectros';
+            $settings['social_facebook'] = '';
         }
 
         if (!isset($settings['social_twitter'])) {
-            $settings['social_twitter'] = 'https://twitter.com/sectros';
+            $settings['social_twitter'] = '';
         }
 
-        $settings['platform_site_domain'] = tenancy()->central(function() {
-            return \App\Models\SaaSSetting::where('key', 'platform_site_domain')->value('value') ?? '';
-        });
+        if (!isset($settings['social_youtube'])) {
+            $settings['social_youtube'] = '';
+        }
+
+        if (!isset($settings['social_tiktok'])) {
+            $settings['social_tiktok'] = '';
+        }
+
+        $settings['platform_site_domain'] = \App\Models\SaaSSetting::on('platform')->where('key', 'platform_site_domain')->value('value') ?? '';
 
         $settings['business_type'] = tenant('business_type') ?? 'restaurant';
         

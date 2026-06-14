@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { 
-  ArrowLeft, Save, Globe, Eye, Smartphone, Monitor, Palette, Layers, 
-  ChevronRight, ChevronDown, Check, Loader2, Image as ImageIcon, Plus, Trash2, 
-  EyeOff, Globe as GlobeIcon
-} from 'lucide-react';
+import {ArrowLeft, Save, Globe, Eye, Smartphone, Monitor, Palette, Layers, ChevronRight, ChevronDown, Check, Loader2, Image as ImageIcon, Plus, Trash2, EyeOff, Globe as GlobeIcon} from 'lucide-react';
 import api from '../services/api';
 import SectionRenderer from '../components/builder/SectionRenderer';
 import { exportToHtml, exportToCss } from '../utils/builderExport';

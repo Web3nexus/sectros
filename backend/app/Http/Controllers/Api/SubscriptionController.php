@@ -16,9 +16,9 @@ class SubscriptionController extends Controller
      */
     public function getPlans()
     {
-        return response()->json(tenancy()->central(fn() => 
-            SubscriptionPlan::where('is_active', true)->get()
-        ));
+        return response()->json(
+            SubscriptionPlan::on('platform')->where('is_active', true)->get()
+        );
     }
 
     /**
@@ -34,14 +34,9 @@ class SubscriptionController extends Controller
             return response()->json(['message' => 'Could not identify tenant context.'], 422);
         }
 
-        // SubscriptionPlan lives in the central DB — query it there.
-        $plan = tenancy()->central(fn() =>
-            SubscriptionPlan::where('slug', $currentTenant->plan)->first()
-        );
+        $plan = SubscriptionPlan::on('platform')->where('slug', $currentTenant->plan)->first();
 
-        $salesEmail = tenancy()->central(fn() =>
-            \App\Models\SaaSSetting::where('key', 'sales_email')->value('value') ?? 'sales@sectros.com'
-        );
+        $salesEmail = \App\Models\SaaSSetting::on('platform')->where('key', 'sales_email')->value('value') ?? 'sales@sectros.com';
 
         return response()->json([
             'plan_name'         => $plan ? $plan->name : 'Free',
@@ -81,10 +76,7 @@ class SubscriptionController extends Controller
             $currentTenant->save();
         }
 
-        // SubscriptionPlan lives in the central DB.
-        $plan = tenancy()->central(fn() =>
-            SubscriptionPlan::where('slug', $request->plan_slug)->first()
-        );
+        $plan = SubscriptionPlan::on('platform')->where('slug', $request->plan_slug)->first();
 
         try {
             $paymentInfo = $paymentService->initializePayment($currentTenant, $plan, $request->interval);

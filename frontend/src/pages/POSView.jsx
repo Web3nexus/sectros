@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, Table as TableIcon, CreditCard, Trash2, Plus, Minus, User, Loader2, CheckCircle } from 'lucide-react'
+import {Search, ShoppingCart, Table as TableIcon, CreditCard, Trash2, Plus, Minus, User, Loader2, CheckCircle} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
 

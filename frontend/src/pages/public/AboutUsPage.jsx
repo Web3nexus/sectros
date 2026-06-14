@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Globe, Users, Trophy, Code2 } from 'lucide-react';
+import {Globe, Users, Trophy, Code2} from 'lucide-react';
 import BackgroundParticles from '../../components/common/BackgroundParticles';
 
 export default function AboutUsPage() {

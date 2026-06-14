@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SaaSSetting extends Model
 {
-    protected $connection = 'mysql';
+    protected $connection = 'platform';
     protected $fillable = ['key', 'value'];
 
     public static function get(string $key, $default = null)

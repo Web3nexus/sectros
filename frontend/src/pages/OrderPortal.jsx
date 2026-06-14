@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ShoppingBag, Star, ChevronRight, Clock, MapPin, Search, Plus, Minus, Loader2 } from 'lucide-react'
+import {ShoppingBag, Briefcase, ChevronRight, Clock, MapPin, Search, Plus, Minus, Loader2} from 'lucide-react'
 import api from '../services/api'
 
 export function OrderPortal() {
@@ -131,7 +131,7 @@ export function OrderPortal() {
                   {orderComplete ? (
                      <div className="h-full flex flex-col items-center justify-center text-center space-y-4 animate-in zoom-in duration-300">
                         <div className="h-20 w-20 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center">
-                           <Star size={40} fill="currentColor" />
+                           <Briefcase size={40} fill="currentColor" />
                         </div>
                         <h3 className="text-2xl font-black text-foreground tracking-tighter uppercase">Order Logged!</h3>
                         <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Your meal is being prepared by our chefs.</p>
@@ -193,7 +193,7 @@ export function OrderPortal() {
             <h1 className="text-5xl font-black tracking-tight mb-4 text-foreground">Bistrologix Kitchen</h1>
             <div className="flex flex-wrap items-center gap-6 text-xs font-black uppercase tracking-widest text-muted-foreground">
                <div className="flex items-center gap-2 text-amber-500">
-                  <Star size={18} fill="currentColor" /> <span className="text-foreground">4.8 (500+)</span>
+                  <Briefcase size={18} fill="currentColor" /> <span className="text-foreground">4.8 (500+)</span>
                </div>
                <div className="flex items-center gap-2">
                   <Clock size={16} className="text-primary" /> <span className="text-foreground">20-35 min</span>

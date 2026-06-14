@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Sparkles, PenSquare } from 'lucide-react';
+import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare} from 'lucide-react';
 import api from '../../services/centralApi';
 import StatusModal from '../../components/common/StatusModal';
 import { useWebsiteTheme } from '../../context/WebsiteThemeContext';
@@ -117,7 +117,7 @@ export default function SaaSSettingsView() {
         <div className="w-full md:w-64 space-y-1">
           {[
             { id: 'general', label: 'General', icon: Globe },
-            { id: 'branding', label: 'Branding', icon: Sparkles },
+            { id: 'branding', label: 'Branding', icon: Briefcase },
             { id: 'security', label: 'Security & Auth', icon: Shield },
             { id: 'smtp', label: 'Email (SMTP)', icon: Mail },
             { id: 'ai', label: 'AI Engine', icon: Bot },
@@ -126,7 +126,7 @@ export default function SaaSSettingsView() {
             { id: 'external_links', label: 'Social & Community', icon: ExternalLink },
             { id: 'database', label: 'Database Routing', icon: Database },
             { id: 'payments', label: 'Payments', icon: CreditCard },
-            { id: 'website_theme', label: 'Website Theme', icon: Sparkles },
+            { id: 'website_theme', label: 'Website Theme', icon: Briefcase },
             { id: 'cms', label: 'Content CMS', icon: PenSquare },
           ].map((tab) => (
             <button
@@ -344,7 +344,7 @@ export default function SaaSSettingsView() {
 
                 <div className="bg-primary/5 border border-primary/10 rounded-[2rem] p-6 flex gap-6">
                   <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20 shadow-inner">
-                    <Sparkles className="w-6 h-6 text-primary" />
+                    <Briefcase className="w-6 h-6 text-primary" />
                   </div>
                   <div>
                     <h4 className="text-sm font-black text-foreground mb-1 uppercase tracking-tight">Branding Tip</h4>
@@ -1247,7 +1247,7 @@ export default function SaaSSettingsView() {
                 </div>
 
                 <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex gap-4">
-                  <Sparkles className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                  <Briefcase className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-xs font-bold text-foreground mb-1">Live Preview</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
@@ -1311,6 +1311,26 @@ export default function SaaSSettingsView() {
                           value={settings.facebook_url || ''} 
                           onChange={e => setSettings({...settings, facebook_url: e.target.value})}
                           placeholder="https://facebook.com/sectros"
+                          className="w-full bg-card border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none" 
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">YouTube Channel</label>
+                        <input 
+                          type="text" 
+                          value={settings.youtube_url || ''} 
+                          onChange={e => setSettings({...settings, youtube_url: e.target.value})}
+                          placeholder="https://youtube.com/@sectros"
+                          className="w-full bg-card border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none" 
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-2">TikTok Profile</label>
+                        <input 
+                          type="text" 
+                          value={settings.tiktok_url || ''} 
+                          onChange={e => setSettings({...settings, tiktok_url: e.target.value})}
+                          placeholder="https://tiktok.com/@sectros"
                           className="w-full bg-card border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none" 
                         />
                     </div>

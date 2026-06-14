@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Shield, ArrowRight } from 'lucide-react';
+import {Lock, Shield, ArrowRight} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../hooks/useBranding';
 

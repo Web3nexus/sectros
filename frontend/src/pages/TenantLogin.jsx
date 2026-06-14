@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Store, Mail, Lock, Loader2, ArrowRight, ShieldCheck, Sparkles, UserPlus } from 'lucide-react';
+import {Store, Mail, Lock, Loader2, ArrowRight, ShieldCheck, Briefcase, UserPlus} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useBranding } from '../hooks/useBranding';
 import { useTranslation } from 'react-i18next';
@@ -167,36 +167,19 @@ export default function TenantLogin() {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-md w-full relative z-10"
       >
-        {/* Branding Wrapper */}
-        <div className="text-center mb-10">
+        {/* Branding */}
+        <div className="text-center mb-8">
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 text-white rounded-[28px] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-blue-500/20 ring-1 ring-white/20"
           >
             {settings.platform_logo_url ? (
-               <img src={settings.platform_logo_url} alt={settings.platform_name} className="w-12 h-12 object-contain" />
+               <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-10 w-auto object-contain mx-auto" />
             ) : (
-               businessName ? <Store className="w-10 h-10" /> : <Sparkles className="w-10 h-10" />
+               businessName ? <Store className="w-10 h-10 mx-auto text-primary" /> : <Briefcase className="w-10 h-10 mx-auto text-primary" />
             )}
           </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-3xl font-black text-foreground tracking-tight"
-          >
-            {businessName || settings.platform_name || 'Partner Portal'}
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-muted-foreground mt-3 font-medium"
-          >
-            {requires2FA ? t('auth.twoFactor') : t('auth.signInToContinue')}
-          </motion.p>
         </div>
 
         <div className="bg-card/50 backdrop-blur-2xl border border-border rounded-[32px] p-8 md:p-10 shadow-2xl relative group overflow-hidden">

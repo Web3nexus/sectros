@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, MessageSquare } from 'lucide-react';
+import {User, MessageSquare} from 'lucide-react';
 
 export default function BlogSection({ content, theme }) {
   const { 

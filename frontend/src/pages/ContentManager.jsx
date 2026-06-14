@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Loader2, Star, Image, BedDouble, Scissors, BookOpen, Users, Circle, Pencil, Trash2, GripVertical, X } from 'lucide-react'
+import {Plus, Loader2, Briefcase, Image, BedDouble, Scissors, BookOpen, Users, Pencil, Trash2, GripVertical, X} from 'lucide-react'
 import api from '../services/api'
 
 const CONTENT_CONFIG = {
   reviews: {
     title: 'Reviews',
-    icon: Star,
+    icon: Briefcase,
     endpoint: 'reviews',
     defaultForm: { customer_name: '', rating: 5, text: '', location: '', customer_avatar: '', is_published: true },
     columns: [
@@ -36,7 +36,7 @@ const CONTENT_CONFIG = {
         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
           item.is_published ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-muted-foreground'
         }`}>
-          <Circle size={6} fill="currentColor" className={item.is_published ? 'animate-pulse' : ''} />
+          <Briefcase size={6} fill="currentColor" className={item.is_published ? 'animate-pulse' : ''} />
           {item.is_published ? 'Published' : 'Hidden'}
         </span>
       )},
@@ -74,7 +74,7 @@ const CONTENT_CONFIG = {
         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
           item.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-muted-foreground'
         }`}>
-          <Circle size={6} fill="currentColor" className={item.is_active ? 'animate-pulse' : ''} />
+          <Briefcase size={6} fill="currentColor" className={item.is_active ? 'animate-pulse' : ''} />
           {item.is_active ? 'Active' : 'Inactive'}
         </span>
       )},
@@ -110,7 +110,7 @@ const CONTENT_CONFIG = {
         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
           item.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-muted-foreground'
         }`}>
-          <Circle size={6} fill="currentColor" />
+          <Briefcase size={6} fill="currentColor" />
           {item.is_active ? 'Active' : 'Inactive'}
         </span>
       )},
@@ -142,7 +142,7 @@ const CONTENT_CONFIG = {
         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
           item.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-muted-foreground'
         }`}>
-          <Circle size={6} fill="currentColor" />
+          <Briefcase size={6} fill="currentColor" />
           {item.is_active ? 'Active' : 'Inactive'}
         </span>
       )},
@@ -176,7 +176,7 @@ const CONTENT_CONFIG = {
         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
           item.is_published ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-muted-foreground'
         }`}>
-          <Circle size={6} fill="currentColor" className={item.is_published ? 'animate-pulse' : ''} />
+          <Briefcase size={6} fill="currentColor" className={item.is_published ? 'animate-pulse' : ''} />
           {item.is_published ? 'Published' : 'Draft'}
         </span>
       )},
@@ -219,7 +219,7 @@ const CONTENT_CONFIG = {
         <span className={`px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 ${
           item.is_active ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-50 text-muted-foreground'
         }`}>
-          <Circle size={6} fill="currentColor" className={item.is_active ? 'animate-pulse' : ''} />
+          <Briefcase size={6} fill="currentColor" className={item.is_active ? 'animate-pulse' : ''} />
           {item.is_active ? 'Active' : 'Inactive'}
         </span>
       )},

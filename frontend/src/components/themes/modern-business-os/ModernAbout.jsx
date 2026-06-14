@@ -1,10 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useCmsContent } from '../../../hooks/useCmsContent';
-import {
-  Heart, RefreshCw, ShieldCheck, Lightbulb, Users, Target,
-  ArrowRight, Quote, Sparkles, Zap, Layers, Compass,
-} from 'lucide-react';
+import {Heart, RefreshCw, ShieldCheck, Lightbulb, Users, Target, ArrowRight, Quote, Briefcase, Zap, Layers, Compass, } from 'lucide-react';
 
 const philosophyCards = [
   {
@@ -274,7 +271,7 @@ export default function ModernAbout() {
           viewport={{ once: true }}
           className="mx-auto max-w-3xl text-center text-white"
         >
-          <Sparkles size={40} className="mx-auto text-blue-200" />
+          <Briefcase size={40} className="mx-auto text-blue-200" />
           <h2 className="mt-6 text-3xl font-bold sm:text-4xl">
             {get('joinCta.heading')}
           </h2>

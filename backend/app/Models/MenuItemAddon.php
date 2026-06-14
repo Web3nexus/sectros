@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class MenuItemAddon extends Model
 {
-    protected $fillable = ['menu_item_id', 'name', 'price', 'is_required'];
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
+    protected $fillable = ['tenant_id', 'menu_item_id', 'name', 'price', 'is_required'];
 
     public function item(): BelongsTo
     {

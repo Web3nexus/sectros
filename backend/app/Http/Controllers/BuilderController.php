@@ -83,9 +83,11 @@ class BuilderController extends Controller
                 '[[BUSINESS_PHONE]]'     => $settings['business_phone'] ?? tenant('phone') ?? '+1 (555) 000-0000',
                 '[[BUSINESS_ADDRESS]]'   => $settings['business_address'] ?? tenant('address') ?? '123 Gourmet Way, Silicon Valley',
                 '{{establishment_year}}' => $settings['establishment_year'] ?? date('Y'),
-                '{{social_instagram}}'   => $settings['social_instagram'] ?? 'https://instagram.com/sectros',
-                '{{social_facebook}}'    => $settings['social_facebook'] ?? 'https://facebook.com/sectros',
-                '{{social_twitter}}'     => $settings['social_twitter'] ?? 'https://twitter.com/sectros',
+                '{{social_instagram}}'   => $settings['social_instagram'] ?? '',
+                '{{social_facebook}}'    => $settings['social_facebook'] ?? '',
+                '{{social_twitter}}'     => $settings['social_twitter'] ?? '',
+                '{{social_youtube}}'     => $settings['social_youtube'] ?? '',
+                '{{social_tiktok}}'      => $settings['social_tiktok'] ?? '',
             ];
 
             $html = $page->html_content;

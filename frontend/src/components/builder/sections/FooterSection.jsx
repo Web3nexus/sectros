@@ -1,7 +1,20 @@
 import React from 'react';
-import { Facebook, Twitter, Instagram, Send, Star } from 'lucide-react';
+import {Facebook, Twitter, Instagram, Send, Briefcase} from 'lucide-react';
 
-export default function FooterSection({ content, theme }) {
+const YoutubeIcon = ({size}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.94 2C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+    <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor"/>
+  </svg>
+);
+
+const TikTokIcon = ({size}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
+  </svg>
+);
+
+export default function FooterSection({ content, theme, socialLinks }) {
   const { 
     layout = 'tastenest-dark', 
     title = 'SECTROS', 
@@ -11,6 +24,14 @@ export default function FooterSection({ content, theme }) {
 
   const { primaryColor = '#F70A38', secondaryColor = '#FFC806', fontFamily = 'Outfit' } = theme;
 
+  const socialItems = [
+    { key: 'facebook', url: socialLinks?.facebook_url || socialLinks?.social_facebook || '', icon: Facebook, label: 'Facebook' },
+    { key: 'twitter', url: socialLinks?.twitter_url || socialLinks?.social_twitter || '', icon: Twitter, label: 'Twitter' },
+    { key: 'instagram', url: socialLinks?.instagram_url || socialLinks?.social_instagram || '', icon: Instagram, label: 'Instagram' },
+    { key: 'youtube', url: socialLinks?.youtube_url || socialLinks?.social_youtube || '', icon: YoutubeIcon, label: 'YouTube' },
+    { key: 'tiktok', url: socialLinks?.tiktok_url || socialLinks?.social_tiktok || '', icon: TikTokIcon, label: 'TikTok' },
+  ].filter(s => s.url);
+
   if (layout === 'coffee-house') {
     return (
       <footer className="w-full bg-[#120F0D] pt-24 pb-8 px-6 md:px-12 border-t border-white/5" style={{ fontFamily }}>
@@ -19,11 +40,12 @@ export default function FooterSection({ content, theme }) {
            <div className="w-full md:w-1/3">
               <h2 className="text-3xl font-black text-white mb-6 font-serif">{title}</h2>
               <p className="text-[#A0988E] mb-8 text-sm leading-relaxed">{subtitle}</p>
-              <div className="flex gap-4">
-                 <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-[#A0988E] hover:bg-white hover:text-black transition-colors"><Facebook size={16}/></a>
-                 <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-[#A0988E] hover:bg-white hover:text-black transition-colors"><Twitter size={16}/></a>
-                 <a href="#" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-[#A0988E] hover:bg-white hover:text-black transition-colors"><Instagram size={16}/></a>
-              </div>
+               <div className="flex gap-4">
+                  {socialItems.map(s => {
+                    const Icon = s.icon;
+                    return <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-[#A0988E] hover:bg-white hover:text-black transition-colors"><Icon size={16}/></a>;
+                  })}
+               </div>
            </div>
            
            {/* Center */}
@@ -72,9 +94,10 @@ export default function FooterSection({ content, theme }) {
            </ul>
 
            <div className="flex gap-6 mb-16">
-              <a href="#" className="w-10 h-10 rounded-full border border-[#E7BFA8] flex items-center justify-center text-[#7A1E1E] hover:bg-[#8B0000] hover:text-white hover:border-transparent transition-all"><Facebook size={16}/></a>
-              <a href="#" className="w-10 h-10 rounded-full border border-[#E7BFA8] flex items-center justify-center text-[#7A1E1E] hover:bg-[#8B0000] hover:text-white hover:border-transparent transition-all"><Twitter size={16}/></a>
-              <a href="#" className="w-10 h-10 rounded-full border border-[#E7BFA8] flex items-center justify-center text-[#7A1E1E] hover:bg-[#8B0000] hover:text-white hover:border-transparent transition-all"><Instagram size={16}/></a>
+              {socialItems.map(s => {
+                const Icon = s.icon;
+                return <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-[#E7BFA8] flex items-center justify-center text-[#7A1E1E] hover:bg-[#8B0000] hover:text-white hover:border-transparent transition-all"><Icon size={16}/></a>;
+              })}
            </div>
         </div>
         
@@ -98,10 +121,11 @@ export default function FooterSection({ content, theme }) {
               <h2 className="text-3xl font-serif text-white font-medium mb-4">{title}</h2>
               <p className="text-white/60 text-sm leading-relaxed mb-8 font-sans">{subtitle}</p>
               <div className="flex gap-3">
-                 <a href="#" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:bg-white hover:text-[#7C6A43] transition-all"><Facebook size={15}/></a>
-                 <a href="#" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:bg-white hover:text-[#7C6A43] transition-all"><Twitter size={15}/></a>
-                 <a href="#" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:bg-white hover:text-[#7C6A43] transition-all"><Instagram size={15}/></a>
-              </div>
+                  {socialItems.map(s => {
+                    const Icon = s.icon;
+                    return <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:bg-white hover:text-[#7C6A43] transition-all"><Icon size={15}/></a>;
+                  })}
+               </div>
            </div>
 
            {/* Quick Links */}
@@ -161,9 +185,10 @@ export default function FooterSection({ content, theme }) {
            </ul>
 
            <div className="flex gap-6">
-              <a href="#" className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Facebook size={18}/></a>
-              <a href="#" className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Twitter size={18}/></a>
-              <a href="#" className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Instagram size={18}/></a>
+              {socialItems.map(s => {
+                const Icon = s.icon;
+                return <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Icon size={18}/></a>;
+              })}
            </div>
         </div>
         
@@ -180,12 +205,12 @@ export default function FooterSection({ content, theme }) {
       {/* Top Banner */}
       <div className="bg-[#F70A38] w-full py-6 flex overflow-hidden whitespace-nowrap">
          <div className="animate-[slideRight_30s_linear_infinite] flex items-center gap-12 font-black text-white text-3xl uppercase tracking-tighter">
-            <span>Let's Eat Meat?</span> <Star fill="currentColor" />
-            <span>Let's Eat Meat?</span> <Star fill="currentColor" />
-            <span>Let's Eat Meat?</span> <Star fill="currentColor" />
-            <span>Let's Eat Meat?</span> <Star fill="currentColor" />
-            <span>Let's Eat Meat?</span> <Star fill="currentColor" />
-            <span>Let's Eat Meat?</span> <Star fill="currentColor" />
+            <span>Let's Eat Meat?</span> <Briefcase fill="currentColor" />
+            <span>Let's Eat Meat?</span> <Briefcase fill="currentColor" />
+            <span>Let's Eat Meat?</span> <Briefcase fill="currentColor" />
+            <span>Let's Eat Meat?</span> <Briefcase fill="currentColor" />
+            <span>Let's Eat Meat?</span> <Briefcase fill="currentColor" />
+            <span>Let's Eat Meat?</span> <Briefcase fill="currentColor" />
          </div>
       </div>
 
@@ -231,9 +256,10 @@ export default function FooterSection({ content, theme }) {
                </button>
             </div>
             <div className="flex gap-4">
-               <a href="#" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Facebook size={14}/></a>
-               <a href="#" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Twitter size={14}/></a>
-               <a href="#" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Instagram size={14}/></a>
+                {socialItems.map(s => {
+                  const Icon = s.icon;
+                  return <a key={s.key} href={s.url} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white hover:bg-[#F70A38] hover:border-transparent transition-colors"><Icon size={14}/></a>;
+                })}
             </div>
          </div>
       </div>

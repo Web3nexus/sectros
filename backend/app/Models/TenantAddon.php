@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TenantAddon extends Model
 {
-    protected $connection = 'mysql';
+    protected $connection = 'platform';
 
     protected $table = 'tenant_addon';
 

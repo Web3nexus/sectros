@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, TrendingUp, Cpu, Activity, ArrowUpRight, CreditCard } from 'lucide-react';
+import {Building2, TrendingUp, Cpu, Activity, ArrowUpRight, CreditCard} from 'lucide-react';
 import api from '../../services/centralApi';
 
 export default function SaaSDashboard() {

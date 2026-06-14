@@ -1,9 +1,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import {
-  Calendar, Phone, MessageSquare, CheckCircle2, Sparkles,
-  Quote, ArrowRight, PlayCircle, Mail, Users, Star,
-} from 'lucide-react';
+import {Calendar, Phone, MessageSquare, CheckCircle2, Briefcase, Quote, ArrowRight, PlayCircle, Mail, Users, } from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 
 const businessTypes = [
@@ -233,7 +230,7 @@ export default function ModernContact() {
               </div>
               <div className="mt-4 flex gap-1">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={16} className="fill-yellow-400 text-yellow-400" />
+                  <Briefcase key={i} size={16} className="fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
             </div>
@@ -365,7 +362,7 @@ export default function ModernContact() {
           viewport={{ once: true }}
           className="mx-auto max-w-3xl"
         >
-          <Sparkles size={40} className="mx-auto text-blue-200" />
+          <Briefcase size={40} className="mx-auto text-blue-200" />
           <h2 className="mt-6 text-3xl font-bold sm:text-4xl">
             {get('finalCta.heading')}
           </h2>

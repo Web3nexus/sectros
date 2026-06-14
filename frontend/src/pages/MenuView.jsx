@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Filter, Edit2, Trash2, Image as ImageIcon, BedDouble, Loader2, Star, Users, Circle, ChevronRight, X } from 'lucide-react'
+import {Plus, Search, Filter, Edit2, Trash2, Image as ImageIcon, BedDouble, Loader2, Briefcase, Users, ChevronRight, X} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessLabels } from '../hooks/useBusinessLabels'
 
@@ -230,7 +230,7 @@ export function MenuView() {
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
                           cat.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-muted text-muted-foreground'
                         }`}>
-                          <Circle size={5} fill="currentColor" />
+                          <Briefcase size={5} fill="currentColor" />
                           {cat.is_active !== false ? 'Active' : 'Inactive'}
                         </span>
                       </div>
@@ -286,7 +286,7 @@ export function MenuView() {
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
                           item.is_available !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'
                         }`}>
-                          <Circle size={5} fill="currentColor" />
+                          <Briefcase size={5} fill="currentColor" />
                           {item.is_available !== false ? 'Available' : 'Unavailable'}
                         </span>
                       </td>

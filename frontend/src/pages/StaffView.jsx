@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Mail, Shield, MoreHorizontal, User, Loader2, Circle } from 'lucide-react'
+import {Plus, Mail, Shield, MoreHorizontal, User, Loader2, Briefcase} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
 
@@ -129,7 +129,7 @@ export function StaffView() {
                    <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${
                      member.is_active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-50 text-muted-foreground border border-border'
                    }`}>
-                     <Circle size={8} fill="currentColor" className={member.is_active ? 'animate-pulse' : ''} />
+                     <Briefcase size={8} fill="currentColor" className={member.is_active ? 'animate-pulse' : ''} />
                      {member.is_active ? 'Active' : 'Offline'}
                    </span>
                 </td>

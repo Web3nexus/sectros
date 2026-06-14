@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Instagram, Facebook, Bot, User, Search, Filter, Loader2, ArrowLeft, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import {MessageSquare, Send, Instagram, Facebook, Bot, User, Search, Filter, Loader2, ArrowLeft, Clock, CheckCircle, AlertCircle} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import echo from '../lib/echo';

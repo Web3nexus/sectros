@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, LogOut, User, Shield, Bell, CheckCircle, CircleX as XCircle, ShoppingBag, Menu, X, Package, BookOpen, Coffee, Scissors, Sparkles, BedDouble, Hotel, Map, Star, Image, ChevronDown } from 'lucide-react';
+import {LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, LogOut, User, Shield, Bell, CheckCircle, CircleX as XCircle, ShoppingBag, Menu, X, Package, BookOpen, Coffee, Scissors, Briefcase, BedDouble, Hotel, Map, Image, ChevronDown} from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../context/AuthContext';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
@@ -11,7 +11,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import ThemeToggle from '../components/ThemeToggle';
 
 const ICON_MAP = {
-  LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, ShoppingBag, Package, BookOpen, Coffee, Scissors, Sparkles, BedDouble, Hotel, Map, Star, Image
+  LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, ShoppingBag, Package, BookOpen, Coffee, Scissors, Briefcase, BedDouble, Hotel, Map, Image
 };
 
 export function DashboardLayout() {
@@ -23,7 +23,7 @@ export function DashboardLayout() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications(15000);
-  const { user, logout, isImpersonating, stopImpersonating, refreshUser } = useAuth();
+  const { user, logout, isImpersonating, stopImpersonating, refreshUser, businessType } = useAuth();
   const settings = useBranding();
   const config = useBusinessConfig();
   const b = config.labels;
@@ -114,16 +114,19 @@ export function DashboardLayout() {
       } ${isSidebarCollapsed ? 'w-20' : 'w-72'}`}>
         <div className="p-4 overflow-y-auto overflow-x-hidden no-scrollbar">
           <div className="flex items-center justify-between lg:justify-center mb-10 px-2 pt-4">
-            <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-2'}`}>
+            <div className={`flex flex-col items-center ${isSidebarCollapsed ? '' : 'w-full'}`}>
               {settings.platform_logo_url ? (
-                <img src={settings.platform_logo_url} alt={settings.platform_name} className={`h-8 w-auto object-contain ${isSidebarCollapsed ? 'mx-auto' : ''}`} />
+                <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-10 w-auto object-contain mb-2" />
               ) : (
-                <div className="bg-primary text-primary-foreground p-1.5 rounded-xl shadow-lg shadow-blue-500/20 shrink-0">
+                <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-lg shadow-blue-500/20 mb-2">
                   <span className="font-black text-xl leading-none">{settings.platform_name?.charAt(0) || 'R'}</span>
                 </div>
               )}
               {!isSidebarCollapsed && (
-                <h2 className="text-xl font-black text-foreground tracking-tighter truncate">{settings.platform_name}</h2>
+                <>
+                  <h2 className="text-base font-black text-foreground tracking-tighter truncate text-center">{settings.platform_name}</h2>
+                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{businessType || config?.type || ''}</span>
+                </>
               )}
             </div>
             <button className="lg:hidden text-muted-foreground hover:text-foreground" onClick={() => setIsMobileSidebarOpen(false)}>

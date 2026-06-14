@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X } from 'lucide-react';
+import {CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X} from 'lucide-react';
 import api from '../services/api';
 import { COUNTRIES } from '../utils/countries';
 

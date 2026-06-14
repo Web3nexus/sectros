@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, Info, X } from 'lucide-react';
+import {CheckCircle, XCircle, Info, X} from 'lucide-react';
 
 export default function StatusModal({ 
   isOpen, 

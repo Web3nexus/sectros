@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class NavigationMenu extends Model
 {
-    protected $fillable = ['name', 'links'];
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
+    protected $fillable = ['tenant_id', 'name', 'links'];
 
     protected $casts = [
         'links' => 'json'

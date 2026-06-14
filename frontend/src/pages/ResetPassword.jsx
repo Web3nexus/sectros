@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, ArrowRight } from 'lucide-react';
+import {Lock, Eye, EyeOff, Loader2, CheckCircle2, AlertCircle, ArrowRight} from 'lucide-react';
 import api from '../services/api';
 
 export default function ResetPassword() {

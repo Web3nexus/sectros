@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Filter, Edit2, Trash2, Circle, X, Minus, Plus as PlusIcon, Package, Loader2, AlertTriangle, TrendingDown, DollarSign } from 'lucide-react'
+import {Plus, Search, Filter, Edit2, Trash2, Briefcase, X, Minus, Plus as PlusIcon, Package, Loader2, AlertTriangle, TrendingDown, DollarSign} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
 
@@ -230,7 +230,7 @@ export default function InventoryView() {
                         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
                           item.is_active !== false ? 'bg-emerald-50 text-emerald-600' : 'bg-muted text-muted-foreground'
                         }`}>
-                          <Circle size={5} fill="currentColor" />
+                          <Briefcase size={5} fill="currentColor" />
                           {item.is_active !== false ? 'In Stock' : 'Inactive'}
                         </span>
                       )}
@@ -253,7 +253,7 @@ export default function InventoryView() {
                           </button>
                           <button onClick={() => handleAdjustStock(item.id)}
                             className="p-1 rounded bg-primary text-white hover:bg-primary/90 transition-all">
-                            <Circle size={8} fill="currentColor" />
+                            <Briefcase size={8} fill="currentColor" />
                           </button>
                           <button onClick={() => { setAdjustingId(null); setAdjustQty(0) }}
                             className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-all">

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
+    protected $connection = 'platform';
+
     protected $fillable = [
         'type',
         'title',

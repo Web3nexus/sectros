@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Save, Upload, Palette, Globe, Shield, Loader2, Check, RefreshCw } from 'lucide-react'
+import {Save, Upload, Palette, Globe, Shield, Loader2, Check, RefreshCw} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class SaaSBlog extends Model
 {
-    protected $connection = 'mysql';
+    protected $connection = 'platform';
     use HasFactory;
 
     protected $fillable = [

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit3, Trash2, Globe, FileText, Star, BookOpen, X, CheckCircle, AlertTriangle, Home, Save, RefreshCw, Eye, PlugZap, ToggleLeft, ToggleRight, ChevronDown, ChevronUp } from 'lucide-react';
+import {Plus, Edit3, Trash2, Globe, FileText, Briefcase, BookOpen, X, CheckCircle, AlertTriangle, Home, Save, RefreshCw, Eye, PlugZap, ToggleLeft, ToggleRight, ChevronDown, ChevronUp} from 'lucide-react';
 import centralApi from '../../services/centralApi';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 
@@ -640,7 +640,7 @@ export default function SaaSCMSView() {
         { id: 'landing', label: 'Landing Page', icon: Home },
         { id: 'integrations', label: 'Integrations', icon: PlugZap },
         { id: 'blogs', label: 'Sectros Insights', icon: FileText, count: data.blogs.length },
-        { id: 'stories', label: 'Success Stories', icon: Star, count: data.stories.length },
+        { id: 'stories', label: 'Success Stories', icon: Briefcase, count: data.stories.length },
         { id: 'docs', label: 'Product Manuals', icon: BookOpen, count: data.docs.length },
     ];
 

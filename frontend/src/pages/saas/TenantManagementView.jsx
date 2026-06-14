@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/centralApi';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import Toast from '../../components/common/Toast';
-import { Building2, Search, Plus, MoreVertical, Shield, ShieldAlert, ShieldCheck, CheckCircle, Activity, Play, Pause, Edit, Trash2, X, ExternalLink, Palette, Key, RefreshCw, Download, CheckSquare, Square } from 'lucide-react';
+import {Building2, Search, Plus, MoreVertical, Shield, ShieldAlert, ShieldCheck, CheckCircle, Activity, Play, Pause, Edit, Trash2, X, ExternalLink, Palette, Key, RefreshCw, Download, CheckSquare, Square} from 'lucide-react';
 
 export default function TenantManagementView() {
   const [tenants, setTenants] = useState([]);

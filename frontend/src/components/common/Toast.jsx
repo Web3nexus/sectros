@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, CheckCircle, AlertCircle, Info, Activity } from 'lucide-react';
+import {X, CheckCircle, AlertCircle, Info, Activity} from 'lucide-react';
 
 /**
  * Modern Toast notification component with Tailwind animations.

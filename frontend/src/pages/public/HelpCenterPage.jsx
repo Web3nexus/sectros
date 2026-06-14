@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronRight, HelpCircle, Utensils, CreditCard, LayoutDashboard, Settings, Loader2, BookOpen, MessageSquare, ExternalLink } from 'lucide-react';
+import {Search, ChevronRight, HelpCircle, Utensils, CreditCard, LayoutDashboard, Settings, Loader2, BookOpen, MessageSquare, ExternalLink} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import centralApi from '../../services/centralApi';
 

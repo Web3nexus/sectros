@@ -140,7 +140,7 @@ export default function SectionRenderer({ sections, theme, onSelectSection, sele
                 </div>
               )}
 
-              <Component content={processedContent} theme={theme} />
+              <Component content={processedContent} theme={theme} socialLinks={branding} />
 
               <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity" />
             </div>

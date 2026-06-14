@@ -28,6 +28,9 @@ use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\TenantBlogController;
 use App\Http\Controllers\Api\TeamMemberController;
 use App\Http\Controllers\Api\InventoryController;
+use App\Http\Controllers\Api\BranchController;
+use App\Http\Controllers\Api\IntegrationController;
+use App\Http\Controllers\Api\WaitlistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -185,12 +188,10 @@ if (!function_exists('renderPublicPage')) {
 }
 
 // ── All Tenant Routes ─────────────────────────────────────────────────────
-Route::middleware([
-    InitializeTenancyByDomain::class,
-])->group(function () {
 
-    // ── Tenant API Routes ─────────────────────────────────────────────────
-    Route::middleware(['api'])->prefix('tenant-api')->group(function () {
+// ── Tenant API Routes ─────────────────────────────────────────────────
+// Prefix is set in bootstrap/app.php (used under both central-api and tenant-api)
+Route::middleware(['api'])->group(function () {
 
         // Public endpoints (no auth required)
         Route::post('/public/reservations', [\App\Http\Controllers\PublicReservationController::class, 'store'])->middleware('throttle:10,1');
@@ -240,10 +241,8 @@ Route::middleware([
                 $user   = $request->user();
                 $tenant = tenant();
 
-                // Get plan info from central DB
-                $plan = $tenant ? tenancy()->central(function () use ($tenant) {
-                    return \App\Models\SubscriptionPlan::where('slug', $tenant->plan)->first();
-                }) : null;
+                // Get plan info from platform connection
+                $plan = $tenant ? \App\Models\SubscriptionPlan::on('platform')->where('slug', $tenant->plan)->first() : null;
 
                 // Determine Role
                 $rawRole = $user->role ?? ($user->roles->first()?->name);
@@ -254,9 +253,7 @@ Route::middleware([
                 }
                 $normalizedRole = ($rawRole === 'restaurant_owner' || $rawRole === 'owner') ? 'owner' : $rawRole;
 
-                $platformName = tenancy()->central(function () {
-                    return \App\Models\SaaSSetting::where('key', 'platform_name')->value('value') ?? 'Sectros';
-                });
+                $platformName = \App\Models\SaaSSetting::on('platform')->where('key', 'platform_name')->value('value') ?? 'Sectros';
 
                 // MERGE FEATURES: User settings > Tenant settings > Plan defaults
                 $planFeatures = (array) ($plan?->features ?? []);
@@ -414,4 +411,3 @@ Route::middleware([
         return renderPublicPage($page);
     })->where('slug', '[a-z0-9\-]+');
 
-}); // end InitializeTenancyByDomain group

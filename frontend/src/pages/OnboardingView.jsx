@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Globe, Building2, Rocket, Loader2, CheckCircle, ArrowRight, ShieldCheck } from 'lucide-react'
+import {Plus, Globe, Building2, Rocket, Loader2, CheckCircle, ArrowRight, ShieldCheck} from 'lucide-react'
 import api from '../services/api'
 
 export default function OnboardingView() {

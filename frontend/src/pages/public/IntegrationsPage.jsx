@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Zap, CheckCircle2, ExternalLink, Box, Layers, Cpu, Globe } from 'lucide-react';
+import {ArrowRight, Zap, CheckCircle2, ExternalLink, Box, Layers, Cpu, Globe} from 'lucide-react';
 import api from '../../services/centralApi';
 
 const fadeIn = {

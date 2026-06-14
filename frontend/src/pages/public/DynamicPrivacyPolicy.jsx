@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, FileText, Globe, Mail, Loader2, ArrowLeft } from 'lucide-react';
+import {Shield, Lock, Eye, FileText, Globe, Mail, Loader2, ArrowLeft} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 

@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class TenantRoom extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
     protected $fillable = [
+        'tenant_id',
         'name',
         'description',
         'price',

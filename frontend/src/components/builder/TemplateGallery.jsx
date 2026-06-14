@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Eye, Lock, ShoppingCart, RefreshCw, Star, Sparkles, Layout, Box, ChevronRight } from 'lucide-react';
+import {Check, Eye, Lock, ShoppingCart, RefreshCw, Briefcase, Layout, Box, ChevronRight} from 'lucide-react';
 import api from '../../services/api';
 import { FALLBACK_BLUEPRINTS } from './BlueprintData';
 import { useBusinessConfig } from '../../hooks/useBusinessConfig';
@@ -141,7 +141,7 @@ export default function TemplateGallery({ onSelect, onPreview }) {
             <div className="p-8 border-t border-slate-200 bg-white">
                <div className="flex items-center justify-between mb-2">
                   <h3 className="text-slate-900 font-black text-xl uppercase tracking-tighter italic group-hover:text-primary transition-colors">{theme.name}</h3>
-                  <Sparkles className={`w-4 h-4 transition-all duration-500 ${isHovered ? 'text-blue-500 scale-125' : 'text-slate-200'}`} />
+                  <Briefcase className={`w-4 h-4 transition-all duration-500 ${isHovered ? 'text-blue-500 scale-125' : 'text-slate-200'}`} />
                </div>
                <p className="text-slate-500 text-sm font-medium leading-relaxed line-clamp-2">
                   {theme.description || 'Professional multi-section restaurant blueprint for high-fidelity deployment.'}

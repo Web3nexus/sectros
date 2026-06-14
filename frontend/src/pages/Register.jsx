@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ArrowRight, ArrowLeft, Building2, Mail, Lock, User, Globe, Loader2, CheckCircle2 } from 'lucide-react';
+import {Briefcase, ArrowRight, ArrowLeft, Building2, Mail, Lock, User, Globe, Loader2, CheckCircle2} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useBranding } from '../hooks/useBranding';
 import api from '../services/api';
@@ -115,7 +115,7 @@ export default function Register() {
             ) : (
               <>
                 <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-2xl shadow-blue-500/20 ring-1 ring-white/10 group-hover:scale-110 transition-transform duration-500">
-                  <Sparkles className="w-6 h-6 text-white" />
+                  <Briefcase className="w-6 h-6 text-white" />
                 </div>
                 <span className="text-3xl font-black text-foreground tracking-tighter uppercase italic">{settings.platform_name || 'Sectros'}</span>
               </>
@@ -132,7 +132,7 @@ export default function Register() {
           <div className="grid grid-cols-2 gap-8 max-w-lg">
             {[
               { title: t('register.feature_global_title'), desc: t('register.feature_global_desc'), icon: Globe },
-              { title: t('register.feature_ai_title'), desc: t('register.feature_ai_desc'), icon: Sparkles }
+              { title: t('register.feature_ai_title'), desc: t('register.feature_ai_desc'), icon: Briefcase }
             ].map((item, id) => (
               <div key={id} className="space-y-3">
                 <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center text-blue-400 shadow-lg">

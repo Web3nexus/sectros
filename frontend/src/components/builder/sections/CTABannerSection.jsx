@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Download } from 'lucide-react';
+import {Smartphone, Download} from 'lucide-react';
 
 export default function CTABannerSection({ content, theme }) {
   const { 

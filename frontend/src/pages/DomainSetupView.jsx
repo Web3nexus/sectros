@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, Copy, ExternalLink, Globe } from 'lucide-react';
+import {CheckCircle, Copy, ExternalLink, Globe} from 'lucide-react';
 
 export default function DomainSetupView() {
   const [customDomain, setCustomDomain] = useState('');

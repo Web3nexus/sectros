@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Globe, Settings, Plus, LayoutGrid, Edit3, Trash2, ExternalLink, Activity, AlertCircle, Eye, ChevronRight, X, Sparkles, Box, Search, Save, Loader2, Phone, MapPin, Building2, Instagram, Facebook } from 'lucide-react';
+import {Layout, Globe, Settings, Plus, LayoutGrid, Edit3, Trash2, ExternalLink, Activity, AlertCircle, Eye, ChevronRight, X, Briefcase, Box, Search, Save, Loader2, Phone, MapPin, Building2, Instagram, Facebook, Twitter} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import TemplateGallery from '../components/builder/TemplateGallery';
@@ -212,7 +212,7 @@ export default function WebsiteDashboardView() {
              <div className="space-y-12">
                 <div className="bg-white rounded-[2.5rem] border border-slate-200 p-12 overflow-hidden relative group shadow-2xl">
                    <div className="absolute top-0 right-0 p-12 opacity-5 scale-150 rotate-12 pointer-events-none group-hover:opacity-10 transition-opacity duration-1000 text-primary">
-                      <Sparkles size={300} />
+                      <Briefcase size={300} />
                    </div>
                    <div className="max-w-2xl relative z-10">
                       <div className="flex items-center gap-2 mb-6">
@@ -288,30 +288,63 @@ export default function WebsiteDashboardView() {
                             />
                          </div>
 
-                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                  <Instagram size={12} /> Instagram URL
-                               </label>
-                               <input 
-                                 value={branding.social_instagram}
-                                 onChange={(e) => setBranding({...branding, social_instagram: e.target.value})}
-                                 className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
-                                 placeholder="https://instagram.com/..."
-                               />
-                            </div>
-                            <div className="space-y-2">
-                               <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                                  <Facebook size={12} /> Facebook URL
-                               </label>
-                               <input 
-                                 value={branding.social_facebook}
-                                 onChange={(e) => setBranding({...branding, social_facebook: e.target.value})}
-                                 className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
-                                 placeholder="https://facebook.com/..."
-                               />
-                            </div>
-                         </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                   <Instagram size={12} /> Instagram URL
+                                </label>
+                                <input 
+                                  value={branding.social_instagram}
+                                  onChange={(e) => setBranding({...branding, social_instagram: e.target.value})}
+                                  className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
+                                  placeholder="https://instagram.com/..."
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                   <Facebook size={12} /> Facebook URL
+                                </label>
+                                <input 
+                                  value={branding.social_facebook}
+                                  onChange={(e) => setBranding({...branding, social_facebook: e.target.value})}
+                                  className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
+                                  placeholder="https://facebook.com/..."
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                   <Twitter size={12} /> Twitter / X URL
+                                </label>
+                                <input 
+                                  value={branding.social_twitter}
+                                  onChange={(e) => setBranding({...branding, social_twitter: e.target.value})}
+                                  className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
+                                  placeholder="https://twitter.com/..."
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                   YouTube URL
+                                </label>
+                                <input 
+                                  value={branding.social_youtube}
+                                  onChange={(e) => setBranding({...branding, social_youtube: e.target.value})}
+                                  className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
+                                  placeholder="https://youtube.com/@..."
+                                />
+                             </div>
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                                   TikTok URL
+                                </label>
+                                <input 
+                                  value={branding.social_tiktok}
+                                  onChange={(e) => setBranding({...branding, social_tiktok: e.target.value})}
+                                  className="w-full bg-slate-100/50 border border-slate-200 rounded-xl px-4 py-3 focus:border-primary transition-all outline-none text-xs font-bold text-slate-900" 
+                                  placeholder="https://tiktok.com/@..."
+                                />
+                             </div>
+                          </div>
 
                          <button 
                             onClick={handleUpdateBranding}
@@ -327,7 +360,7 @@ export default function WebsiteDashboardView() {
                     <div className="flex flex-col gap-6">
                         <div className="bg-primary border border-primary/20 p-8 rounded-[2.5rem] text-primary-foreground shadow-2xl shadow-primary/20 relative overflow-hidden group">
                            <div className="absolute top-0 right-0 p-8 opacity-10 scale-150 rotate-12 group-hover:rotate-45 transition-transform duration-1000">
-                             <Sparkles size={160} />
+                             <Briefcase size={160} />
                           </div>
                           <div className="relative z-10">
                              <h4 className="text-2xl font-black italic uppercase tracking-tighter mb-4 text-primary-foreground">Direct Booking Link</h4>
@@ -358,9 +391,12 @@ export default function WebsiteDashboardView() {
                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Name</span><span className="text-primary">{"{{restaurant_name}}"}</span></div>
                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Phone</span><span className="text-primary">{"[[BUSINESS_PHONE]]"}</span></div>
                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Address</span><span className="text-primary">{"[[BUSINESS_ADDRESS]]"}</span></div>
-                             <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Instagram</span><span className="text-primary">{"{{social_instagram}}"}</span></div>
-                             <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Facebook</span><span className="text-primary">{"{{social_facebook}}"}</span></div>
-                          </div>
+                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Instagram</span><span className="text-primary">{"{{social_instagram}}"}</span></div>
+                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Facebook</span><span className="text-primary">{"{{social_facebook}}"}</span></div>
+                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">Twitter/X</span><span className="text-primary">{"{{social_twitter}}"}</span></div>
+                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">YouTube</span><span className="text-primary">{"{{social_youtube}}"}</span></div>
+                              <div className="flex justify-between p-2 bg-slate-100/50 rounded-lg"><span className="text-slate-500">TikTok</span><span className="text-primary">{"{{social_tiktok}}"}</span></div>
+                           </div>
                        </div>
                     </div>
                 </div>

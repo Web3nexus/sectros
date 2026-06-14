@@ -64,47 +64,27 @@ class AuthController extends Controller
                 return $this->issueToken($user);
             }
 
-            // Tenant user login
-            $tenant = Tenant::where('owner_email', $request->email)->first();
+            // Tenant user login (single-DB: shared users table)
+            $user = User::on('tenant')->where('email', $request->email)->first();
             
-            if (!$tenant) {
-                \Illuminate\Support\Facades\Log::info('DEBUG: Tenant owner not found, searching staff', ['email' => $request->email]);
-                $allTenants = Tenant::all();
-                foreach ($allTenants as $t) {
-                    $found = $t->run(function() use ($request) {
-                        return User::where('email', $request->email)->first();
-                    });
-                    if ($found) {
-                        $tenant = $t;
-                        break;
-                    }
-                }
-            }
-
-            if (!$tenant) {
-                \Illuminate\Support\Facades\Log::warning('DEBUG: No tenant found for user', ['email' => $request->email]);
-                return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
-            }
-
-            // Authenticate within the tenant's database
-            $authData = $tenant->run(function() use ($request) {
-                $user = User::where('email', $request->email)->first();
-                if (!$user || !Hash::check($request->password, $user->password)) {
-                    return null;
-                }
-                return [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'name' => $user->name,
-                    'two_factor_method' => $user->two_factor_method ?: 'none',
-                    'array_data' => $user->toArray()
-                ];
-            });
-
-            if (!$authData) {
+            if (!$user || !Hash::check($request->password, $user->password)) {
                 \Illuminate\Support\Facades\Log::warning('DEBUG: Tenant user authentication failed', ['email' => $request->email]);
                 return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
             }
+
+            $tenant = Tenant::on('platform')->find($user->tenant_id);
+            if (!$tenant) {
+                \Illuminate\Support\Facades\Log::warning('DEBUG: Tenant not found for user', ['tenant_id' => $user->tenant_id]);
+                return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
+            }
+
+            $authData = [
+                'id' => $user->id,
+                'email' => $user->email,
+                'name' => $user->name,
+                'two_factor_method' => $user->two_factor_method ?: 'none',
+                'array_data' => $user->toArray(),
+            ];
 
             // Check 2FA preference
             $twoFactorMethod = $authData['two_factor_method'];
@@ -112,12 +92,10 @@ class AuthController extends Controller
                 \Illuminate\Support\Facades\Log::info('DEBUG: Tenant user requires 2FA', ['email' => $request->email, 'method' => $twoFactorMethod]);
                 if ($twoFactorMethod === 'email') {
                     $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-                    $tenant->run(function() use ($authData, $code) {
-                        User::where('id', $authData['id'])->update([
-                            'two_factor_code' => $code,
-                            'two_factor_expires_at' => now()->addMinutes(10),
-                        ]);
-                    });
+                    User::on('tenant')->where('id', $authData['id'])->update([
+                        'two_factor_code' => $code,
+                        'two_factor_expires_at' => now()->addMinutes(10),
+                    ]);
 
                     try {
                         $platformName = \App\Models\SaaSSetting::get('platform_name', config('app.name'));
@@ -141,16 +119,12 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Log::info('DEBUG: Tenant user authenticated successfully', ['email' => $request->email]);
             
             // Issue token
-            $tokenData = $tenant->run(function() use ($authData) {
-                $user = User::find($authData['id']);
-                $token = $user->createToken('auth-token')->plainTextToken;
-                return $token;
-            });
+            $token = $user->createToken('auth-token')->plainTextToken;
 
             $tenantDomain = $tenant->domains()->first()?->domain;
 
             return response()->json([
-                'token'         => $tokenData,
+                'token'         => $token,
                 'user'          => $authData['array_data'],
                 'tenant_domain' => $tenantDomain,
                 'business_type' => $tenant->business_type ?? 'restaurant',
@@ -246,19 +220,16 @@ class AuthController extends Controller
             }
 
             \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 3 (User Creation)');
-            // Phase 3: Create User
+            // Phase 3: Create User (shared tenant connection)
             try {
-                $userData = $tenant->run(function () use ($validated, $tenant) {
-                    $u = User::create([
-                        'name' => $validated['name'],
-                        'email' => $validated['email'],
-                        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
-                        'role' => 'owner',
-                        'tenant_id' => $tenant->id,
-                    ]);
-                    // Mathematically force timestamp and connection resolution BEFORE tenancy ends
-                    return $u->toArray();
-                });
+                $user = User::on('tenant')->create([
+                    'name' => $validated['name'],
+                    'email' => $validated['email'],
+                    'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                    'role' => 'owner',
+                    'tenant_id' => $tenant->id,
+                ]);
+                $userData = $user->toArray();
             } catch (\Exception $e) {
                 return response()->json(['message' => 'Registration failed at Phase 3 (User Creation): ' . $e->getMessage()], 500);
             }
@@ -266,9 +237,7 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 4 (Welcome Email)');
             // Phase 4: Welcome Email
             try {
-                // Ensure default connection is heavily forced back to central
-                \Illuminate\Support\Facades\DB::setDefaultConnection('mysql');
-                $template = \App\Models\EmailTemplate::where('slug', 'welcome_email')->first();
+                $template = \App\Models\EmailTemplate::on('platform')->where('slug', 'welcome_email')->first();
             } catch (\Exception $e) {
                 return response()->json(['message' => 'Registration failed at Phase 4 (Email Template Fetch): ' . $e->getMessage()], 500);
             }
@@ -288,10 +257,8 @@ class AuthController extends Controller
             }
 
             // Generate auth token for auto-login after registration
-            $authToken = $tenant->run(function () use ($userData) {
-                $freshUser = \App\Models\User::where('email', $userData['email'])->first();
-                return $freshUser ? $freshUser->createToken('auth-token')->plainTextToken : null;
-            });
+            $freshUser = \App\Models\User::on('tenant')->where('email', $userData['email'])->first();
+            $authToken = $freshUser ? $freshUser->createToken('auth-token')->plainTextToken : null;
 
             return response()->json([
                 'success' => true,
@@ -328,16 +295,13 @@ class AuthController extends Controller
             'domain' => 'nullable|string'
         ]);
 
-        // If a domain is provided and no tenant is active, attempt to initialize the tenant context.
-        // This is crucial for impersonation tokens which are stored in the tenant database.
-        if ($request->domain && !tenant()) {
-            $tenant = \App\Models\Tenant::whereHas('domains', function($query) use ($request) {
+        if ($request->domain && !\App\Services\TenantResolver::resolve()) {
+            $tenant = \App\Models\Tenant::whereHas('domains', function ($query) use ($request) {
                 $query->where('domain', $request->domain);
             })->first();
 
             if ($tenant) {
-                tenancy()->initialize($tenant);
-                \Illuminate\Support\Facades\Log::info('DEBUG: Tenant initialized for token login', ['tenant_id' => $tenant->id, 'domain' => $request->domain]);
+                \App\Services\TenantResolver::set($tenant);
             }
         }
 
@@ -434,8 +398,8 @@ class AuthController extends Controller
             ]);
         }
 
-        $tenant = Tenant::find($user->tenant_id);
-        $plan = $tenant ? SubscriptionPlan::where('slug', $tenant->plan)->first() : null;
+        $tenant = Tenant::on('platform')->find($user->tenant_id);
+        $plan = $tenant ? SubscriptionPlan::on('platform')->where('slug', $tenant->plan)->first() : null;
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -469,9 +433,9 @@ class AuthController extends Controller
         ]);
 
         if ($request->is('central-api/*')) {
-            $user = \App\Models\Admin::where('email', $request->email)->firstOrFail();
+            $user = \App\Models\Admin::on('platform')->where('email', $request->email)->firstOrFail();
         } else {
-            $user = User::where('email', $request->email)->firstOrFail();
+            $user = User::on('tenant')->where('email', $request->email)->firstOrFail();
         }
 
         if ($request->method === 'email') {
@@ -572,11 +536,11 @@ class AuthController extends Controller
         ]);
 
         if ($request->is('central-api/*')) {
-            $user = \App\Models\Admin::where('email', $request->email)->first();
-            $connection = 'mysql';
+            $user = \App\Models\Admin::on('platform')->where('email', $request->email)->first();
+            $connection = 'platform';
         } else {
-            $user = User::where('email', $request->email)->first();
-            $connection = config('database.default');
+            $user = User::on('tenant')->where('email', $request->email)->first();
+            $connection = 'tenant';
         }
 
         if (!$user) {

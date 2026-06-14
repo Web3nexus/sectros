@@ -1,5 +1,5 @@
 import React from 'react';
-import { Target, Shield, HeartHandshake } from 'lucide-react';
+import {Target, Shield, HeartHandshake} from 'lucide-react';
 
 export default function AboutSection({ content, theme }) {
   const { 

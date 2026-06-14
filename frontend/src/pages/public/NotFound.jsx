@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, ArrowLeft, Search, UtensilsCrossed, Coffee, Scissors, Building } from 'lucide-react';
+import {Home, ArrowLeft, Search, UtensilsCrossed, Coffee, Scissors, Building} from 'lucide-react';
 
 export default function NotFound() {
   const solutions = [

@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
+use App\Models\TenantNotification;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -13,8 +13,8 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = Notification::orderBy('created_at', 'desc')->limit(20)->get();
-        $unreadCount   = Notification::where('status', 'unread')->count();
+        $notifications = TenantNotification::orderBy('created_at', 'desc')->limit(20)->get();
+        $unreadCount   = TenantNotification::where('status', 'unread')->count();
 
         return response()->json([
             'notifications' => $notifications,
@@ -25,7 +25,7 @@ class NotificationController extends Controller
     /**
      * Mark a single notification as read.
      */
-    public function markRead(Notification $notification)
+    public function markRead(TenantNotification $notification)
     {
         $notification->update(['status' => 'read']);
         return response()->json(['status' => 'ok']);
@@ -36,13 +36,13 @@ class NotificationController extends Controller
      */
     public function markAllRead()
     {
-        Notification::where('status', 'unread')->update(['status' => 'read']);
+        TenantNotification::where('status', 'unread')->update(['status' => 'read']);
         return response()->json(['status' => 'ok', 'unread_count' => 0]);
     }
 
     public static function dispatch(string $type, string $title, string $message, string $icon = 'bell', ?int $referenceId = null): void
     {
-        Notification::create([
+        TenantNotification::create([
             'type'         => $type,
             'title'        => $title,
             'message'      => $message,

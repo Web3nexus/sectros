@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DirectoryCategory extends Model
 {
+    protected $connection = 'platform';
+
     protected $fillable = ['name', 'slug', 'icon', 'description'];
 
     public function listings(): HasMany

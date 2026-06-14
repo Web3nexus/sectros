@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, Quote, Play } from 'lucide-react';
+import {Briefcase, Quote, Play} from 'lucide-react';
 
 export default function TestimonialsSection({ content, theme }) {
   const { 
@@ -23,7 +23,7 @@ export default function TestimonialsSection({ content, theme }) {
       <section className="w-full bg-[#0A0807] py-24 px-6 md:px-12 border-t border-white/5" style={{ fontFamily }}>
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
            <div>
-              <div className="flex text-[#A0988E] mb-6">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={24} fill="currentColor"/>)}</div>
+              <div className="flex text-[#A0988E] mb-6">{Array.from({ length: 5 }).map((_, i) => <Briefcase key={i} size={24} fill="currentColor"/>)}</div>
                <h2 className="text-3xl md:text-5xl font-black text-white leading-tight mb-8 font-serif">{title}</h2>
                <p className="text-white/60 italic text-xl mb-4">"{reviews[2].text}"</p>
                <span className="text-[#A0988E] font-bold uppercase tracking-widest text-xs">{reviews[2].customer_name}</span>
@@ -47,7 +47,7 @@ export default function TestimonialsSection({ content, theme }) {
            <div className="relative">
               <Quote size={60} className="text-[#F3DDCF] absolute -top-10 left-1/2 -translate-x-1/2 -z-10" />
               <div className="bg-white p-12 rounded-2xl shadow-xl shadow-[#E7BFA8]/20 border border-[#F3DDCF]">
-                 <div className="flex justify-center text-[#8B0000] mb-6">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={16} fill="currentColor"/>)}</div>
+                 <div className="flex justify-center text-[#8B0000] mb-6">{Array.from({ length: 5 }).map((_, i) => <Briefcase key={i} size={16} fill="currentColor"/>)}</div>
                  <p className="text-[#77706B] text-xl md:text-2xl italic leading-relaxed mb-8">"{rev.text}"</p>
                  <div className="flex flex-col items-center">
                     <div className="w-16 h-16 rounded-full bg-cover bg-center mb-4 border-2 border-[#8B0000]" style={{ backgroundImage: `url('${rev.customer_avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80'}')` }} />
@@ -82,7 +82,7 @@ export default function TestimonialsSection({ content, theme }) {
               {guestReviews.map((rev, idx) => (
                 <div key={idx} className="bg-white p-8 border border-[#EFE7DA] relative group hover:border-[#B9975B] transition-colors duration-300">
                    <div className="absolute top-0 left-0 w-full h-1 bg-[#EFE7DA] group-hover:bg-[#B9975B] transition-colors duration-300" />
-                   <div className="flex text-[#B9975B] mb-6">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} fill="currentColor" />)}</div>
+                   <div className="flex text-[#B9975B] mb-6">{Array.from({ length: 5 }).map((_, i) => <Briefcase key={i} size={14} fill="currentColor" />)}</div>
                    <p className="text-[#777777] text-sm leading-relaxed mb-8 italic font-sans">"{rev.text}"</p>
                    <div className="flex items-center gap-4 pt-4 border-t border-[#EFE7DA]">
                       <div className="w-12 h-12 rounded-full bg-cover bg-center border-2 border-[#EFE7DA] flex-shrink-0" style={{ backgroundImage: `url(${rev.customer_avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=100'})` }} />
@@ -119,7 +119,7 @@ export default function TestimonialsSection({ content, theme }) {
                <Quote size={40} className="text-[#FFC806]/20 absolute top-8 right-8" />
                <p className="text-white/80 text-lg mb-8 italic leading-relaxed">"{rev.text}"</p>
                <div className="flex items-center gap-4">
-                  <div className="flex text-[#FFC806]">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} fill="currentColor"/>)}</div>
+                  <div className="flex text-[#FFC806]">{Array.from({ length: 5 }).map((_, i) => <Briefcase key={i} size={14} fill="currentColor"/>)}</div>
                   <span className="text-white font-bold">{rev.customer_name}</span>
                </div>
             </div>

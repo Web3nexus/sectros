@@ -6,9 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class InventoryItem extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
     protected $table = 'tenant_inventory_items';
 
     protected $fillable = [
+        'tenant_id',
         'name',
         'description',
         'category',

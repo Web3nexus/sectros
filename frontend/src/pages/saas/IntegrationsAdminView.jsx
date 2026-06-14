@@ -4,7 +4,7 @@
  * directly accessible at /securegate/integrations.
  */
 import React, { useState, useEffect } from 'react';
-import { PlugZap, Save, RefreshCw, CheckCircle, X, Plus, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Globe } from 'lucide-react';
+import {PlugZap, Save, RefreshCw, CheckCircle, X, Plus, ChevronDown, ChevronUp, ToggleLeft, ToggleRight, Globe} from 'lucide-react';
 import centralApi from '../../services/centralApi';
 
 // ─── Brand assets ──────────────────────────────────────────────────────

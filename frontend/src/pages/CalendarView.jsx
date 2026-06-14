@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, ChevronLeft, ChevronRight, Loader2, MessageSquare, Users, Clock, Globe, MessageCircle, Instagram, Facebook, Link as LinkIcon, Smartphone } from 'lucide-react'
+import {Calendar, ChevronLeft, ChevronRight, Loader2, MessageCircle, Users, Clock, Globe, Instagram, Facebook, Link as LinkIcon, Smartphone} from 'lucide-react'
 import api from '../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'

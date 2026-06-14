@@ -2,11 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
-import {
-  UtensilsCrossed, Wine, Music, Building2, CalendarCheck, Layers,
-  TrendingUp, Users, Award, Star, ArrowRight, ChevronDown, Quote,
-  PlayCircle, CheckCircle2, Rocket
-} from 'lucide-react';
+import {UtensilsCrossed, Wine, Music, Building2, CalendarCheck, Layers, TrendingUp, Users, Award, Briefcase, ArrowRight, ChevronDown, Quote, PlayCircle, CheckCircle2, Rocket} from 'lucide-react';
 
 const solutions = [
   {
@@ -63,7 +59,7 @@ const stats = [
   { icon: TrendingUp, value: '40%', label: 'Avg. revenue increase' },
   { icon: Users, value: '10K+', label: 'Venues onboarded' },
   { icon: Award, value: '98%', label: 'Client satisfaction' },
-  { icon: Star, value: '4.9', label: 'Avg. app store rating' },
+  { icon: Briefcase, value: '4.9', label: 'Avg. app store rating' },
 ];
 
 const testimonials = [

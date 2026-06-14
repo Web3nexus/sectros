@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { TrendingUp, TrendingDown, DollarSign, PieChart, ArrowUpRight, ArrowDownRight, Coffee, UtilityPole, Home, Briefcase, Scan, Loader2 } from 'lucide-react'
+import {TrendingUp, TrendingDown, DollarSign, PieChart, ArrowUpRight, ArrowDownRight, Coffee, UtilityPole, Home, Briefcase, Scan, Loader2} from 'lucide-react'
 import { AIScanner } from './AIScanner'
 import api from '../services/api'
 

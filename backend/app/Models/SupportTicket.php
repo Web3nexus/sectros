@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SupportTicket extends Model
 {
+    protected $connection = 'platform';
+
     protected $fillable = [
         'tenant_id',
         'subject',

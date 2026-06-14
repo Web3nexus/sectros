@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, MapPin, Star, Filter, ArrowRight, Utensils, Scissors, Coffee, Sparkles, BedDouble, Stethoscope, ChevronRight, Loader2 } from 'lucide-react';
+import {Search, MapPin, Briefcase, Filter, ArrowRight, Utensils, Scissors, Coffee, BedDouble, Stethoscope, ChevronRight, Loader2} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,7 +7,7 @@ const CATEGORY_ICONS = {
   Utensils: <Utensils size={24} />,
   Scissors: <Scissors size={24} />,
   Coffee: <Coffee size={24} />,
-  Sparkles: <Sparkles size={24} />,
+  Briefcase: <Briefcase size={24} />,
   BedDouble: <BedDouble size={24} />,
   Stethoscope: <Stethoscope size={24} />,
 };
@@ -157,7 +157,7 @@ export default function DirectoryPage() {
                   <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-center gap-1 mb-2">
                       {[...Array(5)].map((_, i) => (
-                        <Star 
+                        <Briefcase 
                           key={i} 
                           size={12} 
                           fill={i < Math.floor(item.rating_avg) ? '#3b82f6' : 'none'} 

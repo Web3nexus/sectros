@@ -7,9 +7,14 @@ use Illuminate\Support\Str;
 
 class TenantBlog extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
     protected $table = 'tenant_blog_posts';
 
     protected $fillable = [
+        'tenant_id',
         'title',
         'slug',
         'content',

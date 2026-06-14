@@ -291,9 +291,7 @@ class AutomationController extends Controller
     private function analyzeMessageIntent(string $message): array
     {
         // 1. Fetch Global Settings from Central
-        $saasSettings = tenancy()->central(function() {
-            return \App\Models\SaaSSetting::all()->pluck('value', 'key');
-        });
+        $saasSettings = \App\Models\SaaSSetting::on('platform')->get()->pluck('value', 'key');
 
         if (isset($saasSettings['global_ai_enabled']) && $saasSettings['global_ai_enabled'] === '0') {
             return ['type' => 'general', 'reply' => 'The AI assistant is currently offline for maintenance.'];
@@ -371,9 +369,7 @@ class AutomationController extends Controller
     public function scanReceipt(Request $request)
     {
         // 1. Fetch Global Settings from Central
-        $saasSettings = tenancy()->central(function() {
-            return \App\Models\SaaSSetting::all()->pluck('value', 'key');
-        });
+        $saasSettings = \App\Models\SaaSSetting::on('platform')->get()->pluck('value', 'key');
 
         if (isset($saasSettings['global_ai_enabled']) && $saasSettings['global_ai_enabled'] === '0') {
             return response()->json(['error' => 'The AI system is currently offline for maintenance.'], 503);
@@ -451,7 +447,7 @@ class AutomationController extends Controller
      */
     private function callAnthropic($systemPrompt, $userMessage, $jsonMode = false)
     {
-        $apiKey = tenancy()->central(fn() => \App\Models\SaaSSetting::get('claude_api_key'));
+        $apiKey = \App\Models\SaaSSetting::on('platform')->where('key', 'claude_api_key')->value('value');
         
         if (!$apiKey) throw new \Exception("Anthropic API Key missing");
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import {Loader2, ArrowLeft} from 'lucide-react';
 import api from '../../services/api';
 import ReservationFormSection from '../../components/builder/sections/ReservationFormSection';
 

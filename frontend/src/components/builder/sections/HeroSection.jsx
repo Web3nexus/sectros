@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, ArrowRight, Star, Video } from 'lucide-react';
+import {Play, ArrowRight, Briefcase, Video} from 'lucide-react';
 
 export default function HeroSection({ content, theme }) {
   const { 
@@ -14,7 +14,7 @@ export default function HeroSection({ content, theme }) {
   const { primaryColor = '#F70A38', secondaryColor = '#FFC806', fontFamily = 'Outfit' } = theme;
 
   const renderStars = () => (
-     <div className="flex text-[#FFC806] mt-1"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></div>
+     <div className="flex text-[#FFC806] mt-1"><Briefcase size={10} fill="currentColor"/><Briefcase size={10} fill="currentColor"/><Briefcase size={10} fill="currentColor"/><Briefcase size={10} fill="currentColor"/><Briefcase size={10} fill="currentColor"/></div>
   );
 
   if (layout === 'coffee-house') {
@@ -128,7 +128,7 @@ export default function HeroSection({ content, theme }) {
                   {content.categories.map((cat, idx) => (
                     <div key={idx} className="bg-white/60 backdrop-blur-sm border border-[#F3DDCF] rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-white transition-all cursor-pointer group">
                       <div className="w-10 h-10 rounded-full bg-[#FAF6F2] flex items-center justify-center mb-3 group-hover:bg-[#F3DDCF] transition-colors">
-                        <Star size={14} className="text-[#8B0000]" />
+                        <Briefcase size={14} className="text-[#8B0000]" />
                       </div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-[#7A1E1E]">{cat}</span>
                     </div>
@@ -189,7 +189,7 @@ export default function HeroSection({ content, theme }) {
                </div>
                {/* Decorative badge */}
                <div className="absolute top-10 right-0 lg:-right-8 w-32 h-32 bg-[#EFE7DA] rounded-full flex flex-col items-center justify-center p-4 shadow-xl text-center border-4 border-white animate-pulse">
-                  <Star size={20} className="text-[#B9975B] mb-1" fill="currentColor" />
+                  <Briefcase size={20} className="text-[#B9975B] mb-1" fill="currentColor" />
                   <span className="text-[10px] uppercase font-bold tracking-widest text-[#5F5132]">5-Star</span>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-[#5F5132]">Luxury</span>
                </div>

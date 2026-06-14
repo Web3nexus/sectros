@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, Check } from 'lucide-react';
+import {ShieldCheck, Check} from 'lucide-react';
 
 export default function CookieConsentBanner() {
   const [isVisible, setIsVisible] = useState(false);

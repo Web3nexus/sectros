@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../services/api';
-import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import {Loader2, CheckCircle2, AlertCircle} from 'lucide-react';
 import { useBusinessConfig } from '../../../hooks/useBusinessConfig';
 
 export default function ReservationFormSection({ content, theme, businessType: propBusinessType }) {

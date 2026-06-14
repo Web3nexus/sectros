@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DirectoryReview extends Model
 {
+    protected $connection = 'platform';
+
     protected $fillable = [
         'listing_id',
         'customer_name',

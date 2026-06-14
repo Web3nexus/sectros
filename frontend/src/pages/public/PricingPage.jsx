@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Check, X, Sparkles, Building2, Crown, ChevronRight, Plus,
-  MessageSquare, DollarSign, Bot, Calendar, Component, Utensils,
-  Table, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag,
-  Package, Infinity, HelpCircle
-} from 'lucide-react';
+import {Check, X, Briefcase, Building2, Crown, ChevronRight, Plus, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Infinity, HelpCircle} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/centralApi';
 import BackgroundParticles from '../../components/common/BackgroundParticles';
@@ -22,11 +17,11 @@ const FEATURE_CATALOGUE = [
   // Engagement
   { key: 'social_integration',label: 'Unified Chat (WA/IG/FB)',   icon: MessageSquare,   alwaysOn: false, category: 'Engagement' },
   { key: 'online_ordering',   label: 'Online Ordering Portal',    icon: ShoppingBag,     alwaysOn: false, category: 'Engagement' },
-  { key: 'directory_featured',label: 'Featured Directory Ad',     icon: Sparkles,        alwaysOn: false, category: 'Engagement' },
+  { key: 'directory_featured',label: 'Featured Directory Ad',     icon: Briefcase,        alwaysOn: false, category: 'Engagement' },
   // Operations
   { key: 'pos_terminal',      label: 'POS Terminal',              icon: Component,       alwaysOn: false, category: 'Operations' },
   { key: 'menu_builder',      label: 'Menu Builder (F&B)',        icon: Utensils,        alwaysOn: false, category: 'Operations' },
-  { key: 'service_builder',   label: 'Service Builder (Salons)',  icon: Sparkles,        alwaysOn: false, category: 'Operations' },
+  { key: 'service_builder',   label: 'Service Builder (Salons)',  icon: Briefcase,        alwaysOn: false, category: 'Operations' },
   { key: 'room_manager',      label: 'Room Manager (Hotels)',     icon: Building2,       alwaysOn: false, category: 'Operations' },
   { key: 'floor_plan',        label: 'Space & Layout Manager',    icon: Table,           alwaysOn: false, category: 'Operations' },
   { key: 'inventory_tracking',label: 'Inventory Management',      icon: Package,         alwaysOn: false, category: 'Operations' },
@@ -98,10 +93,10 @@ const getAccent = (slug, i, total) => {
 };
 
 const getPlanIcon = (slug) => {
-  if (!slug) return <Sparkles className="w-5 h-5 text-blue-400" />;
+  if (!slug) return <Briefcase className="w-5 h-5 text-blue-400" />;
   if (slug.includes('enterprise')) return <Building2 className="w-5 h-5 text-purple-400" />;
   if (slug.includes('pro')) return <Crown className="w-5 h-5 text-amber-400" />;
-  return <Sparkles className="w-5 h-5 text-blue-400" />;
+  return <Briefcase className="w-5 h-5 text-blue-400" />;
 };
 
 const parseFeatures = (features) => {
@@ -163,7 +158,7 @@ export default function PricingPage() {
             initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-semibold mb-6"
           >
-            <Sparkles className="w-4 h-4" /> Transparent Pricing
+            <Briefcase className="w-4 h-4" /> Transparent Pricing
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}

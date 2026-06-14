@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, ArrowRight, Sparkles, Book, FileText, HelpCircle, MessageCircle, Calendar, Grid, Globe, Users, Briefcase, ChevronDown } from 'lucide-react';
+import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, Grid, Globe, Users, ChevronDown} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useBranding } from '../../../hooks/useBranding';
@@ -59,7 +59,7 @@ export function ModernPublicLayout() {
               ) : (
                 <>
                   <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-white" />
+                    <Briefcase className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-lg lg:text-xl font-bold text-slate-900 tracking-tight">{platformName}</span>
                 </>

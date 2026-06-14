@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CreditCard, TrendingUp, Download, Search, CheckCircle, CircleX as XCircle, Loader2, Activity } from 'lucide-react';
+import {CreditCard, TrendingUp, Download, Search, CheckCircle, CircleX as XCircle, Loader2, Activity} from 'lucide-react';
 import api from '../../services/centralApi';
 
 export default function SaaSSubscriptionsView() {

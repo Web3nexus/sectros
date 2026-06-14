@@ -8,8 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class AiInteraction extends Model
 {
     use HasFactory;
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
 
     protected $fillable = [
+        'tenant_id',
         'platform',
         'platform_account_id',
         'sender',

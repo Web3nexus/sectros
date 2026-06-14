@@ -20,12 +20,9 @@ class PublicThemeController extends Controller
             $tenant = tenant();
             
             // Themes in central DB - only active ones
-            $templates = tenancy()->central(fn() => WebsiteTemplate::where('is_active', true)->get());
-            
-            // Purchased themes in central DB
-            $purchasedIds = tenancy()->central(fn() => 
-                TenantTheme::where('tenant_id', $tenant->id)->pluck('website_template_id')->toArray()
-            );
+            $templates = WebsiteTemplate::on('platform')->where('is_active', true)->get();
+
+            $purchasedIds = TenantTheme::on('platform')->where('tenant_id', $tenant->id)->pluck('website_template_id')->toArray();
 
             $data = $templates->map(function($tpl) use ($tenant, $purchasedIds) {
                 $isUnlocked = $tpl->is_free ||
@@ -63,11 +60,9 @@ class PublicThemeController extends Controller
     public function show($id)
     {
         $tenant = tenant();
-        $template = tenancy()->central(fn() => WebsiteTemplate::findOrFail($id));
+        $template = WebsiteTemplate::on('platform')->findOrFail($id);
 
-        $purchased = tenancy()->central(fn() => 
-            TenantTheme::where('tenant_id', $tenant->id)->where('website_template_id', $id)->exists()
-        );
+        $purchased = TenantTheme::on('platform')->where('tenant_id', $tenant->id)->where('website_template_id', $id)->exists();
 
         $isUnlocked = $template->is_free || $purchased || ($template->required_plan_id && $this->isPlanHighEnough($tenant->plan, $template->required_plan_id));
 
@@ -84,7 +79,7 @@ class PublicThemeController extends Controller
     public function purchase(Request $request, $id, PaymentService $paymentService)
     {
         $tenant = tenant();
-        $template = tenancy()->central(fn() => WebsiteTemplate::findOrFail($id));
+        $template = WebsiteTemplate::on('platform')->findOrFail($id);
 
         if ($template->is_free) {
             TenantTheme::updateOrCreate(
@@ -108,8 +103,6 @@ class PublicThemeController extends Controller
         // For this system, we can just assume if the ID is matched or higher it works, 
         // OR fetch the central plan weights.
         
-        return tenancy()->central(fn() => 
-            \App\Models\SubscriptionPlan::where('slug', $currentPlanSlug)->where('id', '>=', $requiredPlanId)->exists()
-        );
+        return \App\Models\SubscriptionPlan::on('platform')->where('slug', $currentPlanSlug)->where('id', '>=', $requiredPlanId)->exists();
     }
 }

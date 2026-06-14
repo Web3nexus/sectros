@@ -1,12 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import {
-  CreditCard, Smartphone, MessageSquare, TrendingUp, BarChart3,
-  Calendar, ClipboardList, Cpu, Zap, Globe, Shield, Database,
-  Code2, ChevronDown, ArrowRight, Linkedin, Twitter, Github,
-  ExternalLink, Search, Plus, CheckCircle2, Sparkles
-} from 'lucide-react';
+import {CreditCard, Smartphone, MessageSquare, TrendingUp, BarChart3, Calendar, ClipboardList, Cpu, Zap, Globe, Shield, Database, Code2, ChevronDown, ArrowRight, Linkedin, Twitter, Github, ExternalLink, Search, Plus, CheckCircle2, Briefcase} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 
 const categories = [
@@ -62,7 +57,7 @@ const featuredIntegrations = [
 const ecosystemIcons = [
   CreditCard, Globe, MessageSquare, TrendingUp, BarChart3, Calendar,
   Smartphone, Shield, Database, Search, Linkedin, Twitter, Github,
-  ExternalLink, Cpu, Zap, ClipboardList, Plus, CheckCircle2, Sparkles,
+  ExternalLink, Cpu, Zap, ClipboardList, Plus, CheckCircle2, Briefcase,
   ArrowRight, Globe, CreditCard, MessageSquare,
 ];
 

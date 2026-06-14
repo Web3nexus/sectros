@@ -145,6 +145,12 @@
                 @if($instagram_url)
                     <a href="{{ $instagram_url }}"><img src="https://img.icons8.com/ios-filled/50/6b778c/instagram-new.png" alt="Instagram"></a>
                 @endif
+                @if(isset($youtube_url) && $youtube_url)
+                    <a href="{{ $youtube_url }}"><img src="https://img.icons8.com/ios-filled/50/6b778c/youtube-play.png" alt="YouTube"></a>
+                @endif
+                @if(isset($tiktok_url) && $tiktok_url)
+                    <a href="{{ $tiktok_url }}"><img src="https://img.icons8.com/ios-filled/50/6b778c/tiktok.png" alt="TikTok"></a>
+                @endif
             </div>
             <p>&copy; {{ date('Y') }} {{ $platform_name }}. All rights reserved.</p>
             <p>You are receiving this because you are a registered user of {{ $platform_name }}.</p>

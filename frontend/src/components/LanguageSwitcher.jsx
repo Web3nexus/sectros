@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Globe, ChevronDown } from 'lucide-react';
+import {Globe, ChevronDown} from 'lucide-react';
 
 const LANGUAGES = [
   { code: 'en', label: 'English', flag: '🇬🇧' },

@@ -2,13 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  ArrowRight, CheckCircle2, CalendarDays, Users, LineChart, 
-  UtensilsCrossed, Smartphone, ShieldCheck, Zap, Globe, 
-  CreditCard, Grid, MessageSquare, Clock, ArrowUpRight, 
-  Layers, Settings, Sparkles, Building, Scissors, Coffee,
-  Check, Star, Rocket
-} from 'lucide-react';
+import {ArrowRight, CheckCircle2, CalendarDays, Users, LineChart, UtensilsCrossed, Smartphone, ShieldCheck, Zap, Globe, CreditCard, Grid, MessageSquare, Clock, ArrowUpRight, Layers, Settings, Briefcase, Building, Scissors, Coffee, Check, Rocket} from 'lucide-react';
 import api from '../../services/centralApi';
 import BackgroundParticles from '../../components/common/BackgroundParticles';
 
@@ -255,7 +249,7 @@ export default function LandingPage() {
             <div className="flex flex-wrap justify-center items-center gap-10 md:gap-20 opacity-50">
                {[
                  { name: 'Ephemeral', icon: Layers },
-                 { name: 'Wildcrafted', icon: Sparkles },
+                 { name: 'Wildcrafted', icon: Briefcase },
                  { name: 'Codecraft_', icon: Settings },
                  { name: 'Convergence', icon: Zap },
                  { name: 'ImgCompress', icon: Grid }
@@ -272,7 +266,7 @@ export default function LandingPage() {
                  { name: 'Watchtower', icon: ShieldCheck },
                  { name: 'Renaissance', icon: Building },
                  { name: 'ContrastAI', icon: Globe },
-                 { name: 'Nietzsche', icon: Sparkles }
+                 { name: 'Nietzsche', icon: Briefcase }
                ].map((brand, i) => (
                  <div key={i} className="flex items-center gap-3 grayscale hover:grayscale-0 transition-all cursor-default group">
                     <brand.icon className="w-8 h-8 text-foreground group-hover:text-primary transition-colors" />
@@ -676,11 +670,11 @@ export default function LandingPage() {
                 className="bg-card border border-border p-8 rounded-4xl flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition-all group"
               >
                 <div className={`w-12 h-12 ${plat.color} rounded-xl mb-6 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
-                  <Star className="w-6 h-6 text-white" fill="currentColor" />
+                  <Briefcase className="w-6 h-6 text-white" fill="currentColor" />
                 </div>
                 <h4 className="text-xl font-black text-foreground mb-1 uppercase tracking-tight">{plat.name}</h4>
                 <div className="flex text-amber-500 mb-3">
-                  {[...Array(5)].map((_, j) => <Star key={j} size={14} fill="currentColor" />)}
+                  {[...Array(5)].map((_, j) => <Briefcase key={j} size={14} fill="currentColor" />)}
                 </div>
                 <div className="text-2xl font-black text-foreground mb-4 tracking-tighter">{plat.rating}</div>
                 <div className="px-4 py-1.5 rounded-full bg-muted border border-border text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-primary transition-colors">

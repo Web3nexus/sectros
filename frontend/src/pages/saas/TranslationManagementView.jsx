@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, X, Globe, Save, Loader2, AlertCircle } from 'lucide-react';
+import {Search, Plus, Edit, Trash2, X, Globe, Save, Loader2, AlertCircle} from 'lucide-react';
 import api from '../../services/centralApi';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 

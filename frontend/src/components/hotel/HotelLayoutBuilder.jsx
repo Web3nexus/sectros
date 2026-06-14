@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Save, RotateCcw, Trash2, Grid3x3, Plus, GripVertical, Building2, Waves, Trees, Car, DoorOpen, Utensils, Sparkles, Dumbbell, Tent, Sun, Fence, Loader2, Ban } from 'lucide-react'
+import {Save, RotateCcw, Trash2, Grid3x3, Plus, GripVertical, Building2, Waves, Trees, Car, DoorOpen, Utensils, Briefcase, Dumbbell, Tent, Sun, Fence, Loader2, Ban} from 'lucide-react'
 import api from '../../services/api'
 
 const GRID_COLS = 10
@@ -12,7 +12,7 @@ const ELEMENT_TYPES = {
   parking: { label: 'Parking', icon: Car, defaultW: 3, defaultH: 2, color: '#6B7280' },
   entrance: { label: 'Entrance', icon: DoorOpen, defaultW: 1, defaultH: 1, color: '#F59E0B' },
   restaurant: { label: 'Restaurant', icon: Utensils, defaultW: 2, defaultH: 1, color: '#EF4444' },
-  spa: { label: 'Spa', icon: Sparkles, defaultW: 2, defaultH: 1, color: '#EC4899' },
+  spa: { label: 'Spa', icon: Briefcase, defaultW: 2, defaultH: 1, color: '#EC4899' },
   gym: { label: 'Gym', icon: Dumbbell, defaultW: 2, defaultH: 1, color: '#8B5CF6' },
   cabanas: { label: 'Cabana', icon: Tent, defaultW: 2, defaultH: 1, color: '#F97316' },
   lounge: { label: 'Lounge Area', icon: Sun, defaultW: 2, defaultH: 1, color: '#14B8A6' },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, CheckCircle, X, Loader2, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, Save, Infinity, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Sparkles, Building2 } from 'lucide-react';
+import {Plus, Edit2, Trash2, CheckCircle, X, Loader2, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, Save, Infinity, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Briefcase, Building2} from 'lucide-react';
 import api from '../../services/centralApi';
 
 // IMPORTANT: The 'key' values below MUST match exactly what DashboardLayout.jsx
@@ -17,7 +17,7 @@ const ALL_FEATURES = [
   { key: 'social_integration', label: 'Unified Chat',        description: 'WhatsApp, Facebook, Instagram', icon: MessageSquare, alwaysOn: false },
   { key: 'pos_terminal',       label: 'POS Terminal',         description: 'In-house ordering & payments', icon: Component, alwaysOn: false },
   { key: 'menu_builder',       label: 'Menu Builder',         description: 'Digital catalog & QR ordering', icon: Utensils, alwaysOn: false },
-  { key: 'service_builder',    label: 'Service Builder',      description: 'Treatment & service cataloging', icon: Sparkles, alwaysOn: false },
+  { key: 'service_builder',    label: 'Service Builder',      description: 'Treatment & service cataloging', icon: Briefcase, alwaysOn: false },
   { key: 'room_manager',       label: 'Room Manager',         description: 'Room inventory & categorization', icon: Building2, alwaysOn: false },
   { key: 'floor_plan',         label: 'Space Manager',        description: 'Visual layout & resource mapping', icon: Table, alwaysOn: false },
   { key: 'staff_management',   label: 'Staff Profiles',       description: 'Account access & role control', icon: Users, alwaysOn: false },
@@ -26,7 +26,7 @@ const ALL_FEATURES = [
   { key: 'online_ordering',    label: 'Online Ordering',      description: 'Customer ordering web portal', icon: ShoppingBag, alwaysOn: false },
   { key: 'inventory_tracking', label: 'Inventory Management', description: 'Stock levels & ingredient tracking', icon: Package, alwaysOn: false },
   // Enterprise & Marketplace
-  { key: 'directory_featured', label: 'Featured Listing',     description: 'Prioritized visibility in directory', icon: Sparkles, alwaysOn: false },
+  { key: 'directory_featured', label: 'Featured Listing',     description: 'Prioritized visibility in directory', icon: Briefcase, alwaysOn: false },
   { key: 'branch_management',  label: 'Multi-Branch',         description: 'Manage multiple physical locations', icon: Building2, alwaysOn: false },
   { key: 'waitlist_automation',label: 'Waitlist Pro',         description: 'Automated SMS & seating logic', icon: Plus, alwaysOn: false },
   { key: 'public_api',         label: 'Public API',           description: 'External integration access', icon: Settings, alwaysOn: false },

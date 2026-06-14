@@ -22,6 +22,18 @@ return Application::configure(basePath: dirname(__DIR__))
                     // Global Webhooks & Public Auth
                     require base_path('routes/api.php');
                 });
+
+            // Tenant API — accessible under both prefixes for transition
+            Route::middleware('api')
+                ->prefix('tenant-api')
+                ->group(function () {
+                    require base_path('routes/tenant.php');
+                });
+            Route::middleware('api')
+                ->prefix('central-api')
+                ->group(function () {
+                    require base_path('routes/tenant.php');
+                });
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class RestaurantTable extends Model
 {
-    protected $fillable = ['table_number', 'capacity', 'status', 'branch_id'];
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
+    protected $fillable = ['tenant_id', 'table_number', 'capacity', 'status', 'branch_id'];
 
     public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

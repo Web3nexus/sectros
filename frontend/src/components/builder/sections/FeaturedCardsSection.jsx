@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, ShoppingCart } from 'lucide-react';
+import {Briefcase, ShoppingCart} from 'lucide-react';
 
 export default function FeaturedCardsSection({ content, theme }) {
   const { 
@@ -31,7 +31,7 @@ export default function FeaturedCardsSection({ content, theme }) {
                           {item.sold} Sold
                        </div>
                     </div>
-                    <div className="flex text-[#A0988E] mb-2"><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
+                    <div className="flex text-[#A0988E] mb-2"><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/></div>
                     <h3 className="text-white font-bold text-lg mb-2">{item.name}</h3>
                     <span className="text-[#A0988E] font-black text-xl mb-4">{item.p}</span>
                     <button className="w-full py-3 rounded border border-white/20 text-[#A0988E] font-bold text-[10px] uppercase tracking-widest hover:bg-white/10 transition-colors">
@@ -106,7 +106,7 @@ export default function FeaturedCardsSection({ content, theme }) {
                   </div>
                   
                   <div className="flex items-center justify-between mb-2">
-                     <div className="flex text-[#FFC806]"><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
+                     <div className="flex text-[#FFC806]"><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/><Briefcase size={12} fill="currentColor"/></div>
                      <span className="text-xs text-muted-foreground font-bold">{item.r}</span>
                   </div>
                   

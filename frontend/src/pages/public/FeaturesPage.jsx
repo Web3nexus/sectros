@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChefHat, QrCode, Smartphone, Zap, Bot, Search, BarChart3, Clock, Lock, Users } from 'lucide-react';
+import {ChefHat, QrCode, Smartphone, Zap, Bot, Search, BarChart3, Clock, Lock, Users} from 'lucide-react';
 import BackgroundParticles from '../../components/common/BackgroundParticles';
 
 export default function FeaturesPage() {

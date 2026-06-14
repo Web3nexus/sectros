@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Translation extends Model
 {
-    protected $connection = 'mysql';
+    protected $connection = 'platform';
     protected $fillable = ['locale', 'group', 'key', 'value'];
 
     public function scopeLocale($query, $locale)

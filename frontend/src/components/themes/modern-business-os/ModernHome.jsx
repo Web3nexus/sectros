@@ -1,15 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import {
-  Calendar, Users, Layout, BarChart3, Bell, Clock, CreditCard,
-  MessageSquare, Settings, Sparkles, ArrowRight, Check, Star,
-  Phone, Mail, Globe, Shield, Zap, TrendingUp, PieChart, Download,
-  Menu, X, ChevronDown, ChevronRight, Plus, Minus, BookOpen,
-  Smartphone, Monitor, Building2, Coffee, UtensilsCrossed, Hotel,
-  PartyPopper, Music, HeartHandshake, Target, BrainCircuit, Award,
-  Quote
-} from 'lucide-react';
+import {Calendar, Users, Layout, BarChart3, Bell, Clock, CreditCard, MessageSquare, Settings, Briefcase, ArrowRight, Check, Phone, Mail, Globe, Shield, Zap, TrendingUp, PieChart, Download, Menu, X, ChevronDown, ChevronRight, Plus, Minus, BookOpen, Smartphone, Monitor, Building2, Coffee, UtensilsCrossed, Hotel, PartyPopper, Music, HeartHandshake, Target, BrainCircuit, Award, Quote} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 
 const fadeUp = {
@@ -33,7 +25,7 @@ function HeroDashboard() {
         <div className="hidden sm:flex flex-col w-52 bg-slate-900 text-slate-300 p-4 gap-1 shrink-0">
           <div className="flex items-center gap-2 mb-6 px-2">
             <div className="w-6 h-6 rounded-md bg-blue-500 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
+              <Briefcase className="w-3.5 h-3.5 text-white" />
             </div>
             <span className="text-white font-bold text-sm">Sectros</span>
           </div>
@@ -398,7 +390,7 @@ function AutomationFlowMockup() {
         <ChevronRight className="w-4 h-4 text-slate-300 mx-1" />
         <div className="flex flex-col items-center">
           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-            <Star className="w-4 h-4 text-purple-600" />
+            <Briefcase className="w-4 h-4 text-purple-600" />
           </div>
           <span className="text-[10px] text-slate-500 mt-1">Follow-up</span>
         </div>
@@ -1180,7 +1172,7 @@ export default function ModernHome() {
               <motion.div key={item.author} className="bg-white rounded-2xl p-6 md:p-8 shadow-lg" variants={stagger}>
                 <div className="flex items-center gap-1 mb-4">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                    <Briefcase key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
                 <p className="text-sm text-slate-600 leading-relaxed mb-5">&ldquo;{item.quote}&rdquo;</p>

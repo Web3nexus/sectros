@@ -1,11 +1,7 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  UtensilsCrossed, Coffee, Scissors, Building, 
-  CheckCircle2, ArrowRight, Zap, Star, Users, 
-  Smartphone, BarChart3, ShieldCheck 
-} from 'lucide-react';
+import {UtensilsCrossed, Coffee, Scissors, Building, CheckCircle2, ArrowRight, Zap, Briefcase, Users, Smartphone, BarChart3, ShieldCheck} from 'lucide-react';
 
 const SOLUTION_CONTENT = {
   restaurants: {
@@ -35,7 +31,7 @@ const SOLUTION_CONTENT = {
     features: [
       { title: 'QR Scan & Pay', desc: 'Let customers order and pay from their table to reduce lines.', icon: Smartphone },
       { title: 'Inventory Alerts', desc: 'Never run out of your best-selling beans with automated low-stock triggers.', icon: BarChart3 },
-      { title: 'Loyalty Built-in', desc: 'Reward your regulars automatically without plastic cards.', icon: Star }
+      { title: 'Loyalty Built-in', desc: 'Reward your regulars automatically without plastic cards.', icon: Briefcase }
     ],
     testimonial: {
       quote: "Our morning line-ups are 30% faster since we implemented Sectros's mobile ordering.",
@@ -154,7 +150,7 @@ export default function SolutionPage() {
             whileInView="whileInView"
             className="relative p-12 md:p-20 rounded-[3rem] bg-linear-to-br from-blue-600/10 to-transparent border border-blue-500/20 text-center"
           >
-            <Star className="w-12 h-12 text-blue-400 absolute -top-6 left-1/2 -translate-x-1/2" />
+            <Briefcase className="w-12 h-12 text-blue-400 absolute -top-6 left-1/2 -translate-x-1/2" />
             <blockquote className="text-2xl md:text-3xl font-medium text-foreground italic mb-8 leading-snug">
               "{content.testimonial.quote}"
             </blockquote>

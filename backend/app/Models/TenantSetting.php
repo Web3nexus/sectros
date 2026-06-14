@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class TenantSetting extends Model
 {
-    protected $fillable = ['key', 'value'];
+    use \App\Traits\BelongsToTenant;
+
+    protected $connection = 'tenant';
+
+    protected $fillable = ['tenant_id', 'key', 'value'];
 
     protected $casts = [
         'value' => 'json'

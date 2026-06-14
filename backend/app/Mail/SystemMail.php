@@ -56,6 +56,8 @@ class SystemMail extends Mailable
                         'facebook_url' => \App\Models\SaaSSetting::get('facebook_url'),
                         'twitter_url' => \App\Models\SaaSSetting::get('twitter_url'),
                         'instagram_url' => \App\Models\SaaSSetting::get('instagram_url'),
+                        'youtube_url' => \App\Models\SaaSSetting::get('youtube_url'),
+                        'tiktok_url' => \App\Models\SaaSSetting::get('tiktok_url'),
                     ])
                     ->text('emails.system_text', [
                         'subject' => $this->subjectStr,

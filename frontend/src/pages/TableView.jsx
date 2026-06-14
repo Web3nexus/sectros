@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Grid, List, Table as TableIcon, Loader2, Circle, MoreVertical, LayoutGrid, Home } from 'lucide-react'
+import {Plus, Grid, List, Table as TableIcon, Loader2, Briefcase, MoreVertical, LayoutGrid, Home} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
 
@@ -118,7 +118,7 @@ export function TableView() {
                table.status === 'occupied' ? 'border-blue-100 text-primary bg-blue-50' : 
                'border-border text-muted-foreground bg-slate-50'
              }`}>
-               <Circle size={6} fill="currentColor" className={table.status === 'occupied' ? 'animate-pulse' : ''} />
+               <Briefcase size={6} fill="currentColor" className={table.status === 'occupied' ? 'animate-pulse' : ''} />
                {table.status}
              </div>
              

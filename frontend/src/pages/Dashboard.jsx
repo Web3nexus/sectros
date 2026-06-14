@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { DollarSign, BarChart2, Calendar, LayoutGrid, MoreHorizontal, Filter, ChevronLeft, ChevronRight, Loader2, ArrowUpRight, TrendingUp, Users, Activity, ShoppingBag, Star, Building2 } from 'lucide-react'
+import {DollarSign, BarChart2, Calendar, LayoutGrid, MoreHorizontal, Filter, ChevronLeft, ChevronRight, Loader2, ArrowUpRight, TrendingUp, Users, Activity, ShoppingBag, Briefcase, Building2} from 'lucide-react'
 import api from '../services/api'
 import { useTranslation } from 'react-i18next'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
@@ -13,7 +13,7 @@ const ICON_MAP = {
   TrendingUp: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><TrendingUp size={16} /></div>,
   Users: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Users size={16} /></div>,
   ShoppingBag: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><ShoppingBag size={16} /></div>,
-  Star: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Star size={16} /></div>,
+  Briefcase: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Briefcase size={16} /></div>,
   LayoutGrid: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><LayoutGrid size={16} /></div>,
 };
 

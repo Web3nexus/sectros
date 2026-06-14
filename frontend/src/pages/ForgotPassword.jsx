@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import {Mail, ArrowLeft, Loader2, CheckCircle2, AlertCircle} from 'lucide-react';
 import api from '../services/api';
 
 export default function ForgotPassword() {

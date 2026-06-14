@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ChevronRight, Book, Code, Component, Zap, Loader2 } from 'lucide-react';
+import {Search, ChevronRight, Book, Code, Component, Zap, Loader2} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

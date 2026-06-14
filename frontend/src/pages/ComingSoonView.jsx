@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Clock } from 'lucide-react';
+import {LayoutDashboard, Clock} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ComingSoonView = ({ title, description }) => {

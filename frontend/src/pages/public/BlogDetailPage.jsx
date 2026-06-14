@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, User, Share2, Tag, Loader2 } from 'lucide-react';
+import {ArrowLeft, Clock, User, Share2, Tag, Loader2} from 'lucide-react';
 import centralApi from '../../services/centralApi';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';

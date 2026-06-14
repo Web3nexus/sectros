@@ -2,11 +2,7 @@ import { motion } from 'framer-motion';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import {
-  Calendar, User, ArrowRight, Tag, Search, ChevronRight,
-  Sparkles, Mail, BookOpen, Lightbulb, BarChart3, Building2,
-  Quote, TrendingUp,
-} from 'lucide-react';
+import {Calendar, User, ArrowRight, Tag, Search, ChevronRight, Briefcase, Mail, BookOpen, Lightbulb, BarChart3, Building2, Quote, TrendingUp, } from 'lucide-react';
 
 const categories = ['All', 'Product', 'Tips', 'Industry', 'Case Studies'];
 
@@ -212,7 +208,7 @@ export default function ModernBlog() {
                   {a.category === 'Case Studies' && <Building2 size={36} className="opacity-40" />}
                   {a.category === 'Tips' && <Lightbulb size={36} className="opacity-40" />}
                   {a.category === 'Industry' && <BarChart3 size={36} className="opacity-40" />}
-                  {a.category === 'Product' && <Sparkles size={36} className="opacity-40" />}
+                  {a.category === 'Product' && <Briefcase size={36} className="opacity-40" />}
                   <span className="sr-only">{a.imageLabel}</span>
                 </div>
                 <div className="flex flex-1 flex-col p-5">
@@ -251,7 +247,7 @@ export default function ModernBlog() {
           viewport={{ once: true }}
           className="relative mx-auto max-w-3xl overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 px-8 py-14 text-center text-white shadow-xl sm:px-12"
         >
-          <Sparkles size={36} className="mx-auto text-blue-200" />
+          <Briefcase size={36} className="mx-auto text-blue-200" />
           <h2 className="mt-4 text-2xl font-bold sm:text-3xl">{get('newsletter.heading')}</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-blue-100">
             {get('newsletter.paragraph')}

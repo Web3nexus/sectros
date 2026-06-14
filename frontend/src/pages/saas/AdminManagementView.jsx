@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Shield, ShieldCheck, Mail, Key, Trash2, X, Check, Search, Activity, AlertTriangle } from 'lucide-react';
+import {Users, Plus, Shield, ShieldCheck, Mail, Key, Trash2, X, Check, Search, Activity, AlertTriangle} from 'lucide-react';
 import api from '../../services/centralApi';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 

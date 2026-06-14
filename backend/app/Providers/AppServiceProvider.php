@@ -2,23 +2,23 @@
 
 namespace App\Providers;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\ServiceProvider;
+use App\Scopes\TenantScope;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
+        Builder::macro('withoutTenantScope', function () {
+            return $this->withoutGlobalScope(TenantScope::class);
+        });
+
         \App\Models\Tenant::observe(\App\Observers\TenantObserver::class);
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable((new \App\Models\SaaSSetting)->getTable())) {

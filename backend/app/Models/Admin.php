@@ -11,7 +11,7 @@ class Admin extends Authenticatable
 {
     use HasApiTokens, Notifiable, HasRoles;
 
-    protected $connection = 'mysql';
+    protected $connection = 'platform';
 
     protected $fillable = [
         'name',

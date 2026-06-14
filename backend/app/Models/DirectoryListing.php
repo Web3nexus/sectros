@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DirectoryListing extends Model
 {
+    protected $connection = 'platform';
+
     protected $fillable = [
         'tenant_id',
         'name',

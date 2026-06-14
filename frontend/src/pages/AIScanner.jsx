@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Upload, Scan, FileText, CheckCircle, Loader2, X, AlertCircle } from 'lucide-react'
+import {Upload, Scan, FileText, CheckCircle, Loader2, X, AlertCircle} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import api from '../services/api'
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Calendar, Clock, Users, MessageSquare, CheckCircle, CircleX as XCircle, Clock4, Search, Filter, Loader2, Globe, MessageCircle, Instagram, Facebook, Link as LinkIcon, Smartphone, MapPin } from 'lucide-react'
+import {Calendar, Clock, Users, MessageCircle, CheckCircle, CircleX as XCircle, Clock4, Search, Filter, Loader2, Globe, Instagram, Facebook, Link as LinkIcon, Smartphone, MapPin} from 'lucide-react'
 import api from '../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
