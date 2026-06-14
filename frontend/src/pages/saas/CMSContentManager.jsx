@@ -97,6 +97,7 @@ function PageEditor({ pageKey, data, onChange }) {
 
   const set = (path, value) => {
     const parts = path.split('.');
+    if (parts.some(p => p === '__proto__' || p === 'constructor' || p === 'prototype')) return;
     const newData = { ...data };
     let obj = newData;
     for (let i = 0; i < parts.length - 1; i++) {
@@ -174,6 +175,7 @@ function getDefault(obj, path) {
 
 function deepSet(obj, path, value) {
   const parts = path.split('.');
+  if (parts.some(p => p === '__proto__' || p === 'constructor' || p === 'prototype')) return obj;
   const result = { ...obj };
   let current = result;
   for (let i = 0; i < parts.length - 1; i++) {
