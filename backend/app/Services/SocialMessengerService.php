@@ -47,16 +47,24 @@ class SocialMessengerService
 
     /**
      * Resolve the appropriate token for the platform.
-     * Facebook/Instagram require a Page Access Token; WhatsApp uses the system token.
+     * WhatsApp uses per-tenant tokens from tenant_whatsapp_connections.
+     * Facebook/Instagram use Page Access Token stored on the Tenant.
      */
-    private function getToken(?int $tenantId, string $platform): ?string
+    private function getToken(?string $tenantId, string $platform): ?string
     {
         $saasSettings = \App\Models\SaaSSetting::all()->pluck('value', 'key');
 
         if ($platform === 'whatsapp') {
+            if ($tenantId) {
+                $connection = \App\Models\TenantWhatsAppConnection::forTenant($tenantId)->active()->first();
+                if ($connection && $connection->access_token) {
+                    return $connection->access_token;
+                }
+            }
+
             $token = $saasSettings['meta_system_token'] ?? env('META_SYSTEM_TOKEN');
             if (empty($token)) {
-                Log::warning("Skipping WhatsApp dispatch: No META_SYSTEM_TOKEN configured.");
+                Log::warning("Skipping WhatsApp dispatch: No tenant token or META_SYSTEM_TOKEN configured.");
                 return null;
             }
             return $token;

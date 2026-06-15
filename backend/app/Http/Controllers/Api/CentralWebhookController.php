@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
+use App\Models\TenantWhatsAppConnection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +19,6 @@ class CentralWebhookController extends Controller
         $token = $request->query('hub_verify_token');
         $challenge = $request->query('hub_challenge');
 
-        // Fetch global verify token from SaaS settings
         $settings = \App\Models\SaaSSetting::all()->pluck('value', 'key');
         $expectedToken = $settings['social_verify_token'] ?? 'sectros_secret_token';
 
@@ -39,31 +39,25 @@ class CentralWebhookController extends Controller
     {
         $payload = $request->all();
         $signature = $request->header('X-Hub-Signature-256');
-        
-        // 0. Validate Webhook Signature (REQUIRED for production)
+
         $settings = \App\Models\SaaSSetting::all()->pluck('value', 'key');
         $appSecret = $settings['meta_app_secret'] ?? env('META_APP_SECRET');
 
         if (empty($appSecret)) {
-            Log::critical('Social Webhook: META_APP_SECRET not configured — rejecting all webhooks for safety');
+            Log::critical('Social Webhook: META_APP_SECRET not configured');
             return response()->json(['error' => 'Server not configured for webhooks'], 500);
         }
 
         if (!$signature || !hash_equals('sha256=' . hash_hmac('sha256', $request->getContent(), $appSecret), $signature)) {
-            Log::warning('Social Webhook: Invalid or Missing Signature', ['ip' => $request->ip()]);
+            Log::warning('Social Webhook: Invalid Signature', ['ip' => $request->ip()]);
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
-        Log::info('Incoming Meta Webhook', [
-            'url' => $request->fullUrl(),
-            'method' => $request->method(),
-            'payload' => $payload
-        ]);
+        Log::info('Incoming Meta Webhook', ['url' => $request->fullUrl(), 'method' => $request->method()]);
 
-        // 1. Collect all potential identifiers from the payload
+        $platform = 'Unknown';
         $potentialIds = [];
-        
-        // WhatsApp Business Payload
+
         if (isset($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'])) {
             $platform = 'WhatsApp';
             $potentialIds[] = $payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
@@ -71,78 +65,85 @@ class CentralWebhookController extends Controller
             if (isset($payload['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'])) {
                 $potentialIds[] = $payload['entry'][0]['changes'][0]['value']['metadata']['display_phone_number'];
             }
-        } 
-        // Facebook/Instagram Page Payload
-        elseif (isset($payload['entry'][0]['id'])) {
+        } elseif (isset($payload['entry'][0]['id'])) {
             $platform = (isset($payload['object']) && $payload['object'] === 'instagram') ? 'Instagram' : 'Facebook';
             $potentialIds[] = $payload['entry'][0]['id'];
-        }
-        // Fallback for custom/simulated payloads
-        elseif (isset($payload['message']['platform_id'])) {
+        } elseif (isset($payload['message']['platform_id'])) {
             $platform = $payload['message']['platform'] ?? 'Web';
             $potentialIds[] = $payload['message']['platform_id'];
         }
 
-        $platformId = $potentialIds[0] ?? 'unknown';
+        $tenant = $this->resolveTenant($potentialIds, $platform);
 
-        // 2. Perform Robust/Fuzzy matching against Tenants
-        $tenant = Tenant::all()->first(function ($t) use ($potentialIds) {
-            $storedIds = [
-                $t->whatsapp_id,
-                $t->facebook_page_id,
-                $t->instagram_id
-            ];
+        if (!$tenant) {
+            Log::warning('Social Webhook: No matching tenant', ['potentialIds' => $potentialIds, 'platform' => $platform]);
+            return response()->json(['status' => 'ignored', 'message' => 'No matching tenant found'], 200);
+        }
+
+        try {
+            if ($platform === 'WhatsApp' && isset($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'])) {
+                $technicalId = $payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
+                if (($tenant->whatsapp_technical_id ?? null) !== $technicalId) {
+                    $tenant->whatsapp_technical_id = $technicalId;
+                    $tenant->save();
+                }
+            }
+
+            \App\Jobs\ProcessSocialWebhook::dispatch($tenant, $payload);
+
+            return response()->json(['status' => 'EVENT_RECEIVED'], 200);
+        } catch (\Exception $e) {
+            Log::error('Central Webhook Dispatch Failed', ['error' => $e->getMessage()]);
+            return response()->json(['status' => 'error', 'message' => 'Internal error'], 500);
+        }
+    }
+
+    /**
+     * Resolve tenant by matching incoming IDs against:
+     * 1. tenant_whatsapp_connections (phone_number_id, waba_id)
+     * 2. Tenant model (whatsapp_id, facebook_page_id, instagram_id)
+     */
+    private function resolveTenant(array $potentialIds, string $platform): ?Tenant
+    {
+        foreach ($potentialIds as $id) {
+            if (empty($id)) continue;
+
+            $connection = TenantWhatsAppConnection::where('phone_number_id', $id)
+                ->orWhere('waba_id', $id)
+                ->first();
+
+            if ($connection) {
+                return Tenant::find($connection->tenant_id);
+            }
+        }
+
+        return Tenant::all()->first(function ($t) use ($potentialIds) {
+            $storedIds = array_filter([
+                $t->whatsapp_id ?? null,
+                $t->facebook_page_id ?? null,
+                $t->instagram_id ?? null,
+            ]);
 
             foreach ($potentialIds as $incomingId) {
                 foreach ($storedIds as $storedId) {
-                    if (empty($storedId) || empty($incomingId)) continue;
-                    
-                    // Exact match
+                    if (empty($storedId)) continue;
+
                     if ($storedId == $incomingId) return true;
-                    
-                    // Numeric normalization match (strip +, -, spaces)
+
                     $normIncoming = preg_replace('/\D/', '', (string)$incomingId);
                     $normStored = preg_replace('/\D/', '', (string)$storedId);
-                    
+
                     if (!empty($normIncoming) && !empty($normStored)) {
                         if ($normIncoming === $normStored) return true;
-                        
-                        // Last 10 digits match (handles international prefix variations)
                         if (strlen($normIncoming) >= 10 && strlen($normStored) >= 10) {
                             if (substr($normIncoming, -10) === substr($normStored, -10)) return true;
                         }
                     }
 
-                    // Partial match for URLs (case insensitive)
                     if (stripos((string)$storedId, (string)$incomingId) !== false) return true;
                 }
             }
             return false;
         });
-
-        if (!$tenant) {
-            Log::warning('Social Webhook: No tenant found for IDs', ['potentialIds' => $potentialIds, 'platform' => $platform ?? 'unknown']);
-            return response()->json(['status' => 'ignored', 'message' => 'No matching tenant found'], 200);
-        }
-
-        // 3. Prepare Tenant Data and Dispatch Background Job
-        try {
-            // Auto-update technical IDs for non-technical users
-            if ($platform === 'WhatsApp' && isset($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'])) {
-                $technicalId = $payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'];
-                if ($tenant->whatsapp_technical_id !== $technicalId) {
-                    $tenant->whatsapp_technical_id = $technicalId;
-                    $tenant->save();
-                }
-            }
-            
-            \App\Jobs\ProcessSocialWebhook::dispatch($tenant, $payload);
-            
-            // Instantly return 200 OK to Meta
-            return response()->json(['status' => 'EVENT_RECEIVED'], 200);
-        } catch (\Exception $e) {
-            Log::error('Central Webhook Dispatch Failed', ['error' => $e->getMessage()]);
-            return response()->json(['status' => 'error', 'message' => 'Internal scheduling error'], 500);
-        }
     }
 }

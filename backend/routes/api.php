@@ -14,6 +14,9 @@ Route::middleware('throttle:60,1')->group(function () {
 Route::get('/auth/facebook', [\App\Http\Controllers\Api\SocialiteController::class, 'redirectToFacebook']);
 Route::get('/auth/facebook/callback', [\App\Http\Controllers\Api\SocialiteController::class, 'handleFacebookCallback']);
 
+// WhatsApp Embedded Signup Callback (handles Meta OAuth redirect for per-tenant WhatsApp connection)
+Route::get('/whatsapp/callback', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'handleCallback']);
+
 // Payment Webhooks
 Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleStripe']);
 Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);

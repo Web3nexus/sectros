@@ -331,6 +331,13 @@ Route::middleware(['api'])->group(function () {
                 Route::post('/scan-receipt', [AutomationController::class, 'scanReceipt']);
             });
 
+            Route::prefix('whatsapp')->group(function () {
+                Route::get('/initiate', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'initiate']);
+                Route::get('/status', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'status']);
+                Route::post('/disconnect', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'disconnect']);
+                Route::post('/send-test', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'sendTest']);
+            });
+
             Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'stats']);
 
             Route::prefix('builder')->group(function () {

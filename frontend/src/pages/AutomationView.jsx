@@ -31,19 +31,37 @@ export default function AutomationView() {
   const [isLinkingModalOpen, setIsLinkingModalOpen] = useState(false);
   const [linkingChannel, setLinkingChannel] = useState(null);
   const [platformId, setPlatformId] = useState('');
+  const [whatsAppConnection, setWhatsAppConnection] = useState(null);
+  const [connectingWhatsApp, setConnectingWhatsApp] = useState(false);
 
   useEffect(() => {
     fetchActivity();
     fetchSettings();
     fetchKnowledge();
+    fetchWhatsAppStatus();
     // Check for OAuth results in URL
     const params = new URLSearchParams(window.location.search);
     if (params.get('oauth') === 'success') {
         alert("Account connected successfully via Meta OAuth!");
-        fetchSettings(); // Refresh to show connected status
+        fetchSettings();
     } else if (params.get('oauth') === 'error') {
         alert("Meta authentication failed. Please try again.");
     }
+    // Listen for WhatsApp Embedded Signup popup callback
+    const handleMessage = (event) => {
+      if (event.data && event.data.status) {
+        if (event.data.status === 'success') {
+          alert('WhatsApp Business connected successfully!');
+          fetchWhatsAppStatus();
+          fetchSettings();
+        } else if (event.data.status === 'error') {
+          alert('WhatsApp connection failed: ' + (event.data.message || 'Unknown error'));
+        }
+        setConnectingWhatsApp(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   const fetchActivity = async () => {
@@ -102,22 +120,66 @@ export default function AutomationView() {
     }
   };
 
+  const fetchWhatsAppStatus = async () => {
+    try {
+      const res = await api.get('whatsapp/status');
+      setWhatsAppConnection(res.data.connection);
+    } catch (err) {
+      console.error('Failed to fetch WhatsApp status:', err);
+    }
+  };
+
+  const handleDisconnectWhatsApp = async () => {
+    if (!confirm('Disconnect WhatsApp Business? The AI will no longer respond to messages from this number.')) return;
+    try {
+      await api.post('whatsapp/disconnect');
+      setWhatsAppConnection(null);
+      const newSettings = { ...aiSettings, social_whatsapp: false };
+      setAiSettings(newSettings);
+      api.post('automation/settings', newSettings);
+    } catch (err) {
+      alert('Failed to disconnect WhatsApp.');
+    }
+  };
+
+  const handleConnectWhatsApp = async () => {
+    setConnectingWhatsApp(true);
+    try {
+      const res = await api.get('whatsapp/initiate');
+      const width = 600, height = 800;
+      const left = (screen.width - width) / 2;
+      const top = (screen.height - height) / 2;
+      window.open(
+        res.data.url,
+        'connect-whatsapp',
+        `width=${width},height=${height},left=${left},top=${top},popup=1`
+      );
+    } catch (err) {
+      alert('Failed to start WhatsApp connection. ' + (err.response?.data?.error || 'Please try again.'));
+      setConnectingWhatsApp(false);
+    }
+  };
+
   const handleSocialToggle = (platform) => {
+    if (platform.id === 'social_whatsapp') {
+      if (whatsAppConnection && whatsAppConnection.status === 'connected') {
+        handleDisconnectWhatsApp();
+      } else {
+        handleConnectWhatsApp();
+      }
+      return;
+    }
     if (aiSettings[platform.id]) {
       const newSettings = { ...aiSettings, [platform.id]: false };
       setAiSettings(newSettings);
       api.post('automation/settings', newSettings);
     } else {
-      // Use OAuth for Meta platforms
-      if (['social_facebook', 'social_instagram', 'social_whatsapp'].includes(platform.id)) {
+      if (['social_facebook', 'social_instagram'].includes(platform.id)) {
         const hostname = window.location.hostname;
         const parts = hostname.split('.');
-        // Extract tenant ID (e.g. 'vincentv' from 'vincentv.sectros.com')
-        const tenantId = parts.length > 2 ? parts[0] : hostname; 
-        // Identify central domain (e.g. 'sectros.com')
+        const tenantId = parts.length > 2 ? parts[0] : hostname;
         const centralDomain = parts.length > 2 ? parts.slice(1).join('.') : hostname;
         const protocol = window.location.protocol;
-
         window.open(`${protocol}//${centralDomain}/central-api/auth/facebook?tenant_id=${tenantId}`, '_blank');
       } else {
         setLinkingChannel(platform);
@@ -330,34 +392,60 @@ export default function AutomationView() {
            </div>
            
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                  { name: 'WhatsApp Business', id: 'social_whatsapp', icon: <MessageSquare size={28} />, connected: aiSettings.social_whatsapp, color: 'text-emerald-500', bg: 'bg-emerald-50', desc: 'Reply to WhatsApp messages via the inbox' },
+              {(() => {
+                  const waConnected = whatsAppConnection && whatsAppConnection.status === 'connected';
+                  return [
+                  { name: 'WhatsApp Business', id: 'social_whatsapp', icon: <MessageSquare size={28} />, connected: waConnected, color: 'text-emerald-500', bg: 'bg-emerald-50', desc: waConnected ? `Connected: ${whatsAppConnection.display_phone_number || whatsAppConnection.phone_number_id}` : 'Connect your WhatsApp Business Account. Uses Embedded Signup.' },
                   { name: 'Facebook Page', id: 'social_facebook', icon: <Facebook size={28} />, connected: aiSettings.social_facebook, color: 'text-primary', bg: 'bg-blue-50', desc: 'Reply to Facebook Page DMs via the inbox' },
                   { name: 'Instagram Creator', id: 'social_instagram', icon: <Instagram size={28} />, connected: aiSettings.social_instagram, color: 'text-pink-500', bg: 'bg-pink-50', desc: 'Reply to Instagram DMs via the inbox (requires Meta App Review)' },
-              ].map(platform => (
+                  ].map((platform, idx) => (
                   <div key={platform.name} className="p-8 rounded-[40px] border border-border hover:border-blue-200 hover:shadow-2xl hover:shadow-blue-500/5 transition-all group relative overflow-hidden">
-                      <div className="flex items-start justify-between mb-10">
+                      <div className="flex items-start justify-between mb-4">
                           <div className={`h-16 w-16 rounded-[24px] ${platform.bg} ${platform.color} flex items-center justify-center group-hover:scale-110 group-hover:rotate-6 transition-all`}>
                               {platform.icon}
                           </div>
+                          {platform.connected && platform.id === 'social_whatsapp' && (
+                            <span className="text-[8px] bg-emerald-100 text-emerald-700 font-black px-2 py-1 rounded-full uppercase tracking-widest">Active</span>
+                          )}
                       </div>
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                           <div>
                             <h4 className="font-black text-foreground tracking-tight text-sm uppercase mb-1">{platform.name}</h4>
                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{platform.desc}</p>
                           </div>
-                          <button 
+                          {platform.id === 'social_whatsapp' && !waConnected && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                              <p className="text-[9px] font-bold text-amber-700 uppercase tracking-widest leading-relaxed">
+                                WhatsApp API connection is for WhatsApp Business Platform usage. Your customers will message you on WhatsApp normally. Requires your own Meta Business Manager and WhatsApp Business Account.
+                              </p>
+                            </div>
+                          )}
+                          <button
                               onClick={() => handleSocialToggle(platform)}
-                              className={`w-full py-4 rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all ${
-                              platform.connected 
-                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
+                              disabled={platform.id === 'social_whatsapp' && connectingWhatsApp}
+                              className={`w-full py-4 rounded-[20px] text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                              platform.connected && platform.id === 'social_whatsapp'
+                                  ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-100'
+                                  : platform.connected
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-100'
                                   : 'bg-primary text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 active:scale-95'
                           }`}>
-                              {platform.connected ? 'Channel Online' : 'Link Account'}
+                              {platform.id === 'social_whatsapp' && connectingWhatsApp ? (
+                                <><Loader2 size={14} className="animate-spin" /> Connecting...</>
+                              ) : platform.id === 'social_whatsapp' && waConnected ? (
+                                'Disconnect'
+                              ) : platform.id === 'social_whatsapp' ? (
+                                'Connect WhatsApp Business'
+                              ) : platform.connected ? (
+                                'Channel Online'
+                              ) : (
+                                'Link Account'
+                              )}
                           </button>
                       </div>
                   </div>
-              ))}
+                  ));
+              })()}
            </div>
         </div>
       )}
