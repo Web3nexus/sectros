@@ -17,6 +17,19 @@ Route::get('/auth/facebook/callback', [\App\Http\Controllers\Api\SocialiteContro
 // WhatsApp Embedded Signup Callback (handles Meta OAuth redirect for per-tenant WhatsApp connection)
 Route::get('/whatsapp/callback', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'handleCallback']);
 
+// Meta App Review Required Pages
+Route::get('/privacy', function() {
+    return response('<html><head><title>Privacy Policy</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;color:#333}h1{color:#111}h2{color:#444}</style></head><body><h1>Privacy Policy</h1><p><em>Last updated: ' . date('F d, Y') . '</em></p><h2>Information We Collect</h2><p>We collect information you provide when connecting your WhatsApp Business Account, including your business name, phone number, and message content.</p><h2>How We Use Your Information</h2><p>We use this information to enable WhatsApp messaging features within our platform, including automated replies, reservation management, and customer communication.</p><h2>Data Sharing</h2><p>We do not sell your data. Message data is processed through Meta\'s WhatsApp Cloud API and stored securely for operational purposes.</p><h2>Contact</h2><p>For inquiries: privacy@sectros.com</p></body></html>')->header('Content-Type', 'text/html');
+});
+
+Route::get('/terms', function() {
+    return response('<html><head><title>Terms of Service</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;color:#333}h1{color:#111}h2{color:#444}</style></head><body><h1>Terms of Service</h1><p><em>Last updated: ' . date('F d, Y') . '</em></p><h2>Acceptance</h2><p>By using Sectros and connecting your WhatsApp Business Account, you agree to these terms.</p><h2>WhatsApp Compliance</h2><p>You must comply with Meta\'s WhatsApp Business Solution Terms and applicable laws when using WhatsApp features through our platform.</p><h2>Service Availability</h2><p>We strive for high availability but do not guarantee uninterrupted WhatsApp messaging service.</p><h2>Limitation of Liability</h2><p>We are not liable for any damages arising from the use of WhatsApp integration features.</p></body></html>')->header('Content-Type', 'text/html');
+});
+
+Route::get('/data-deletion', function() {
+    return response('<html><head><title>Data Deletion</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;color:#333}h1{color:#111}</style></head><body><h1>Data Deletion Request</h1><p>To request deletion of your WhatsApp connection data, please email privacy@sectros.com with the subject "Data Deletion Request" including your business name and WhatsApp phone number.</p><p>We will process your request within 30 days and confirm once your data has been deleted.</p></body></html>')->header('Content-Type', 'text/html');
+});
+
 // Payment Webhooks
 Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleStripe']);
 Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);
