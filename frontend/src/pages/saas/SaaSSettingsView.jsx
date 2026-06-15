@@ -285,7 +285,18 @@ export default function SaaSSettingsView() {
                             className="hidden" 
                             accept="image/*"
                             onChange={async (e) => {
-                                // ... same logic
+                              const file = e.target.files[0];
+                              if (!file) return;
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              formData.append('type', 'logo');
+                              try {
+                                const res = await api.post('saas/settings/upload-branding', formData);
+                                setSettings({ ...settings, platform_logo_url: res.data.url });
+                                showModal("Logo Uploaded", "Your platform logo has been updated.", "success");
+                              } catch (err) {
+                                showModal("Upload Failed", "Failed to upload logo.", "error");
+                              }
                             }}
                           />
                         </label>
