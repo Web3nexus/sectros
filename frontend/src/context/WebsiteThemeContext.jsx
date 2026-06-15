@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import api from '../services/api';
+import centralApi from '../services/centralApi';
 
 const WebsiteThemeContext = createContext();
 
@@ -12,7 +12,7 @@ export function WebsiteThemeProvider({ children }) {
   useEffect(() => {
     const fetchTheme = async () => {
       try {
-        const res = await api.get('saas/settings');
+        const res = await centralApi.get('public/theme');
         const theme = res.data.website_theme || 'classic-ai';
         setActiveTheme(theme);
         localStorage.setItem('website_theme', theme);

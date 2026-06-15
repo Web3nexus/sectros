@@ -719,6 +719,15 @@ class SaaSController extends Controller
     }
 
     /**
+     * Public endpoint to get the active website theme. No auth required.
+     */
+    public function getPublicTheme()
+    {
+        $theme = \App\Models\SaaSSetting::where('key', 'website_theme')->value('value');
+        return response()->json(['website_theme' => $theme ?? 'classic-ai']);
+    }
+
+    /**
      * Look up a tenant by its domain to show business info on login page.
      */
     public function getTenantByDomain($domain)
