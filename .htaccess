@@ -1,4 +1,5 @@
 <IfModule mod_rewrite.c>
+    Options +FollowSymLinks
     RewriteEngine On
 
     # Only rewrite if not already going to backend/public
