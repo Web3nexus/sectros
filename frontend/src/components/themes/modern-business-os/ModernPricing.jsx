@@ -1,71 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {Check, Minus, ChevronDown, Zap, Users, Globe, MessageSquare, ArrowRight, Briefcase, HelpCircle, Smartphone, DollarSign} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
+import centralApi from '../../../services/centralApi';
 
-const plans = [
+const defaultPlans = [
   {
-    name: 'Starter',
-    monthly: 0,
-    yearly: 0,
-    description: 'For new venues getting started.',
-    popular: false,
-    features: [
-      'Online booking page',
-      'Basic reservation management',
-      'Guest list',
-      'Email confirmations',
-      'Up to 50 bookings/mo',
-    ],
+    name: 'Starter', monthly: 0, yearly: 0, description: 'For new venues getting started.', popular: false,
+    features: ['Online booking page', 'Basic reservation management', 'Guest list', 'Email confirmations', 'Up to 50 bookings/mo'],
   },
   {
-    name: 'Growth',
-    monthly: 29,
-    yearly: 290,
-    description: 'For growing restaurants.',
-    popular: false,
-    features: [
-      'Everything in Starter',
-      'Floor plan management',
-      'Guest CRM',
-      'Automated reminders',
-      'Deposits & payments',
-      'Analytics dashboard',
-      'Up to 500 bookings/mo',
-    ],
+    name: 'Growth', monthly: 29, yearly: 290, description: 'For growing restaurants.', popular: false,
+    features: ['Everything in Starter', 'Floor plan management', 'Guest CRM', 'Automated reminders', 'Deposits & payments', 'Analytics dashboard', 'Up to 500 bookings/mo'],
   },
   {
-    name: 'Professional',
-    monthly: 79,
-    yearly: 790,
-    description: 'For established hospitality businesses.',
-    popular: true,
-    features: [
-      'Everything in Growth',
-      'Advanced automation',
-      'Multi-channel messaging',
-      'Advanced analytics',
-      'Team roles (up to 10)',
-      'Priority support',
-      'Unlimited bookings',
-    ],
+    name: 'Professional', monthly: 79, yearly: 790, description: 'For established hospitality businesses.', popular: true,
+    features: ['Everything in Growth', 'Advanced automation', 'Multi-channel messaging', 'Advanced analytics', 'Team roles (up to 10)', 'Priority support', 'Unlimited bookings'],
   },
   {
-    name: 'Enterprise',
-    monthly: null,
-    yearly: null,
-    description: 'For multi-location groups.',
-    popular: false,
-    features: [
-      'Everything in Professional',
-      'Multi-location management',
-      'Custom integrations',
-      'Dedicated onboarding',
-      'Enterprise reporting',
-      'Custom contract',
-      'SLA guarantee',
-    ],
+    name: 'Enterprise', monthly: null, yearly: null, description: 'For multi-location groups.', popular: false,
+    features: ['Everything in Professional', 'Multi-location management', 'Custom integrations', 'Dedicated onboarding', 'Enterprise reporting', 'Custom contract', 'SLA guarantee'],
   },
 ];
 
@@ -165,6 +120,26 @@ export default function ModernPricing() {
   const { get } = useCmsContent('pricing');
   const [annual, setAnnual] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const [plans, setPlans] = useState(defaultPlans);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    centralApi.get('saas/plans').then(res => {
+      const raw = res.data;
+      const arr = Array.isArray(raw) ? raw : (raw?.data || []);
+      const active = arr.filter(p => p.is_active);
+      if (active.length > 0) {
+        setPlans(active.map(p => ({
+          name: p.name,
+          monthly: p.monthly_price ?? 0,
+          yearly: p.yearly_price ?? null,
+          description: p.description || '',
+          popular: !!p.popular,
+          features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? p.features.split(',').map(f => f.trim()) : defaultPlans.find(d => d.name === p.name)?.features || [],
+        })));
+      }
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-white font-sans antialiased">

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {Calendar, Users, Layout, BarChart3, Bell, Clock, CreditCard, MessageSquare, Settings, Briefcase, ArrowRight, Check, Phone, Mail, Globe, Shield, Zap, TrendingUp, PieChart, Download, Menu, X, ChevronDown, ChevronRight, Plus, Minus, BookOpen, Smartphone, Monitor, Building2, Coffee, UtensilsCrossed, Hotel, PartyPopper, Music, HeartHandshake, Target, BrainCircuit, Award, Quote} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
+import centralApi from '../../../services/centralApi';
 
 const fadeUp = {
   initial: { opacity: 0, y: 40 },
@@ -524,7 +525,26 @@ const faqItems = [
 
 export default function ModernHome() {
   const [openFaq, setOpenFaq] = useState(null);
+  const [pricingPlans, setPricingPlans] = useState(null);
   const { get, getArray } = useCmsContent('home');
+
+  useEffect(() => {
+    centralApi.get('saas/plans').then(res => {
+      const raw = res.data;
+      const arr = Array.isArray(raw) ? raw : (raw?.data || []);
+      const active = arr.filter(p => p.is_active);
+      if (active.length > 0) {
+        setPricingPlans(active.map(p => ({
+          name: p.name,
+          price: p.monthly_price === 0 || p.monthly_price === null ? (p.name === 'Enterprise' ? 'Custom' : '$0') : `$${p.monthly_price}`,
+          period: p.monthly_price === 0 ? 'forever free' : p.monthly_price === null ? 'contact us' : '/month',
+          highlighted: !!p.popular,
+          features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? p.features.split(',').map(f => f.trim()) : [],
+          desc: p.description || '',
+        })));
+      }
+    }).catch(() => {});
+  }, []);
   const featureItems = getArray('featureCluster.items');
   const productCards = getArray('productShowcase.cards');
   const testimonialItems = getArray('testimonials.items');
@@ -1221,7 +1241,7 @@ export default function ModernHome() {
             <p className="mt-4 text-lg text-slate-400">{get('pricingPreview.subheading')}</p>
           </motion.div>
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" {...stagger}>
-            {[
+            {(pricingPlans || [
               {
                 name: 'Starter',
                 desc: 'For new venues getting started',
@@ -1254,7 +1274,7 @@ export default function ModernHome() {
                 highlighted: false,
                 features: ['Everything in Pro', 'Unlimited locations', 'Dedicated account manager', 'Custom integrations', 'On-site training', 'SLA guarantee'],
               },
-            ].map(({ name, desc, price, period, highlighted, features }, i) => (
+            ]).map(({ name, desc, price, period, highlighted, features }, i) => (
               <motion.div
                 key={name}
                 variants={stagger}
