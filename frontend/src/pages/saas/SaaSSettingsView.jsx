@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2} from 'lucide-react';
+import axios from 'axios';
 import api from '../../services/centralApi';
 import StatusModal from '../../components/common/StatusModal';
 import { useWebsiteTheme } from '../../context/WebsiteThemeContext';
@@ -291,7 +292,10 @@ export default function SaaSSettingsView() {
                               formData.append('file', file);
                               formData.append('type', 'logo');
                               try {
-                                const res = await api.post('saas/settings/upload-branding', formData);
+                                const token = localStorage.getItem('admin_token');
+                                const res = await axios.post('/central-api/saas/settings/upload-branding', formData, {
+                                  headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' },
+                                });
                                 setSettings({ ...settings, platform_logo_url: res.data.url });
                                 showModal("Logo Uploaded", "Your platform logo has been updated.", "success");
                               } catch (err) {
@@ -338,7 +342,10 @@ export default function SaaSSettingsView() {
                               formData.append('file', file);
                               formData.append('type', 'favicon');
                               try {
-                                const res = await api.post('saas/settings/upload-branding', formData);
+                                const token = localStorage.getItem('admin_token');
+                                const res = await axios.post('/central-api/saas/settings/upload-branding', formData, {
+                                  headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' },
+                                });
                                 setSettings({ ...settings, platform_favicon_url: res.data.url });
                                 showModal("Favicon Uploaded", "Your browser favicon has been updated.", "success");
                               } catch (err) {
