@@ -56,12 +56,18 @@ export default function MessagesView() {
         chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [selectedSender, interactions]);
 
-    // Group interactions by sender for the sidebar
+    // Group interactions by sender + platform_account_id (same sender on different pages = separate convos)
+    const conversationKey = (item) => `${item.sender}|${item.platform_account_id || item.platform}`;
+
     const conversations = interactions.reduce((acc, curr) => {
-        if (!acc[curr.sender]) {
-            acc[curr.sender] = {
+        const key = conversationKey(curr);
+        if (!acc[key]) {
+            acc[key] = {
+                key,
                 sender: curr.sender,
                 platform: curr.platform,
+                platform_account_id: curr.platform_account_id,
+                platform_account_name: curr.platform_account_name,
                 lastMessage: curr.content,
                 timestamp: curr.timestamp,
                 time: curr.time,
@@ -69,7 +75,7 @@ export default function MessagesView() {
                 messages: []
             };
         }
-        acc[curr.sender].messages.push(curr);
+        acc[key].messages.push(curr);
         return acc;
     }, {});
 
@@ -97,6 +103,7 @@ export default function MessagesView() {
     };
 
     const activeChatMessages = selectedSender ? conversations[selectedSender].messages.slice().reverse() : [];
+    const activeConversation = selectedSender ? conversations[selectedSender] : null;
 
     const isOutOfCredits = credits && (credits.used >= credits.limit) && (credits.topup <= 0);
     const isLowOnCredits = credits && !isOutOfCredits && ((credits.limit + credits.topup - credits.used) / (credits.limit + credits.topup) <= 0.1);
@@ -132,9 +139,9 @@ export default function MessagesView() {
                         </div>
                     ) : (Array.isArray(sortedConversations) ? sortedConversations : []).map(conv => (
                             <button 
-                                key={conv.sender}
-                                onClick={() => setSelectedSender(conv.sender)}
-                                className={`w-full p-6 text-left hover:bg-slate-50 transition-all flex gap-4 relative group ${selectedSender === conv.sender ? 'bg-blue-50/50' : ''}`}
+                                key={conv.key}
+                                onClick={() => setSelectedSender(conv.key)}
+                                className={`w-full p-6 text-left hover:bg-slate-50 transition-all flex gap-4 relative group ${selectedSender === conv.key ? 'bg-blue-50/50' : ''}`}
                             >
                                 <div className="relative">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-muted-foreground font-black text-sm uppercase group-hover:bg-white group-hover:shadow-md transition-all">
@@ -152,6 +159,11 @@ export default function MessagesView() {
                                         <span className="text-[8px] font-black text-muted-foreground uppercase">{conv.time}</span>
                                     </div>
                                     <p className="text-[10px] font-bold text-muted-foreground truncate lowercase">{conv.lastMessage}</p>
+                                    {conv.platform_account_name && (
+                                        <p className="text-[8px] font-black text-muted-foreground/60 truncate uppercase tracking-widest mt-0.5">
+                                            via {conv.platform_account_name}
+                                        </p>
+                                    )}
                                 </div>
                                 {conv.unread && (
                                     <div className="absolute right-6 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -164,7 +176,7 @@ export default function MessagesView() {
 
             {/* Chat Window */}
             <div className={`flex-1 bg-white rounded-[32px] border border-border flex flex-col overflow-hidden shadow-sm ${!selectedSender ? 'hidden md:flex' : 'flex'}`}>
-                {selectedSender ? (
+                {selectedSender && activeConversation ? (
                     <>
                         {/* Chat Header */}
                         <div className="p-6 border-b border-border flex items-center justify-between bg-slate-50/30">
@@ -173,13 +185,17 @@ export default function MessagesView() {
                                     <ArrowLeft size={20} className="text-slate-600" />
                                 </button>
                                 <div className="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-muted-foreground font-bold text-xs uppercase border border-border">
-                                    {selectedSender.substring(0, 2)}
+                                    {activeConversation.sender.substring(0, 2)}
                                 </div>
                                 <div>
-                                    <h3 className="font-black text-foreground uppercase tracking-tight text-sm">{selectedSender}</h3>
+                                    <h3 className="font-black text-foreground uppercase tracking-tight text-sm">{activeConversation.sender}</h3>
                                     <div className="flex items-center gap-2">
                                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">{conversations[selectedSender].platform} Connected</span>
+                                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                                            {activeConversation.platform}
+                                            {activeConversation.platform_account_name && ` via ${activeConversation.platform_account_name}`}
+                                            {' '}Connected
+                                        </span>
                                     </div>
                                 </div>
                             </div>

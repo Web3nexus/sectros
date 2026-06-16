@@ -31,6 +31,7 @@ use App\Http\Controllers\Api\InventoryController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\IntegrationController;
 use App\Http\Controllers\Api\WaitlistController;
+use App\Http\Controllers\Api\MetaAccountController;
 
 /*
 |--------------------------------------------------------------------------
@@ -336,6 +337,12 @@ Route::middleware(['api'])->group(function () {
                 Route::get('/status', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'status']);
                 Route::post('/disconnect', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'disconnect']);
                 Route::post('/send-test', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'sendTest']);
+            });
+
+            Route::prefix('meta')->group(function () {
+                Route::get('/accounts', [MetaAccountController::class, 'index']);
+                Route::post('/accounts/{id}/disconnect', [MetaAccountController::class, 'disconnect']);
+                Route::post('/accounts/disconnect-all', [MetaAccountController::class, 'disconnectAll']);
             });
 
             Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'stats']);

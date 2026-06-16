@@ -11,6 +11,7 @@ use OpenAI\Laravel\Facades\OpenAI;
 use Carbon\Carbon;
 use App\Models\TenantSetting;
 use App\Models\AiInteraction;
+use App\Models\ConnectedAccount;
 use App\Services\SocialMessengerService;
 
 class AutomationController extends Controller
@@ -148,6 +149,7 @@ class AutomationController extends Controller
         $messageText = $payload['message']['text'] ?? '';
         $sender = $payload['message']['sender'] ?? ($payload['user']['name'] ?? 'Unknown User');
         $platform = $payload['message']['platform'] ?? 'Web';
+        $platformAccountId = null;
 
         // Auto-detect Meta/WhatsApp platforms if platform is generic
         if ($platform === 'Web' || empty($platform)) {
@@ -155,14 +157,15 @@ class AutomationController extends Controller
                  $platform = 'WhatsApp';
                  $messageText = $payload['entry'][0]['changes'][0]['value']['messages'][0]['text']['body'] ?? $messageText;
                  $sender = $payload['entry'][0]['changes'][0]['value']['contacts'][0]['wa_id'] ?? $sender;
+                 $platformAccountId = $payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'] ?? null;
              } elseif (isset($payload['entry'][0]['messaging'])) {
-                 // Distinguish between Facebook and Instagram if possible
                  $platform = (isset($payload['object']) && $payload['object'] === 'instagram') ? 'Instagram' : 'Facebook';
                  $messageText = $payload['entry'][0]['messaging'][0]['message']['text'] ?? $messageText;
                  $sender = $payload['entry'][0]['messaging'][0]['sender']['id'] ?? $sender;
-             } 
+                 $platformAccountId = $payload['entry'][0]['id'] ?? null;
+             }
          }
-        
+
         Log::info('Received social webhook message', ['payload' => $payload]);
 
         if (empty($messageText)) {
@@ -250,10 +253,21 @@ class AutomationController extends Controller
             if ($platform === 'WhatsApp') {
                 $metaData['phone_number_id'] = ($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'] ?? null) ?: (tenant('whatsapp_technical_id') ?: tenant('whatsapp_id'));
             } elseif ($platform === 'Facebook') {
-                $metaData['page_token'] = $tenant->facebook_page_token ? decrypt($tenant->facebook_page_token) : null;
+                // Token resolved by SocialMessengerService::getToken() via connected_accounts
             } elseif ($platform === 'Instagram') {
-                $metaData['page_token'] = $tenant->facebook_page_token ? decrypt($tenant->facebook_page_token) : null;
-                $metaData['instagram_id'] = tenant('instagram_id');
+                $igAccount = ConnectedAccount::forTenant(tenant('id'))
+                    ->where('channel', 'instagram')
+                    ->active();
+                if ($platformAccountId) {
+                    $igAccount = $igAccount->where('instagram_business_account_id', $platformAccountId);
+                }
+                $igAccount = $igAccount->first();
+                if ($igAccount && $igAccount->instagram_business_account_id) {
+                    $metaData['instagram_id'] = $igAccount->instagram_business_account_id;
+                }
+                if (empty($metaData['instagram_id'])) {
+                    $metaData['instagram_id'] = tenant('instagram_id');
+                }
             }
             
             $sent = $messenger->sendMessage($platform, $sender, $reply, $metaData);
@@ -266,7 +280,7 @@ class AutomationController extends Controller
 
         $interaction = \App\Models\AiInteraction::create([
             'platform' => $platform,
-            'platform_account_id' => ($platform === 'WhatsApp') ? (($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'] ?? null) ?: (tenant('whatsapp_technical_id') ?: tenant('whatsapp_id'))) : null,
+            'platform_account_id' => $platformAccountId ?: (($platform === 'WhatsApp') ? (($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'] ?? null) ?: (tenant('whatsapp_technical_id') ?: tenant('whatsapp_id'))) : null),
             'sender' => $sender,
             'content' => $messageText,
             'reply' => $reply,
@@ -553,10 +567,49 @@ class AutomationController extends Controller
         if ($interaction->platform === 'WhatsApp') {
             $metaData['phone_number_id'] = $interaction->platform_account_id ?: (tenant('whatsapp_technical_id') ?: tenant('whatsapp_id'));
         } elseif ($interaction->platform === 'Facebook') {
-            $metaData['page_token'] = $tenant->facebook_page_token ? decrypt($tenant->facebook_page_token) : null;
+            if ($interaction->platform_account_id) {
+                $account = ConnectedAccount::forTenant($tenant->id)
+                    ->where('page_id', $interaction->platform_account_id)
+                    ->active()
+                    ->first();
+                if ($account && $account->access_token) {
+                    $metaData['page_token'] = $account->access_token;
+                }
+            }
+            if (empty($metaData['page_token'])) {
+                $fallback = ConnectedAccount::forTenant($tenant->id)
+                    ->where('channel', 'facebook')
+                    ->active()
+                    ->first();
+                if ($fallback && $fallback->access_token) {
+                    $metaData['page_token'] = $fallback->access_token;
+                }
+            }
         } elseif ($interaction->platform === 'Instagram') {
-            $metaData['page_token'] = $tenant->facebook_page_token ? decrypt($tenant->facebook_page_token) : null;
-            $metaData['instagram_id'] = tenant('instagram_id');
+            if ($interaction->platform_account_id) {
+                $account = ConnectedAccount::forTenant($tenant->id)
+                    ->where('page_id', $interaction->platform_account_id)
+                    ->where('channel', 'instagram')
+                    ->active()
+                    ->first();
+                if ($account) {
+                    if ($account->access_token) $metaData['page_token'] = $account->access_token;
+                    if ($account->instagram_business_account_id) $metaData['instagram_id'] = $account->instagram_business_account_id;
+                }
+            }
+            if (empty($metaData['instagram_id'])) {
+                $fallback = ConnectedAccount::forTenant($tenant->id)
+                    ->where('channel', 'instagram')
+                    ->active()
+                    ->first();
+                if ($fallback) {
+                    if ($fallback->access_token) $metaData['page_token'] = $fallback->access_token;
+                    if ($fallback->instagram_business_account_id) $metaData['instagram_id'] = $fallback->instagram_business_account_id;
+                }
+            }
+            if (empty($metaData['instagram_id'])) {
+                $metaData['instagram_id'] = tenant('instagram_id');
+            }
         }
         $sent = $messenger->sendMessage($interaction->platform, $interaction->sender, $replyText, $metaData);
         
@@ -581,11 +634,25 @@ class AutomationController extends Controller
         $sentimentScore = $totalInteractions > 0 ? round(($positiveCount / $totalInteractions) * 100) : 0;
 
         $activityLog = $interactions->map(function ($item) {
+            $pageName = null;
+            if ($item->platform_account_id && in_array($item->platform, ['Facebook', 'Instagram'])) {
+                $account = ConnectedAccount::forTenant(tenant('id'))
+                    ->where('page_id', $item->platform_account_id)
+                    ->where('channel', $item->platform === 'Instagram' ? 'instagram' : 'facebook')
+                    ->active()
+                    ->first();
+                if ($account) {
+                    $pageName = $account->page_name;
+                }
+            }
+
             return [
                 'id' => $item->id,
                 'type' => $item->is_reservation ? 'booking' : 'inquiry',
                 'sender' => $item->sender,
                 'platform' => $item->platform,
+                'platform_account_id' => $item->platform_account_id,
+                'platform_account_name' => $pageName,
                 'content' => $item->content,
                 'reply' => $item->reply,
                 'status' => $item->status,

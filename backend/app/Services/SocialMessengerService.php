@@ -48,7 +48,7 @@ class SocialMessengerService
     /**
      * Resolve the appropriate token for the platform.
      * WhatsApp uses per-tenant tokens from tenant_whatsapp_connections.
-     * Facebook/Instagram use Page Access Token stored on the Tenant.
+     * Facebook/Instagram use Page Access Tokens from connected_accounts.
      */
     private function getToken(?string $tenantId, string $platform): ?string
     {
@@ -70,7 +70,17 @@ class SocialMessengerService
             return $token;
         }
 
-        if ($tenantId) {
+        // Facebook and Instagram use Page Access Tokens from connected_accounts
+        if ($tenantId && in_array($platform, ['facebook', 'instagram'])) {
+            $account = \App\Models\ConnectedAccount::forTenant($tenantId)
+                ->where('channel', $platform)
+                ->active()
+                ->first();
+            if ($account && $account->access_token) {
+                return $account->access_token;
+            }
+
+            // Fallback to old Tenant model fields
             $tenant = \App\Models\Tenant::find($tenantId);
             if ($tenant && $tenant->facebook_page_token) {
                 return decrypt($tenant->facebook_page_token);

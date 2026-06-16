@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\ConnectedAccount;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -60,6 +61,7 @@ class SocialiteController extends Controller
 
     /**
      * Handle the callback from Meta.
+     * Stores all connected pages and Instagram accounts in connected_accounts table.
      */
     public function handleFacebookCallback(Request $request)
     {
@@ -69,7 +71,7 @@ class SocialiteController extends Controller
         $state = $request->query('state');
         if (!$state) {
             Log::error('Meta OAuth: Missing state parameter');
-            return redirect()->away('https://' . ($settings['central_domain'] ?? 'sectros.com') . '/dashboard/settings?oauth=error');
+            return redirect()->away('https://' . ($settings['central_domain'] ?? 'sectros.com') . '/dashboard/automation?oauth=error');
         }
 
         $parts = explode('|', $state);
@@ -96,19 +98,103 @@ class SocialiteController extends Controller
             ]);
             
             $pages = $pagesResponse->json()['data'] ?? [];
-            $firstPage = $pages[0] ?? null;
+
+            // Delete old connected accounts for this tenant (full re-sync)
+            \DB::transaction(function () use ($tenantId, $user, $longLivedToken, $pages, &$targetDomain, $settings) {
+                ConnectedAccount::forTenant($tenantId)
+                    ->whereIn('channel', ['facebook', 'instagram'])
+                    ->delete();
+
+                foreach ($pages as $page) {
+                    // Store Facebook Page connection
+                    $fbAccount = ConnectedAccount::create([
+                        'tenant_id' => $tenantId,
+                        'provider' => 'meta',
+                        'channel' => 'facebook',
+                        'meta_user_id' => $user->id,
+                        'page_id' => $page['id'],
+                        'page_name' => $page['name'],
+                        'status' => 'active',
+                    ]);
+                    $fbAccount->access_token = $page['access_token'];
+                    $fbAccount->save();
+
+                    // Subscribe page to webhook for Messenger
+                    $subscribeResponse = Http::post('https://graph.facebook.com/' . self::META_API_VERSION . '/' . $page['id'] . '/subscribed_apps', [
+                        'access_token' => $page['access_token'],
+                        'subscribed_fields' => 'messages,messaging_postbacks,message_deliveries,message_reads',
+                    ]);
+                    if ($subscribeResponse->successful()) {
+                        $fbAccount->webhook_subscribed = true;
+                        $fbAccount->webhook_subscribed_at = now();
+                        $fbAccount->save();
+                    } else {
+                        Log::warning('Failed to subscribe page to webhook', [
+                            'page_id' => $page['id'],
+                            'status' => $subscribeResponse->status(),
+                            'response' => $subscribeResponse->json(),
+                        ]);
+                    }
+
+                    // Check for linked Instagram Business Account
+                    try {
+                        $igResponse = Http::get('https://graph.facebook.com/' . self::META_API_VERSION . '/' . $page['id'], [
+                            'access_token' => $page['access_token'],
+                            'fields' => 'instagram_business_account{id,username}',
+                        ]);
+
+                        $igAccount = $igResponse->json()['instagram_business_account'] ?? null;
+                        if ($igAccount && !empty($igAccount['id'])) {
+                            $igConnection = ConnectedAccount::create([
+                                'tenant_id' => $tenantId,
+                                'provider' => 'meta',
+                                'channel' => 'instagram',
+                                'meta_user_id' => $user->id,
+                                'page_id' => $page['id'],
+                                'page_name' => $page['name'],
+                                'instagram_business_account_id' => $igAccount['id'],
+                                'instagram_username' => $igAccount['username'] ?? null,
+                                'status' => 'active',
+                            ]);
+                            $igConnection->access_token = $page['access_token'];
+                            $igConnection->save();
+
+                            Log::info('Instagram Business Account connected', [
+                                'tenant_id' => $tenantId,
+                                'page_id' => $page['id'],
+                                'ig_id' => $igAccount['id'],
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Instagram account lookup failed for page', [
+                            'page_id' => $page['id'],
+                            'error' => $e->getMessage(),
+                        ]);
+                    }
+                }
+
+                // Store meta_user token (long-lived) for token refresh later
+                $metaUserRecord = ConnectedAccount::updateOrCreate(
+                    [
+                        'tenant_id' => $tenantId,
+                        'provider' => 'meta',
+                        'channel' => 'meta_user',
+                    ],
+                    [
+                        'meta_user_id' => $user->id,
+                        'status' => 'active',
+                    ]
+                );
+                $metaUserRecord->access_token = $longLivedToken;
+                $metaUserRecord->save();
+            });
 
             $targetDomain = $settings['central_domain'] ?? 'sectros.com';
-            if ($tenant && $firstPage) {
-                $tenant->facebook_page_id = $firstPage['id'];
-                $tenant->facebook_page_token = encrypt($firstPage['access_token']);
-                $tenant->meta_user_token = encrypt($longLivedToken);
-                $tenant->save();
-                
+            if ($tenant) {
                 $targetDomain = $tenant->domains->first()?->domain ?? "{$tenantId}.{$targetDomain}";
             }
 
-            $redirectUrl = "https://{$targetDomain}/dashboard/settings?oauth=success";
+            $redirectUrl = "https://{$targetDomain}/dashboard/automation?oauth=success";
             return redirect($redirectUrl);
 
         } catch (\Exception $e) {
@@ -117,7 +203,7 @@ class SocialiteController extends Controller
             $centralDomain = $settings['central_domain'] ?? 'sectros.com';
             $targetDomain = $tenant ? ($tenant->domains->first()?->domain ?? "{$tenantId}.{$centralDomain}") : $centralDomain;
             
-            $errorUrl = "https://{$targetDomain}/dashboard/settings?oauth=error";
+            $errorUrl = "https://{$targetDomain}/dashboard/automation?oauth=error";
             return redirect($errorUrl);
         }
     }

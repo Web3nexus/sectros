@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\TenantWhatsAppConnection;
+use App\Models\ConnectedAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -57,6 +58,15 @@ class CentralWebhookController extends Controller
 
         $platform = 'Unknown';
         $potentialIds = [];
+        $entryIds = [];
+
+        if (isset($payload['entry']) && is_array($payload['entry'])) {
+            foreach ($payload['entry'] as $entry) {
+                if (isset($entry['id'])) {
+                    $entryIds[] = $entry['id'];
+                }
+            }
+        }
 
         if (isset($payload['entry'][0]['changes'][0]['value']['metadata']['phone_number_id'])) {
             $platform = 'WhatsApp';
@@ -71,6 +81,16 @@ class CentralWebhookController extends Controller
         } elseif (isset($payload['message']['platform_id'])) {
             $platform = $payload['message']['platform'] ?? 'Web';
             $potentialIds[] = $payload['message']['platform_id'];
+        }
+
+        // Atomic idempotency: namespace key by platform to prevent cross-platform collisions
+        $eventId = $request->header('X-Request-Id') ?? (implode(',', $entryIds) ?: null);
+        if ($eventId) {
+            $cacheKey = 'webhook_event_' . strtolower($platform) . '_' . $eventId;
+            if (!cache()->add($cacheKey, true, 300)) {
+                Log::info('Social Webhook: Duplicate event ignored', ['event_id' => $eventId, 'platform' => $platform]);
+                return response()->json(['status' => 'DUPLICATE_IGNORED'], 200);
+            }
         }
 
         $tenant = $this->resolveTenant($potentialIds, $platform);
@@ -101,19 +121,33 @@ class CentralWebhookController extends Controller
     /**
      * Resolve tenant by matching incoming IDs against:
      * 1. tenant_whatsapp_connections (phone_number_id, waba_id)
-     * 2. Tenant model (whatsapp_id, facebook_page_id, instagram_id)
+     * 2. connected_accounts (page_id, instagram_business_account_id)
+     * 3. Tenant model (whatsapp_id, facebook_page_id, instagram_id) — fuzzy
      */
     private function resolveTenant(array $potentialIds, string $platform): ?Tenant
     {
         foreach ($potentialIds as $id) {
             if (empty($id)) continue;
 
+            // Check WhatsApp connections
             $connection = TenantWhatsAppConnection::where('phone_number_id', $id)
                 ->orWhere('waba_id', $id)
                 ->first();
 
             if ($connection) {
                 return Tenant::find($connection->tenant_id);
+            }
+
+            // Check connected_accounts for Facebook/Instagram
+            $account = ConnectedAccount::active()->where(function ($q) use ($id) {
+                    $q->where('page_id', $id)
+                      ->orWhere('instagram_business_account_id', $id);
+                })
+                ->first();
+
+            if ($account) {
+                $tenant = Tenant::find($account->tenant_id);
+                if ($tenant) return $tenant;
             }
         }
 

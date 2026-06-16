@@ -33,6 +33,7 @@ export default function AutomationView() {
   const [platformId, setPlatformId] = useState('');
   const [whatsAppConnection, setWhatsAppConnection] = useState(null);
   const [connectingWhatsApp, setConnectingWhatsApp] = useState(false);
+  const [metaAccounts, setMetaAccounts] = useState({ accounts: [], meta_connected: false });
 
   useEffect(() => {
     fetchActivity();
@@ -44,9 +45,11 @@ export default function AutomationView() {
     if (params.get('oauth') === 'success') {
         alert("Account connected successfully via Meta OAuth!");
         fetchSettings();
+        fetchMetaAccounts();
     } else if (params.get('oauth') === 'error') {
         alert("Meta authentication failed. Please try again.");
     }
+    fetchMetaAccounts();
     // Listen for WhatsApp Embedded Signup popup callback
     const handleMessage = (event) => {
       if (event.data && event.data.status) {
@@ -129,6 +132,25 @@ export default function AutomationView() {
     }
   };
 
+  const fetchMetaAccounts = async () => {
+    try {
+      const res = await api.get('meta/accounts');
+      setMetaAccounts(res.data);
+    } catch (err) {
+      console.error('Failed to fetch Meta accounts:', err);
+    }
+  };
+
+  const handleDisconnectMetaAccount = async (accountId) => {
+    if (!confirm('Disconnect this Meta account? The AI will no longer respond to messages from this page.')) return;
+    try {
+      await api.post(`meta/accounts/${accountId}/disconnect`);
+      fetchMetaAccounts();
+    } catch (err) {
+      alert('Failed to disconnect account.');
+    }
+  };
+
   const handleDisconnectWhatsApp = async () => {
     if (!confirm('Disconnect WhatsApp Business? The AI will no longer respond to messages from this number.')) return;
     try {
@@ -175,12 +197,20 @@ export default function AutomationView() {
       api.post('automation/settings', newSettings);
     } else {
       if (['social_facebook', 'social_instagram'].includes(platform.id)) {
-        const hostname = window.location.hostname;
-        const parts = hostname.split('.');
-        const tenantId = parts.length > 2 ? parts[0] : hostname;
-        const centralDomain = parts.length > 2 ? parts.slice(1).join('.') : hostname;
-        const protocol = window.location.protocol;
-        window.open(`${protocol}//${centralDomain}/central-api/auth/facebook?tenant_id=${tenantId}`, '_blank');
+        // If no accounts connected yet, open OAuth
+        if (!metaAccounts.meta_connected || metaAccounts.accounts.length === 0) {
+          const hostname = window.location.hostname;
+          const parts = hostname.split('.');
+          const tenantId = parts.length > 2 ? parts[0] : hostname;
+          const centralDomain = parts.length > 2 ? parts.slice(1).join('.') : hostname;
+          const protocol = window.location.protocol;
+          window.open(`${protocol}//${centralDomain}/central-api/auth/facebook?tenant_id=${tenantId}`, '_blank');
+        } else {
+          // Already connected, just enable AI
+          const newSettings = { ...aiSettings, [platform.id]: true };
+          setAiSettings(newSettings);
+          api.post('automation/settings', newSettings);
+        }
       } else {
         setLinkingChannel(platform);
         setPlatformId(aiSettings[platform.id.replace('social_', '') + '_id'] || '');
@@ -445,9 +475,81 @@ export default function AutomationView() {
                       </div>
                   </div>
                   ));
-              })()}
-           </div>
-        </div>
+               })()}
+            </div>
+
+            {/* Connected Meta Accounts Section */}
+            {metaAccounts.meta_connected && (
+              <div className="mt-8 bg-white rounded-[40px] border border-border p-10 shadow-sm animate-in fade-in duration-500">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h3 className="font-black text-foreground uppercase tracking-tight text-xl mb-1">Connected Meta Accounts</h3>
+                    <p className="text-muted-foreground text-sm font-medium">Facebook Pages and Instagram accounts linked to your business.</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest">OAuth Linked</span>
+                  </div>
+                </div>
+
+                {metaAccounts.accounts.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Facebook size={32} className="mx-auto mb-4 opacity-20" />
+                    <p className="text-[10px] font-black uppercase tracking-widest">No pages connected yet. Click "Link Account" above to connect your Facebook Pages.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {metaAccounts.accounts.map(account => (
+                      <div key={account.id} className="flex items-center justify-between p-6 rounded-[32px] border border-border bg-slate-50/50 hover:bg-white hover:shadow-md transition-all group">
+                        <div className="flex items-center gap-4">
+                          <div className={`h-14 w-14 rounded-2xl flex items-center justify-center ${
+                            account.channel === 'instagram' ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-primary'
+                          }`}>
+                            {account.channel === 'instagram' ? <Instagram size={24} /> : <Facebook size={24} />}
+                          </div>
+                          <div>
+                            <p className="font-black text-foreground tracking-tight uppercase text-sm">{account.page_name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                                {account.channel === 'instagram'
+                                  ? 'Instagram: ' + (account.instagram_username ? '@' + account.instagram_username : 'ID: ' + account.instagram_business_account_id)
+                                  : 'Facebook Page'
+                                }
+                              </span>
+                              {account.webhook_subscribed && (
+                                <span className="text-[7px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-widest">Webhook Active</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDisconnectMetaAccount(account.id)}
+                          className="text-[10px] font-black text-red-500 uppercase tracking-widest hover:text-red-700 px-5 py-3 rounded-2xl hover:bg-red-50 transition-all md:opacity-0 md:group-hover:opacity-100"
+                        >
+                          Disconnect
+                        </button>
+                      </div>
+                    ))}
+                    <div className="pt-4 flex justify-end">
+                      <button
+                        onClick={() => {
+                          const hostname = window.location.hostname;
+                          const parts = hostname.split('.');
+                          const tenantId = parts.length > 2 ? parts[0] : hostname;
+                          const centralDomain = parts.length > 2 ? parts.slice(1).join('.') : hostname;
+                          const protocol = window.location.protocol;
+                          window.open(protocol + '//' + centralDomain + '/central-api/auth/facebook?tenant_id=' + tenantId, '_blank');
+                        }}
+                        className="text-[10px] font-black text-primary uppercase tracking-widest hover:bg-blue-50 px-5 py-3 rounded-2xl transition-all flex items-center gap-2 border border-border"
+                      >
+                        <Plus size={14} /> Connect Another Page
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+         </div>
       )}
 
       {/* AI Engine Tab */}
