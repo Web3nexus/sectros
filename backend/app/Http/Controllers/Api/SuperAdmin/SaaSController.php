@@ -803,6 +803,7 @@ class SaaSController extends Controller
             'from_address' => $settings['from_address'] ?? 'noreply@sectros.com',
             'openai_api_key' => $this->maskSecret($settings['openai_api_key'] ?? ''),
             'claude_api_key' => $this->maskSecret($settings['claude_api_key'] ?? ''),
+            'gemini_api_key' => $this->maskSecret($settings['gemini_api_key'] ?? ''),
             'ai_provider' => $settings['ai_provider'] ?? 'openai',
             'global_ai_enabled' => (bool) ($settings['global_ai_enabled'] ?? true),
             'social_verify_token' => $this->maskSecret($settings['social_verify_token'] ?? ''),
@@ -888,7 +889,7 @@ class SaaSController extends Controller
             'platform_name', 'central_domain', 'platform_site_domain',
             'require_2fa', 'disable_public_signups',
             'mail_mailer', 'mail_host', 'mail_port', 'mail_username', 'mail_encryption', 'mail_password', 'from_address',
-            'openai_api_key', 'claude_api_key', 'ai_provider', 'global_ai_enabled',
+            'openai_api_key', 'claude_api_key', 'gemini_api_key', 'ai_provider', 'global_ai_enabled',
             'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret',
             'meta_system_token',
             'whatsapp_channel_url', 'community_url', 'instagram_url', 'twitter_url', 'facebook_url', 'youtube_url', 'tiktok_url',
@@ -908,6 +909,10 @@ class SaaSController extends Controller
         $settings = $request->only($allowedKeys);
         
         foreach ($settings as $key => $value) {
+            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'turnstile_secret_key']) && !empty($value) && str_contains($value, '*')) {
+                continue;
+            }
+
             $storeValue = $value;
             if (is_array($value)) {
                 $storeValue = json_encode($value);
@@ -1334,6 +1339,33 @@ class SaaSController extends Controller
                 return response()->json(['message' => 'Claude Connection Failed: ' . ($response->json()['error']['message'] ?? 'Unknown error')], 400);
             } catch (\Exception $e) {
                 return response()->json(['message' => 'Claude Request Failed: ' . $e->getMessage()], 500);
+            }
+        }
+
+        if ($provider === 'gemini') {
+            $apiKey = $request->input('gemini_api_key') ?: \App\Models\SaaSSetting::get('gemini_api_key');
+            if (!$apiKey) return response()->json(['message' => 'No Gemini API Key found.'], 400);
+
+            try {
+                $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => 'Say hello!']
+                            ]
+                        ]
+                    ]
+                ]);
+
+                if ($response->successful()) {
+                    return response()->json([
+                        'message' => 'Gemini Connection Successful!', 
+                        'response' => $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? 'Success'
+                    ]);
+                }
+                return response()->json(['message' => 'Gemini Connection Failed: ' . ($response->json()['error']['message'] ?? 'Unknown error')], 400);
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Gemini Request Failed: ' . $e->getMessage()], 500);
             }
         }
 

@@ -25,6 +25,7 @@ export default function SaaSSettingsView() {
     from_address: '',
     openai_api_key: '',
     claude_api_key: '',
+    gemini_api_key: '',
     ai_provider: 'openai',
     global_ai_enabled: true,
     default_system_prompt: '',
@@ -62,7 +63,7 @@ export default function SaaSSettingsView() {
   const [showSecrets, setShowSecrets] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'success' });
 
-  const secretKeys = ['mail_password', 'openai_api_key', 'claude_api_key', 'meta_app_secret', 'facebook_client_secret',
+  const secretKeys = ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
     'flutterwave_encryption_key', 'turnstile_secret_key'];
 
@@ -667,16 +668,17 @@ export default function SaaSSettingsView() {
                             >
                                 <option value="openai">OpenAI (GPT-4o)</option>
                                 <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+                                <option value="gemini">Google Gemini (Gemini 1.5 Flash)</option>
                             </select>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="pt-2">
                             <label className="block text-sm font-medium text-muted-foreground mb-2 font-semibold">Master OpenAI API Key</label>
                             <input 
                               type="password" 
-                              value={settings.openai_api_key} 
+                              value={displayValue('openai_api_key', settings.openai_api_key)} 
                               onChange={e => setSettings({...settings, openai_api_key: e.target.value})}
                               placeholder="sk-..."
                               className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none placeholder:text-muted-foreground/30 transition-all shadow-sm" 
@@ -686,9 +688,19 @@ export default function SaaSSettingsView() {
                             <label className="block text-sm font-medium text-muted-foreground mb-2 font-semibold">Anthropic Claude API Key</label>
                             <input 
                               type="password" 
-                              value={settings.claude_api_key} 
+                              value={displayValue('claude_api_key', settings.claude_api_key)} 
                               onChange={e => setSettings({...settings, claude_api_key: e.target.value})}
                               placeholder="sk-ant-..."
+                              className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none placeholder:text-muted-foreground/30 transition-all shadow-sm" 
+                            />
+                        </div>
+                        <div className="pt-2">
+                            <label className="block text-sm font-medium text-muted-foreground mb-2 font-semibold">Google Gemini API Key</label>
+                            <input 
+                              type="password" 
+                              value={displayValue('gemini_api_key', settings.gemini_api_key)} 
+                              onChange={e => setSettings({...settings, gemini_api_key: e.target.value})}
+                              placeholder="AIzaSy..."
                               className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none placeholder:text-muted-foreground/30 transition-all shadow-sm" 
                             />
                         </div>
@@ -712,6 +724,7 @@ export default function SaaSSettingsView() {
                                   const res = await api.post('saas/settings/test-ai', { 
                                       openai_api_key: settings.openai_api_key,
                                       claude_api_key: settings.claude_api_key,
+                                      gemini_api_key: settings.gemini_api_key,
                                       ai_provider: settings.ai_provider
                                   });
                                   showModal("AI Connected", res.data.message, "success");
@@ -722,7 +735,7 @@ export default function SaaSSettingsView() {
                           className="bg-primary/10 hover:bg-primary/20 text-primary px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-primary/20 shadow-sm"
                         >
                             <Bot className="w-4 h-4" />
-                            Verify {settings.ai_provider === 'anthropic' ? 'Claude' : 'OpenAI'} Connection
+                            Verify {settings.ai_provider === 'anthropic' || settings.ai_provider === 'claude' ? 'Claude' : (settings.ai_provider === 'gemini' ? 'Gemini' : 'OpenAI')} Connection
                         </button>
                     </div>
                  </div>

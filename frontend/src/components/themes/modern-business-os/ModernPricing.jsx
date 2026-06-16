@@ -4,25 +4,7 @@ import { motion } from 'framer-motion';
 import {Check, Minus, ChevronDown, Zap, Users, Globe, MessageSquare, ArrowRight, Briefcase, HelpCircle, Smartphone, DollarSign} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 import centralApi from '../../../services/centralApi';
-
-const defaultPlans = [
-  {
-    name: 'Starter', monthly: 0, yearly: 0, description: 'For new venues getting started.', popular: false,
-    features: ['Online booking page', 'Basic reservation management', 'Guest list', 'Email confirmations', 'Up to 50 bookings/mo'],
-  },
-  {
-    name: 'Growth', monthly: 29, yearly: 290, description: 'For growing restaurants.', popular: false,
-    features: ['Everything in Starter', 'Floor plan management', 'Guest CRM', 'Automated reminders', 'Deposits & payments', 'Analytics dashboard', 'Up to 500 bookings/mo'],
-  },
-  {
-    name: 'Professional', monthly: 79, yearly: 790, description: 'For established hospitality businesses.', popular: true,
-    features: ['Everything in Growth', 'Advanced automation', 'Multi-channel messaging', 'Advanced analytics', 'Team roles (up to 10)', 'Priority support', 'Unlimited bookings'],
-  },
-  {
-    name: 'Enterprise', monthly: null, yearly: null, description: 'For multi-location groups.', popular: false,
-    features: ['Everything in Professional', 'Multi-location management', 'Custom integrations', 'Dedicated onboarding', 'Enterprise reporting', 'Custom contract', 'SLA guarantee'],
-  },
-];
+import { defaultPlans, mapFeaturesToList, getDefaultFeatures } from '../../../utils/planFeatures';
 
 const comparisonFeatures = [
   { name: 'Reservations', starter: true, growth: true, pro: true, enterprise: true },
@@ -129,14 +111,17 @@ export default function ModernPricing() {
       const arr = Array.isArray(raw) ? raw : (raw?.data || []);
       const active = arr.filter(p => p.is_active);
       if (active.length > 0) {
-        setPlans(active.map(p => ({
-          name: p.name,
-          monthly: p.monthly_price ?? 0,
-          yearly: p.yearly_price ?? null,
-          description: p.description || '',
-          popular: !!p.popular,
-          features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? p.features.split(',').map(f => f.trim()) : defaultPlans.find(d => d.name === p.name)?.features || [],
-        })));
+        setPlans(active.map(p => {
+          const mappedFeatures = mapFeaturesToList(p.features);
+          return {
+            name: p.name,
+            monthly: p.monthly_price ?? 0,
+            yearly: p.yearly_price ?? null,
+            description: p.description || '',
+            popular: !!p.popular,
+            features: mappedFeatures.length > 0 ? mappedFeatures : getDefaultFeatures(p.name),
+          };
+        }));
       }
     }).catch(() => {}).finally(() => setLoading(false));
   }, []);
@@ -175,15 +160,19 @@ export default function ModernPricing() {
       </section>
 
       <section className="px-6 pb-20 pt-10">
-        <div className="mx-auto grid max-w-7xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto max-w-7xl flex flex-wrap justify-center gap-6">
           {plans.map((plan, idx) => (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 32 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 * idx }}
-              className={`relative flex flex-col rounded-2xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md ${
-                plan.popular ? 'border-blue-500 ring-1 ring-blue-500 scale-[1.02] lg:scale-105' : 'border-slate-200'
+              className={`relative flex flex-col w-full sm:w-[calc(50%-12px)] ${
+                plans.length === 3 ? 'lg:w-[calc(33.333%-16px)]' :
+                plans.length === 2 ? 'lg:w-[calc(50%-12px)]' :
+                'lg:w-[calc(25%-18px)]'
+              } min-w-[220px] rounded-2xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md ${
+                plan.popular ? 'border-blue-500 ring-1 ring-blue-500 scale-[1.02]' : 'border-slate-200'
               }`}
             >
               {plan.popular && (

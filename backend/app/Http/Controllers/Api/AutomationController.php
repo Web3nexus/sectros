@@ -344,6 +344,8 @@ class AutomationController extends Controller
         try {
             if ($provider === 'anthropic' || $provider === 'claude') {
                 return $this->callAnthropic($finalPrompt, $message, true);
+            } elseif ($provider === 'gemini') {
+                return $this->callGemini($finalPrompt, $message, true);
             }
 
             // OpenAI Fallback
@@ -408,6 +410,16 @@ class AutomationController extends Controller
             if ($provider === 'anthropic' || $provider === 'claude') {
                 $prompt = "Analyze this receipt image and extract data. Return ONLY a JSON object containing: vendor_name, total_amount, date (YYYY-MM-DD), category.";
                 $data = $this->callAnthropic($prompt, [
+                    'type' => 'image',
+                    'source' => [
+                        'type' => 'base64',
+                        'media_type' => $image->getMimeType(),
+                        'data' => $base64Image
+                    ]
+                ], true);
+            } elseif ($provider === 'gemini') {
+                $prompt = "Analyze this receipt image and extract data. Return ONLY a JSON object containing: vendor_name, total_amount, date (YYYY-MM-DD), category.";
+                $data = $this->callGemini($prompt, [
                     'type' => 'image',
                     'source' => [
                         'type' => 'base64',
@@ -503,6 +515,73 @@ class AutomationController extends Controller
 
         if ($jsonMode) {
             // Claude sometimes wraps JSON in markdown blocks
+            if (preg_match('/```json\s*(.*?)\s*```/s', $text, $matches)) {
+                $text = $matches[1];
+            }
+            return json_decode($text, true) ?: ['type' => 'error', 'reply' => 'Failed to parse AI response.'];
+        }
+
+        return $text;
+    }
+
+    /**
+     * Helper to call Gemini API via HTTP client.
+     */
+    private function callGemini($systemPrompt, $userMessage, $jsonMode = false)
+    {
+        $apiKey = \App\Models\SaaSSetting::on('platform')->where('key', 'gemini_api_key')->value('value');
+        
+        if (!$apiKey) throw new \Exception("Gemini API Key missing");
+
+        $parts = [];
+        if (is_array($userMessage) && isset($userMessage['type']) && $userMessage['type'] === 'image') {
+            $parts[] = [
+                'inlineData' => [
+                    'mimeType' => $userMessage['source']['media_type'] ?? 'image/jpeg',
+                    'data' => $userMessage['source']['data']
+                ]
+            ];
+            $parts[] = [
+                'text' => 'Process this image as requested.'
+            ];
+        } else {
+            $parts[] = [
+                'text' => (string)$userMessage
+            ];
+        }
+
+        $body = [
+            'contents' => [
+                [
+                    'role' => 'user',
+                    'parts' => $parts
+                ]
+            ]
+        ];
+
+        if (!empty($systemPrompt)) {
+            $body['systemInstruction'] = [
+                'parts' => [
+                    ['text' => $systemPrompt]
+                ]
+            ];
+        }
+
+        if ($jsonMode) {
+            $body['generationConfig'] = [
+                'responseMimeType' => 'application/json'
+            ];
+        }
+
+        $response = \Illuminate\Support\Facades\Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={$apiKey}", $body);
+
+        if (!$response->successful()) {
+            throw new \Exception("Gemini Error: " . ($response->json()['error']['message'] ?? 'Unknown Error'));
+        }
+
+        $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+
+        if ($jsonMode) {
             if (preg_match('/```json\s*(.*?)\s*```/s', $text, $matches)) {
                 $text = $matches[1];
             }

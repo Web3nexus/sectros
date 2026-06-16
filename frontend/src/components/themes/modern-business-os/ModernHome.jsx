@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import {Calendar, Users, Layout, BarChart3, Bell, Clock, CreditCard, MessageSquare, Settings, Briefcase, ArrowRight, Check, Phone, Mail, Globe, Shield, Zap, TrendingUp, PieChart, Download, Menu, X, ChevronDown, ChevronRight, Plus, Minus, BookOpen, Smartphone, Monitor, Building2, Coffee, UtensilsCrossed, Hotel, PartyPopper, Music, HeartHandshake, Target, BrainCircuit, Award, Quote} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 import centralApi from '../../../services/centralApi';
+import { mapFeaturesToList, getDefaultFeatures, defaultPlans } from '../../../utils/planFeatures';
 
 const fadeUp = {
   initial: { opacity: 0, y: 40 },
@@ -523,9 +524,12 @@ const faqItems = [
   },
 ];
 
+
+
 export default function ModernHome() {
   const [openFaq, setOpenFaq] = useState(null);
   const [pricingPlans, setPricingPlans] = useState(null);
+  const plansCount = pricingPlans ? pricingPlans.length : 4;
   const { get, getArray } = useCmsContent('home');
 
   useEffect(() => {
@@ -534,14 +538,17 @@ export default function ModernHome() {
       const arr = Array.isArray(raw) ? raw : (raw?.data || []);
       const active = arr.filter(p => p.is_active);
       if (active.length > 0) {
-        setPricingPlans(active.map(p => ({
-          name: p.name,
-          price: p.monthly_price === 0 || p.monthly_price === null ? (p.name === 'Enterprise' ? 'Custom' : '$0') : `$${p.monthly_price}`,
-          period: p.monthly_price === 0 ? 'forever free' : p.monthly_price === null ? 'contact us' : '/month',
-          highlighted: !!p.popular,
-          features: Array.isArray(p.features) ? p.features : typeof p.features === 'string' ? p.features.split(',').map(f => f.trim()) : [],
-          desc: p.description || '',
-        })));
+        setPricingPlans(active.map(p => {
+          const mappedFeatures = mapFeaturesToList(p.features);
+          return {
+            name: p.name,
+            price: p.monthly_price === 0 || p.monthly_price === null ? (p.name === 'Enterprise' ? 'Custom' : '$0') : `$${p.monthly_price}`,
+            period: p.monthly_price === 0 ? 'forever free' : p.monthly_price === null ? 'contact us' : '/month',
+            highlighted: !!p.popular,
+            features: mappedFeatures.length > 0 ? mappedFeatures : getDefaultFeatures(p.name),
+            desc: p.description || '',
+          };
+        }));
       }
     }).catch(() => {});
   }, []);
@@ -1240,7 +1247,7 @@ export default function ModernHome() {
             <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{get('pricingPreview.heading')}</h2>
             <p className="mt-4 text-lg text-slate-400">{get('pricingPreview.subheading')}</p>
           </motion.div>
-          <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" {...stagger}>
+          <motion.div className="flex flex-wrap justify-center gap-6" {...stagger}>
             {(pricingPlans || [
               {
                 name: 'Starter',
@@ -1275,43 +1282,47 @@ export default function ModernHome() {
                 features: ['Everything in Pro', 'Unlimited locations', 'Dedicated account manager', 'Custom integrations', 'On-site training', 'SLA guarantee'],
               },
             ]).map(({ name, desc, price, period, highlighted, features }, i) => (
-              <motion.div
-                key={name}
-                variants={stagger}
-                className={`rounded-2xl p-6 md:p-8 flex flex-col ${
-                  highlighted
-                    ? 'bg-blue-600 text-white ring-2 ring-blue-400 scale-105 relative'
-                    : 'bg-slate-800 text-slate-200'
-                }`}
-              >
-                {highlighted && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</div>
-                )}
-                <div className="mb-1 text-lg font-bold">{name}</div>
-                <div className={`text-sm mb-4 ${highlighted ? 'text-blue-100' : 'text-slate-400'}`}>{desc}</div>
-                <div className="mb-6">
-                  <span className="text-4xl font-bold">{price}</span>
-                  <span className={`text-sm ml-1 ${highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{period}</span>
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {features.map(f => (
-                    <li key={f} className="flex items-start gap-2.5 text-sm">
-                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${highlighted ? 'text-blue-200' : 'text-blue-400'}`} />
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  to={price === '$0' ? '/register' : '/pricing'}
-                  className={`w-full text-center py-3 rounded-xl text-sm font-semibold transition-all ${
+                <motion.div
+                  key={name}
+                  variants={stagger}
+                  className={`w-full sm:w-[calc(50%-12px)] ${
+                    plansCount === 3 ? 'lg:w-[calc(33.333%-16px)]' :
+                    plansCount === 2 ? 'lg:w-[calc(50%-12px)]' :
+                    'lg:w-[calc(25%-18px)]'
+                  } min-w-[220px] rounded-2xl p-6 md:p-8 flex flex-col ${
                     highlighted
-                      ? 'bg-white text-blue-600 hover:bg-blue-50'
-                      : 'bg-slate-700 text-white hover:bg-slate-600'
+                      ? 'bg-blue-600 text-white ring-2 ring-blue-400 scale-105 relative'
+                      : 'bg-slate-800 text-slate-200'
                   }`}
                 >
-                  {price === '$0' ? 'Get Started Free' : price === 'Custom' ? 'Contact Sales' : 'Start Free Trial'}
-                </Link>
-              </motion.div>
+                  {highlighted && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</div>
+                  )}
+                  <div className="mb-1 text-lg font-bold">{name}</div>
+                  <div className={`text-sm mb-4 ${highlighted ? 'text-blue-100' : 'text-slate-400'}`}>{desc}</div>
+                  <div className="mb-6">
+                    <span className="text-4xl font-bold">{price}</span>
+                    <span className={`text-sm ml-1 ${highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{period}</span>
+                  </div>
+                  <ul className="space-y-3 mb-8 flex-1">
+                    {features.map(f => (
+                      <li key={f} className="flex items-start gap-2.5 text-sm">
+                        <Check className={`w-4 h-4 mt-0.5 shrink-0 ${highlighted ? 'text-blue-200' : 'text-blue-400'}`} />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to={price === '$0' ? '/register' : '/pricing'}
+                    className={`w-full text-center py-3 rounded-xl text-sm font-semibold transition-all ${
+                      highlighted
+                        ? 'bg-white text-blue-600 hover:bg-blue-50'
+                        : 'bg-slate-700 text-white hover:bg-slate-600'
+                    }`}
+                  >
+                    {price === '$0' ? 'Get Started Free' : price === 'Custom' ? 'Contact Sales' : 'Start Free Trial'}
+                  </Link>
+                </motion.div>
             ))}
           </motion.div>
         </div>
