@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::connection('platform')->create('connected_accounts', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id');
+            $table->string('tenant_id');
             $table->string('provider')->default('meta');
             $table->string('channel');
             $table->string('meta_user_id')->nullable();
