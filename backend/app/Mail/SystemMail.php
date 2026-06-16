@@ -40,10 +40,14 @@ class SystemMail extends Mailable
         $platformName = \App\Models\SaaSSetting::get('platform_name') ?? config('app.name');
         $fromAddress = \App\Models\SaaSSetting::get('from_address') ?? ('noreply@' . (\App\Models\SaaSSetting::get('central_domain') ?? 'sectros.com'));
         $logo = \App\Models\SaaSSetting::get('platform_logo_url');
-        
+        $emailLogo = \App\Models\SaaSSetting::get('email_logo_url');
+
         // Ensure logo is absolute URL if it exists
         if ($logo && !str_starts_with($logo, 'http')) {
             $logo = config('app.url') . '/' . ltrim($logo, '/');
+        }
+        if ($emailLogo && !str_starts_with($emailLogo, 'http')) {
+            $emailLogo = config('app.url') . '/' . ltrim($emailLogo, '/');
         }
 
         return $this->from($fromAddress, $platformName)
@@ -53,6 +57,7 @@ class SystemMail extends Mailable
                         'content' => $this->contentHtml,
                         'platform_name' => $platformName,
                         'logo' => $logo,
+                        'email_logo' => $emailLogo,
                         'facebook_url' => \App\Models\SaaSSetting::get('facebook_url'),
                         'twitter_url' => \App\Models\SaaSSetting::get('twitter_url'),
                         'instagram_url' => \App\Models\SaaSSetting::get('instagram_url'),

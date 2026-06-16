@@ -58,8 +58,18 @@ class BrandingController extends Controller
 
     public function update(Request $request)
     {
-        $settings = $request->all();
-        
+        $allowedKeys = [
+            'business_name', 'business_address', 'business_phone', 'business_email',
+            'primary_color', 'secondary_color', 'accent_color',
+            'font_family', 'logo_url', 'favicon_url',
+            'social_facebook', 'social_instagram', 'social_twitter', 'social_tiktok',
+            'opening_hours', 'about_text', 'hero_title', 'hero_subtitle',
+            'show_reservation_button', 'show_menu_button',
+            'reservation_link', 'menu_link',
+        ];
+
+        $settings = $request->only($allowedKeys);
+
         foreach ($settings as $key => $value) {
             $storeValue = $value;
             if (is_array($value)) {

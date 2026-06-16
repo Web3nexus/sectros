@@ -194,11 +194,12 @@ class StaffController extends Controller
         $staff = StaffProfile::create($validated);
 
         // Create a functional user account for login
+        $plainPassword = \Illuminate\Support\Str::random(12);
         $user = \App\Models\User::firstOrCreate(
             ['email' => $validated['email']],
             [
                 'name' => $validated['name'],
-                'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(12)),
+                'password' => \Illuminate\Support\Facades\Hash::make($plainPassword),
             ]
         );
 
@@ -206,7 +207,7 @@ class StaffController extends Controller
         $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
         $user->syncRoles([$roleRecord]);
 
-        // Send Staff Registration Email
+        // Send Staff Registration Email with credentials
         $template = \App\Models\EmailTemplate::where('slug', 'staff_registration')->first();
         if ($template) {
             $platformName = \App\Models\SaaSSetting::get('platform_name', 'Sectros');
@@ -219,6 +220,8 @@ class StaffController extends Controller
                     'business_name' => $businessName,
                     'platform_name' => $platformName,
                     'login_url' => $loginUrl,
+                    'password' => $plainPassword,
+                    'email' => $user->email,
             ]));
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to send staff registration email: " . $e->getMessage());

@@ -71,7 +71,7 @@ export function DashboardLayout() {
     { key: 'calendar', path: '/dashboard/calendar', label: b.calendar || 'Calendar', alwaysOn: false, roleCheck: false, feature: null },
     { key: 'reservations', path: '/dashboard/reservations', label: b.reservations || 'Reservations', alwaysOn: false, roleCheck: false, feature: 'reservations' },
     { key: 'messages', path: '/dashboard/messages', label: t('dashboard.unifiedChat'), alwaysOn: false, roleCheck: true, feature: 'social_integration' },
-    { key: 'pos', path: '/dashboard/pos', label: b.pos || t('dashboard.posTerminal'), alwaysOn: false, roleCheck: true, feature: 'pos_system' },
+    { key: 'pos', path: '/dashboard/pos', label: b.pos || t('dashboard.posTerminal'), alwaysOn: false, roleCheck: true, feature: 'pos_terminal' },
     { key: 'menu', path: '/dashboard/menu', label: b.menu || 'Menu Builder', alwaysOn: false, roleCheck: false, feature: 'menu_builder' },
       { key: 'website', path: '/dashboard/website', label: t('dashboard.websiteBuilder') || 'Website Builder', alwaysOn: false, roleCheck: true, feature: 'white_label_website', children: [
             { key: 'reviews', path: '/dashboard/reviews', label: 'Reviews' },
@@ -81,12 +81,16 @@ export function DashboardLayout() {
             { key: 'team', path: '/dashboard/team', label: 'Team' },
           ]},
     { key: 'tables', path: '/dashboard/tables', label: b.floorPlan || 'Floor Plan', alwaysOn: false, roleCheck: false, feature: 'floor_plan' },
+    { key: 'franchises', path: '/dashboard/franchises', label: 'Franchise Tools', alwaysOn: false, roleCheck: true, feature: 'franchise_tools' },
+    { key: 'waitlist', path: '/dashboard/waitlist', label: 'Waitlist Pro', alwaysOn: false, roleCheck: true, feature: 'waitlist_automation' },
+    { key: 'integrations', path: '/dashboard/integrations', label: 'Public API', alwaysOn: false, roleCheck: true, feature: 'public_api' },
+    { key: 'branches', path: '/dashboard/branches', label: 'Branches', alwaysOn: false, roleCheck: true, feature: 'branch_management' },
     { key: 'staff', path: '/dashboard/staff', label: b.staff || 'Staff Profiles', alwaysOn: false, roleCheck: true, feature: 'staff_management' },
-    { key: 'financials', path: '/dashboard/financials', label: b.financials || 'Financials', alwaysOn: false, roleCheck: true, feature: 'financial_reporting' },
+    { key: 'financials', path: '/dashboard/financials', label: b.financials || 'Financials', alwaysOn: false, roleCheck: true, feature: 'financial_reports' },
     { key: 'billing', path: '/dashboard/billing', label: t('dashboard.billingPlan') || 'Billing & Plan', alwaysOn: true, roleCheck: true, feature: null },
     { key: 'automation', path: '/dashboard/automation', label: t('dashboard.aiCommand') || 'AI Command', alwaysOn: false, roleCheck: true, feature: 'ai_automation' },
     { key: 'online_ordering', path: '/dashboard/online-ordering', label: b.onlineOrdering || t('dashboard.onlineOrdering'), alwaysOn: false, roleCheck: true, feature: 'online_ordering' },
-    { key: 'inventory', path: '/dashboard/inventory', label: b.inventory || t('dashboard.inventoryTracking'), alwaysOn: false, roleCheck: true, feature: 'inventory_management' },
+    { key: 'inventory', path: '/dashboard/inventory', label: b.inventory || t('dashboard.inventoryTracking'), alwaysOn: false, roleCheck: true, feature: 'inventory_tracking' },
     { key: 'settings', path: '/dashboard/settings', label: b.configuration || 'Configuration', alwaysOn: true, roleCheck: true, feature: null },
   ];
 

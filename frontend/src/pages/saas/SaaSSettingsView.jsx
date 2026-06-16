@@ -51,6 +51,7 @@ export default function SaaSSettingsView() {
     default_currency: 'USD',
     platform_logo_url: '',
     platform_favicon_url: '',
+    email_logo_url: '',
     turnstile_site_key: '',
     turnstile_secret_key: '',
     sales_email: '',
@@ -566,16 +567,66 @@ export default function SaaSSettingsView() {
                         </button>
                       </div>
                       
-                      <div className="flex items-center justify-between">
-                        <p className="text-[10px] text-muted-foreground italic">Save configuration before testing if you changed SMTP settings.</p>
-                        <Link 
-                            to="/securegate/email-templates" 
-                            className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
-                        >
-                            Manage Email Templates
-                        </Link>
-                      </div>
-                  </div>
+                       <div className="flex items-center justify-between">
+                         <p className="text-[10px] text-muted-foreground italic">Save configuration before testing if you changed SMTP settings.</p>
+                         <Link 
+                             to="/securegate/email-templates" 
+                             className="text-xs text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1"
+                         >
+                             Manage Email Templates
+                         </Link>
+                       </div>
+                   </div>
+
+                   <div className="pt-6 border-t border-border/50 space-y-4">
+                     <h3 className="text-sm font-black text-foreground uppercase tracking-widest">Email Logo</h3>
+                     <p className="text-xs text-muted-foreground">Upload a logo specifically for email headers. Leave empty to use the platform logo.</p>
+                     <div className="bg-background border-2 border-dashed border-border rounded-2xl p-6 flex flex-col items-center justify-center gap-4 transition-colors hover:border-primary/50 max-w-sm">
+                       {settings.email_logo_url ? (
+                         <div className="relative group">
+                           <img src={settings.email_logo_url} alt="Email Logo" className="h-14 w-auto object-contain bg-white border border-border p-2 rounded-lg" />
+                           <button
+                             onClick={() => setSettings({ ...settings, email_logo_url: '' })}
+                             className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                           >
+                             <Trash2 className="w-3 h-3" />
+                           </button>
+                         </div>
+                       ) : (
+                         <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center text-muted-foreground">
+                           <Mail className="w-7 h-7" />
+                         </div>
+                       )}
+                       <div className="text-center">
+                         <label className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground px-5 py-2.5 rounded-xl text-xs font-bold transition-all block mb-2 shadow-md shadow-primary/20">
+                           {settings.email_logo_url ? 'Replace Email Logo' : 'Upload Email Logo'}
+                           <input
+                             type="file"
+                             className="hidden"
+                             accept="image/*"
+                             onChange={async (e) => {
+                               const file = e.target.files[0];
+                               if (!file) return;
+                               const formData = new FormData();
+                               formData.append('file', file);
+                               formData.append('type', 'email_logo');
+                               try {
+                                 const token = localStorage.getItem('admin_token');
+                                 const res = await axios.post('/central-api/saas/settings/upload-branding', formData, {
+                                   headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data', 'Accept': 'application/json' },
+                                 });
+                                 setSettings({ ...settings, email_logo_url: res.data.url });
+                                 showModal("Email Logo Uploaded", "Your email logo has been updated.", "success");
+                               } catch (err) {
+                                 showModal("Upload Failed", "Failed to upload email logo.", "error");
+                               }
+                             }}
+                           />
+                         </label>
+                         <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">PNG or SVG (Max 2MB)</p>
+                       </div>
+                     </div>
+                   </div>
 
                   <div className="pt-6 border-t border-border/50">
                       {/* Removed misplaced AI verify button from here */}

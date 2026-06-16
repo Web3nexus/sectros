@@ -12,12 +12,28 @@ use App\Models\User;
 use App\Models\SupportTicket;
 use App\Models\SubscriptionPlan;
 use App\Models\EmailTemplate;
+use App\Models\AuditLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
+use App\Traits\AuditsOperation;
+
 class SaaSController extends Controller
 {
+    private function audit(string $action, array $details = [], ?string $tenantId = null): void
+    {
+        $user = request()->user();
+        AuditLog::create([
+            'tenant_id' => $tenantId ?? (function_exists('tenant') ? tenant('id') : null),
+            'user_id' => $user?->id,
+            'user_email' => $user?->email,
+            'action' => $action,
+            'details' => $details,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+    }
     /**
      * Get overview stats for the Super Admin dashboard.
      */
@@ -638,9 +654,14 @@ class SaaSController extends Controller
                 $user->assignRole($role);
             }
 
-            $token = $user->createToken('impersonation_token', ['*'], now('UTC')->addHours(24))->plainTextToken;
+            $token = $user->createToken('impersonation_token', ['impersonate'], now('UTC')->addHour())->plainTextToken;
 
             $protocol = request()->getScheme();
+            $this->audit('impersonation', [
+                'tenant_id' => $tenant->id,
+                'business_name' => $tenant->business_name,
+                'owner_email' => $tenant->owner_email,
+            ]);
             return response()->json([
                 'token' => $token,
                 'domain' => $domain,
@@ -751,6 +772,18 @@ class SaaSController extends Controller
     /**
      * Get global SaaS settings.
      */
+    private function sanitizeLanding(string $value): string
+    {
+        return strip_tags($value, '<b><i><u><a><br>');
+    }
+
+    private function maskSecret(?string $value): string
+    {
+        if (empty($value)) return '';
+        if (strlen($value) <= 8) return str_repeat('*', strlen($value));
+        return substr($value, 0, 4) . str_repeat('*', strlen($value) - 8) . substr($value, -4);
+    }
+
     public function getSettings()
     {
         $settings = \App\Models\SaaSSetting::all()->pluck('value', 'key');
@@ -765,17 +798,17 @@ class SaaSController extends Controller
             'mail_host' => $settings['mail_host'] ?? 'smtp.mailtrap.io',
             'mail_port' => $settings['mail_port'] ?? '2525',
             'mail_username' => $settings['mail_username'] ?? '',
-            'mail_password' => $settings['mail_password'] ?? '',
+            'mail_password' => $this->maskSecret($settings['mail_password'] ?? ''),
             'mail_encryption' => $settings['mail_encryption'] ?? 'tls',
             'from_address' => $settings['from_address'] ?? 'noreply@sectros.com',
-            'openai_api_key' => $settings['openai_api_key'] ?? '',
-            'claude_api_key' => $settings['claude_api_key'] ?? '',
+            'openai_api_key' => $this->maskSecret($settings['openai_api_key'] ?? ''),
+            'claude_api_key' => $this->maskSecret($settings['claude_api_key'] ?? ''),
             'ai_provider' => $settings['ai_provider'] ?? 'openai',
             'global_ai_enabled' => (bool) ($settings['global_ai_enabled'] ?? true),
-            'social_verify_token' => $settings['social_verify_token'] ?? 'sectros_secret_token',
-            'meta_app_secret' => $settings['meta_app_secret'] ?? '',
-            'facebook_client_id' => $settings['facebook_client_id'] ?? '',
-            'facebook_client_secret' => $settings['facebook_client_secret'] ?? '',
+            'social_verify_token' => $this->maskSecret($settings['social_verify_token'] ?? ''),
+            'meta_app_secret' => $this->maskSecret($settings['meta_app_secret'] ?? ''),
+            'facebook_client_id' => $this->maskSecret($settings['facebook_client_id'] ?? ''),
+            'facebook_client_secret' => $this->maskSecret($settings['facebook_client_secret'] ?? ''),
             'whatsapp_channel_url' => $settings['whatsapp_channel_url'] ?? 'https://whatsapp.com/channel/0029VaDP7yS59PwL7REH7h2Y',
             'community_url' => $settings['community_url'] ?? 'https://whatsapp.com/channel/SectrosOwners',
             'instagram_url' => $settings['instagram_url'] ?? 'https://instagram.com/sectros',
@@ -785,30 +818,31 @@ class SaaSController extends Controller
             'tiktok_url' => $settings['tiktok_url'] ?? '',
             'default_system_prompt' => $settings['default_system_prompt'] ?? 'You are an AI assistant for a restaurant. Determine if the user wants to make a reservation. If yes, extract details (date, time, party size) and output JSON: {"type": "reservation", "details": {"date": "YYYY-MM-DD", "time": "HH:MM", "party_size": int, "requests": "string"}}. Else, generate a friendly reply: {"type": "general", "reply": "..."}.',
             // Landing Page Content
-            'landing_badge_text' => $settings['landing_badge_text'] ?? 'Now serving restaurants in 30+ cities',
-            'landing_hero_title' => $settings['landing_hero_title'] ?? 'The Intelligent Guest Retention Platform',
-            'landing_hero_subtitle' => $settings['landing_hero_subtitle'] ?? 'Maximise your restaurant\'s potential with smarter reservations, automated marketing, and a seamless guest experience — all in one place.',
-            'landing_cta_primary' => $settings['landing_cta_primary'] ?? 'Start Free Trial',
-            'landing_cta_secondary' => $settings['landing_cta_secondary'] ?? 'Explore Features',
-            'landing_trial_tagline' => $settings['landing_trial_tagline'] ?? 'No credit card required • 14-day free trial',
+            'landing_badge_text' => $this->sanitizeLanding($settings['landing_badge_text'] ?? 'Now serving restaurants in 30+ cities'),
+            'landing_hero_title' => $this->sanitizeLanding($settings['landing_hero_title'] ?? 'The Intelligent Guest Retention Platform'),
+            'landing_hero_subtitle' => $this->sanitizeLanding($settings['landing_hero_subtitle'] ?? 'Maximise your restaurant\'s potential with smarter reservations, automated marketing, and a seamless guest experience — all in one place.'),
+            'landing_cta_primary' => $this->sanitizeLanding($settings['landing_cta_primary'] ?? 'Start Free Trial'),
+            'landing_cta_secondary' => $this->sanitizeLanding($settings['landing_cta_secondary'] ?? 'Explore Features'),
+            'landing_trial_tagline' => $this->sanitizeLanding($settings['landing_trial_tagline'] ?? 'No credit card required • 14-day free trial'),
             'landing_hero_image_url' => $settings['landing_hero_image_url'] ?? '',
-            'landing_social_proof_label' => $settings['landing_social_proof_label'] ?? 'Trusted by growing restaurant brands',
-            'landing_social_proof_brands' => $settings['landing_social_proof_brands'] ?? 'The Grill House,Bistro Uno,Saveur,Urban Plates,Coast & Co',
-            'landing_feature1_title' => $settings['landing_feature1_title'] ?? 'Effortless Reservations',
-            'landing_feature1_subtitle' => $settings['landing_feature1_subtitle'] ?? 'Accept table bookings automatically across all channels. Our smart availability engine prevents overbooking and keeps your floor running smoothly.',
-            'landing_feature1_bullets' => $settings['landing_feature1_bullets'] ?? "Online booking widgets for your website\nSmart table & floor plan management\nWaitlist management & SMS alerts",
-            'landing_feature2_title' => $settings['landing_feature2_title'] ?? 'Know Your Guests',
-            'landing_feature2_subtitle' => $settings['landing_feature2_subtitle'] ?? 'Build rich guest profiles automatically. Track preferences, visit history, and spending patterns to deliver a personalised experience every time.',
-            'landing_feature2_bullets' => $settings['landing_feature2_bullets'] ?? "Guest preference & allergy tracking\nAutomated follow-up messages\nLoyalty rewards & repeat booking tools",
-            'landing_bento_heading' => $settings['landing_bento_heading'] ?? 'Everything you need to grow',
-            'landing_bento_subheading' => $settings['landing_bento_subheading'] ?? 'Built for restaurant operators, not IT departments.',
-            'landing_bento_items' => $settings['landing_bento_items'] ?? "Smart Reservations | Accept bookings 24/7 automatically\nTable Management | Visual floor plan and capacity control\nGuest Profiles | Know your regulars by name\nMarketing Tools | Email & SMS campaigns that drive returns",
-            'landing_cta_section_title' => $settings['landing_cta_section_title'] ?? 'Ready to grow your restaurant?',
-            'landing_cta_section_body' => $settings['landing_cta_section_body'] ?? 'Join hundreds of restaurants already using Sectros. Get set up in under 5 minutes — no tech skills required.',
-            'landing_cta_section_button' => $settings['landing_cta_section_button'] ?? 'Start your 14-day free trial',
+            'landing_social_proof_label' => $this->sanitizeLanding($settings['landing_social_proof_label'] ?? 'Trusted by growing restaurant brands'),
+            'landing_social_proof_brands' => $this->sanitizeLanding($settings['landing_social_proof_brands'] ?? 'The Grill House,Bistro Uno,Saveur,Urban Plates,Coast & Co'),
+            'landing_feature1_title' => $this->sanitizeLanding($settings['landing_feature1_title'] ?? 'Effortless Reservations'),
+            'landing_feature1_subtitle' => $this->sanitizeLanding($settings['landing_feature1_subtitle'] ?? 'Accept table bookings automatically across all channels. Our smart availability engine prevents overbooking and keeps your floor running smoothly.'),
+            'landing_feature1_bullets' => $this->sanitizeLanding($settings['landing_feature1_bullets'] ?? "Online booking widgets for your website\nSmart table & floor plan management\nWaitlist management & SMS alerts"),
+            'landing_feature2_title' => $this->sanitizeLanding($settings['landing_feature2_title'] ?? 'Know Your Guests'),
+            'landing_feature2_subtitle' => $this->sanitizeLanding($settings['landing_feature2_subtitle'] ?? 'Build rich guest profiles automatically. Track preferences, visit history, and spending patterns to deliver a personalised experience every time.'),
+            'landing_feature2_bullets' => $this->sanitizeLanding($settings['landing_feature2_bullets'] ?? "Guest preference & allergy tracking\nAutomated follow-up messages\nLoyalty rewards & repeat booking tools"),
+            'landing_bento_heading' => $this->sanitizeLanding($settings['landing_bento_heading'] ?? 'Everything you need to grow'),
+            'landing_bento_subheading' => $this->sanitizeLanding($settings['landing_bento_subheading'] ?? 'Built for restaurant operators, not IT departments.'),
+            'landing_bento_items' => $this->sanitizeLanding($settings['landing_bento_items'] ?? "Smart Reservations | Accept bookings 24/7 automatically\nTable Management | Visual floor plan and capacity control\nGuest Profiles | Know your regulars by name\nMarketing Tools | Email & SMS campaigns that drive returns"),
+            'landing_cta_section_title' => $this->sanitizeLanding($settings['landing_cta_section_title'] ?? 'Ready to grow your restaurant?'),
+            'landing_cta_section_body' => $this->sanitizeLanding($settings['landing_cta_section_body'] ?? 'Join hundreds of restaurants already using Sectros. Get set up in under 5 minutes — no tech skills required.'),
+            'landing_cta_section_button' => $this->sanitizeLanding($settings['landing_cta_section_button'] ?? 'Start your 14-day free trial'),
             'website_theme' => $settings['website_theme'] ?? 'classic-ai',
             'platform_logo_url' => $settings['platform_logo_url'] ?? '/brand/logo-black.png',
             'platform_favicon_url' => $settings['platform_favicon_url'] ?? '/brand/icon-light.png',
+            'email_logo_url' => $settings['email_logo_url'] ?? '',
         ]);
     }
 
@@ -818,15 +852,16 @@ class SaaSController extends Controller
     public function uploadBranding(Request $request)
     {
         $request->validate([
-            'type' => 'required|in:logo,favicon',
+            'type' => 'required|in:logo,favicon,email_logo',
             'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg,ico|max:2048',
         ]);
 
         $type = $request->input('type');
         $file = $request->file('file');
         
-        $extension = $file->getClientOriginalExtension();
-        $filename = "platform_{$type}_" . time() . ".{$extension}";
+        $extension = $file->extension();
+        $safeType = preg_replace('/[^a-z_]/', '', $type);
+        $filename = "platform_{$safeType}_" . time() . ".{$extension}";
         
         // Store in public/platform
         $path = $file->storeAs('platform', $filename, 'public');
@@ -866,6 +901,7 @@ class SaaSController extends Controller
             'landing_bento_heading', 'landing_bento_subheading', 'landing_bento_items',
             'landing_cta_section_title', 'landing_cta_section_body', 'landing_cta_section_button',
             'website_theme',
+            'email_logo_url',
             'turnstile_site_key', 'turnstile_secret_key',
         ];
         
@@ -877,6 +913,8 @@ class SaaSController extends Controller
                 $storeValue = json_encode($value);
             } elseif (is_bool($value)) {
                 $storeValue = $value ? 'true' : 'false';
+            } elseif (str_starts_with($key, 'landing_') && $key !== 'landing_hero_image_url') {
+                $storeValue = strip_tags($value);
             }
 
             \App\Models\SaaSSetting::updateOrCreate(
@@ -1468,18 +1506,17 @@ class SaaSController extends Controller
         $tenant = Tenant::findOrFail($id);
         $request->validate([
             'email' => 'required|email',
-            'password' => 'required|string',
             'domain' => 'required|string',
         ]);
 
         try {
-            $subject = "Welcome to " . config('app.name') . " - Your Dashboard Credentials";
-            $content = "<h2>Welcome to " . config('app.name') . "!</h2>
+            $subject = "Welcome to " . e(config('app.name')) . " - Your Dashboard is Ready";
+            $safeDomain = e($request->domain);
+            $content = "<h2>Welcome to " . e(config('app.name')) . "!</h2>
                         <p>Your restaurant dashboard has been successfully deployed.</p>
-                        <p><strong>Dashboard URL:</strong> <a href='http://{$request->domain}'>http://{$request->domain}</a></p>
-                        <p><strong>Login Email:</strong> {$request->email}</p>
-                        <p><strong>Temporary Password:</strong> {$request->password}</p>
-                        <p>Please log in and change your password immediately.</p>";
+                        <p><strong>Dashboard URL:</strong> <a href='http://{$safeDomain}'>http://{$safeDomain}</a></p>
+                        <p><strong>Login Email:</strong> " . e($request->email) . "</p>
+                        <p>Please check your email for the password reset link or contact support if you need assistance.</p>";
 
             Mail::to($request->email)->send(new \App\Mail\SystemMail($subject, $content));
             return response()->json(['message' => 'Credentials dispatched successfully.']);
@@ -1522,26 +1559,31 @@ class SaaSController extends Controller
                 }
             }
 
+            $response = ['message' => 'Credentials updated successfully.'];
+
             if ($request->send_email) {
-                // Determine domain
                 $domain = $tenant->domains->first()?->domain ?? 'N/A';
                 
-                $subject = config('app.name') . " - Your Dashboard Credentials Have Been Reset";
+                $subject = e(config('app.name')) . " - Your Dashboard Credentials Have Been Reset";
+                $safeDomain = e($domain);
+                $safeEmail = e($email);
                 $content = "<h2>Dashboard Security Update</h2>
                             <p>An administrator has updated your login credentials.</p>
-                            <p><strong>Dashboard URL:</strong> <a href='http://{$domain}'>http://{$domain}</a></p>
-                            <p><strong>Login Email:</strong> {$email}</p>
-                            <p><strong>New Password:</strong> {$password}</p>
-                            <p>Please log in to confirm access.</p>";
+                            <p><strong>Dashboard URL:</strong> <a href='http://{$safeDomain}'>http://{$safeDomain}</a></p>
+                            <p><strong>Login Email:</strong> {$safeEmail}</p>
+                            <p>Please use the forgot password link on the login page to set a new password if needed.</p>";
 
                 Mail::to($email)->send(new \App\Mail\SystemMail($subject, $content));
+                $response['email_sent'] = true;
             }
 
-            return response()->json([
-                'message' => 'Credentials updated successfully.',
-                'new_password' => $password,
-                'new_email' => $email
-            ]);
+            if ($request->filled('new_email')) {
+                $response['new_email'] = $email;
+            }
+
+            Log::info('Staff credentials reset', ['tenant_id' => $tenant->id, 'user_id' => $userId]);
+
+            return response()->json($response);
             
         } catch (\Exception $e) {
             Log::error("Failed to reset staff credentials", ['error' => $e->getMessage()]);

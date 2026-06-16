@@ -236,7 +236,7 @@ Route::middleware(['api'])->group(function () {
         });
 
         // Protected routes
-        Route::middleware('auth:sanctum')->group(function () {
+        Route::middleware(['auth:sanctum', 'throttle:120,1'])->group(function () {
 
             Route::get('/user', function (\Illuminate\Http\Request $request) {
                 $user   = $request->user();
@@ -293,6 +293,12 @@ Route::middleware(['api'])->group(function () {
             Route::put('/staff/{id}', [StaffController::class, 'update']);
             Route::delete('/staff/{id}', [StaffController::class, 'destroy']);
 
+            Route::get('/staff/me/dashboard', [\App\Http\Controllers\Api\StaffDashboardController::class, 'index']);
+            Route::get('/staff/messages', [\App\Http\Controllers\Api\StaffMessageController::class, 'index']);
+            Route::post('/staff/messages', [\App\Http\Controllers\Api\StaffMessageController::class, 'store']);
+            Route::patch('/staff/messages/{id}/read', [\App\Http\Controllers\Api\StaffMessageController::class, 'markRead']);
+            Route::get('/staff/messages/unread-count', [\App\Http\Controllers\Api\StaffMessageController::class, 'unreadCount']);
+
             Route::apiResource('/reviews', ReviewController::class);
             Route::apiResource('/gallery', GalleryController::class);
             Route::apiResource('/rooms', RoomController::class);
@@ -304,6 +310,9 @@ Route::middleware(['api'])->group(function () {
 
             Route::get('/branding', [BrandingController::class, 'index']);
             Route::post('/branding', [BrandingController::class, 'update']);
+            Route::get('/configuration', [\App\Http\Controllers\Api\ConfigurationController::class, 'index']);
+            Route::post('/configuration', [\App\Http\Controllers\Api\ConfigurationController::class, 'update']);
+            Route::get('/configuration/schema', [\App\Http\Controllers\Api\ConfigurationController::class, 'schema']);
 
             Route::apiResource('/orders', OrderController::class);
             Route::apiResource('/reservations', ReservationController::class);
@@ -316,6 +325,7 @@ Route::middleware(['api'])->group(function () {
             Route::apiResource('/attendance', AttendanceController::class);
             Route::apiResource('/settlements', SettlementController::class);
             Route::apiResource('/branches', BranchController::class);
+            Route::apiResource('/franchises', \App\Http\Controllers\Api\FranchiseController::class);
             Route::apiResource('/integrations', IntegrationController::class);
             Route::apiResource('/waitlist', WaitlistController::class);
             Route::post('/waitlist/{id}/notify', [\App\Http\Controllers\Api\WaitlistController::class, 'notify']);

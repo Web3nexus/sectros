@@ -31,18 +31,18 @@
         }
 
         .header {
-            background-color: #1D1934;
+            background-color: #f8f6f3;
             padding: 48px 40px;
             text-align: center;
         }
 
         .header img {
-            max-height: 40px;
+            max-height: 48px;
             margin-bottom: 24px;
         }
 
         .header h1 {
-            color: #ffffff;
+            color: #2d2a3d;
             font-size: 28px;
             font-weight: 700;
             margin: 0;
@@ -121,10 +121,12 @@
     <div class="wrapper">
         <div class="container">
             <div class="header">
-                @if($logo)
+                @if($email_logo)
+                    <img src="{{ $email_logo }}" alt="{{ $platform_name }}">
+                @elseif($logo)
                     <img src="{{ $logo }}" alt="{{ $platform_name }}">
                 @else
-                    <div style="color: #ffffff; font-size: 24px; font-weight: 700; margin-bottom: 24px;">{{ $platform_name }}</div>
+                    <div style="color: #2d2a3d; font-size: 24px; font-weight: 700; margin-bottom: 24px;">{{ $platform_name }}</div>
                 @endif
                 <h1>{{ $subject }}</h1>
             </div>

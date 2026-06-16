@@ -534,10 +534,14 @@ class AutomationController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file')) {
-            $filePath = $request->file('file')->store('knowledge', 'public');
-            
-            // In a real app, we would use a PDF parser here to extract text into $validated['content']
-            // For now, we'll assume the user might provide text alongside the file or we'll just store the path.
+            $allowedMimes = ['application/pdf', 'text/plain', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+            $mime = $request->file('file')->getMimeType();
+            if (!in_array($mime, $allowedMimes)) {
+                return response()->json(['message' => 'Invalid file type.'], 422);
+            }
+            $extension = $request->file('file')->extension();
+            $safeName = 'knowledge_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $extension;
+            $filePath = $request->file('file')->storeAs('knowledge', $safeName, 'public');
         }
 
         $knowledge = \App\Models\TenantKnowledge::create([

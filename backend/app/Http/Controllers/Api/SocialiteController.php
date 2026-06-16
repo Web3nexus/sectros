@@ -40,9 +40,16 @@ class SocialiteController extends Controller
         $this->applySaaSSettings();
         
         $tenantId = $request->query('tenant_id');
-        $state = $tenantId . '|' . Str::random(32);
-        
-        session(['meta_oauth_state' => $state]);
+        if (!$tenantId || !\App\Models\Tenant::where('id', $tenantId)->exists()) {
+            return response()->json(['message' => 'Invalid tenant.'], 400);
+        }
+
+        $nonce = Str::random(32);
+        $statePayload = $tenantId . '|' . $nonce;
+        $stateSig = hash_hmac('sha256', $statePayload, config('app.key'));
+        $state = $statePayload . '|' . $stateSig;
+
+        cache(['meta_oauth_state_' . $tenantId => $state], now()->addMinutes(15));
 
         return Socialite::driver('facebook')
             ->setScopes([
@@ -76,7 +83,24 @@ class SocialiteController extends Controller
 
         $parts = explode('|', $state);
         $tenantId = $parts[0] ?? null;
-        $tenant = $tenantId ? \App\Models\Tenant::find($tenantId) : null;
+        $nonce = $parts[1] ?? null;
+        $sig = $parts[2] ?? null;
+
+        $expectedSig = hash_hmac('sha256', $tenantId . '|' . $nonce, config('app.key'));
+        if (!$tenantId || !$nonce || !$sig || !hash_equals($expectedSig, $sig)) {
+            Log::error('Meta OAuth: Invalid state signature');
+            return redirect()->away('https://' . ($settings['central_domain'] ?? 'sectros.com') . '/dashboard/automation?oauth=error');
+        }
+
+        $cached = cache('meta_oauth_state_' . $tenantId);
+        if (!$cached || !hash_equals($cached, $state)) {
+            Log::error('Meta OAuth: State mismatch or expired', ['tenant_id' => $tenantId]);
+            return redirect()->away('https://' . ($settings['central_domain'] ?? 'sectros.com') . '/dashboard/automation?oauth=error');
+        }
+
+        cache()->forget('meta_oauth_state_' . $tenantId);
+
+        $tenant = \App\Models\Tenant::find($tenantId);
 
         try {
             $user = Socialite::driver('facebook')->stateless()->user();

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\SuperAdmin\SaaSController;
 use App\Http\Controllers\Api\SuperAdmin\SaaSCMSAdminController;
 use App\Http\Controllers\Api\SuperAdmin\TranslationController;
 use App\Http\Controllers\Api\TenantController;
+use App\Http\Controllers\Api\ProvisioningController;
 
 // Public Branding & Tenant Lookup
 Route::get('/public/branding', [SaaSController::class, 'getPublicBranding']);
@@ -44,7 +45,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // SaaS Super Admin
-Route::middleware(['auth:sanctum'])->prefix('saas')->group(function () {
+Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(function () {
     // Admin Management
     Route::get('/admins', [AdminUserController::class, 'index']);
     Route::post('/admins', [AdminUserController::class, 'store']);
@@ -63,6 +64,8 @@ Route::middleware(['auth:sanctum'])->prefix('saas')->group(function () {
     Route::patch('/tenants/{id}/staff/{userId}/2fa', [SaaSController::class, 'toggleTenantUser2FA']);
     Route::post('/tenants/{id}/impersonate', [SaaSController::class, 'impersonate']);
     Route::delete('/tenants/{id}', [SaaSController::class, 'destroyTenant']);
+    Route::get('/provisioning/{tenant}/status', [ProvisioningController::class, 'status']);
+    Route::post('/provisioning/full', [ProvisioningController::class, 'fullProvision']);
     Route::get('/tenants/{id}/themes', [SaaSController::class, 'getTenantThemes']);
     Route::post('/tenants/{id}/themes/unlock', [SaaSController::class, 'unlockTenantTheme']);
     Route::delete('/tenants/{id}/themes/{theme_id}', [SaaSController::class, 'revokeTenantTheme']);
@@ -147,7 +150,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 });
 
 // Tenants list for registration etc.
-Route::post('/tenants', [TenantController::class, 'store']);
+Route::post('/tenants', [TenantController::class, 'store'])->middleware('throttle:10,1');
 
 // Public Translations & CMS (Load these in api.php if needed publically)
 Route::get('/public/translations/{locale}', [TranslationController::class, 'fetch']);

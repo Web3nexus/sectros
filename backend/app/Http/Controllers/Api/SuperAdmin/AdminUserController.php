@@ -4,12 +4,25 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
 class AdminUserController extends Controller
 {
+    private function audit(string $action, array $details = []): void
+    {
+        $user = request()->user();
+        AuditLog::create([
+            'user_id' => $user?->id,
+            'user_email' => $user?->email,
+            'action' => $action,
+            'details' => $details,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+    }
     /**
      * Display a listing of the resource.
      */
@@ -47,6 +60,8 @@ class AdminUserController extends Controller
         ]);
 
         $admin->assignRole('super_admin');
+
+        $this->audit('admin_created', ['admin_id' => $admin->id, 'email' => $admin->email]);
 
         return response()->json($admin, 201);
     }
@@ -87,6 +102,8 @@ class AdminUserController extends Controller
         }
         $admin->save();
 
+        $this->audit('admin_updated', ['admin_id' => $admin->id, 'email' => $admin->email]);
+
         return response()->json($admin);
     }
 
@@ -105,6 +122,7 @@ class AdminUserController extends Controller
             return response()->json(['message' => 'Cannot delete your own account'], 403);
         }
 
+        $this->audit('admin_deleted', ['admin_id' => $admin->id, 'email' => $admin->email]);
         $admin->delete();
 
         return response()->json(['message' => 'Admin deleted successfully']);

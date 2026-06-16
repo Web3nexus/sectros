@@ -46,8 +46,8 @@ class EmailTemplateSeeder extends Seeder
             [
                 'slug'      => 'staff_registration',
                 'subject'   => 'Welcome to the Team, {name}',
-                'content'   => "Welcome aboard!\n\nYour staff account for {business_name} at {platform_name} is ready.\n\nLogin URL: {login_url}\nTemporary PIN for setup: {pin}\n\nPlease log in and complete your profile security setup.",
-                'variables' => ['name', 'business_name', 'platform_name', 'login_url', 'pin'],
+                'content'   => "Welcome aboard!\n\nYour staff account for {business_name} at {platform_name} is ready.\n\nLogin URL: {login_url}\nYour email: {email}\nTemporary password: {password}\n\nAfter logging in, please change your password from the Profile section.",
+                'variables' => ['name', 'business_name', 'platform_name', 'login_url', 'email', 'password'],
             ],
             [
                 'slug'      => 'new_message',

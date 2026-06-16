@@ -38,7 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(\Illuminate\Http\Middleware\HandleCors::class);
+        $middleware->prepend(\App\Http\Middleware\TrustProxies::class);
         $middleware->append(\App\Http\Middleware\LocaleMiddleware::class);
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->alias([
             'tenancy.header' => \App\Http\Middleware\InitializeTenancyByHeader::class,
         ]);
@@ -48,6 +50,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             return route('login');
         });
+        $middleware->throttleApi('60', '1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

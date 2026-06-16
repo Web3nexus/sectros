@@ -21,10 +21,15 @@ class CentralWebhookController extends Controller
         $challenge = $request->query('hub_challenge');
 
         $settings = \App\Models\SaaSSetting::all()->pluck('value', 'key');
-        $expectedToken = $settings['social_verify_token'] ?? 'sectros_secret_token';
+        $expectedToken = $settings['social_verify_token'] ?? null;
+
+        if (!$expectedToken) {
+            Log::critical('Social Webhook: social_verify_token not configured');
+            return response('Webhook not configured', 500);
+        }
 
         if ($mode && $token) {
-            if ($mode === 'subscribe' && $token === $expectedToken) {
+            if ($mode === 'subscribe' && hash_equals($expectedToken, $token)) {
                 return response($challenge, 200);
             }
         }

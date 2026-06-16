@@ -11,6 +11,7 @@ export const businessConfig = {
       insights: "Insights",
       calendar: "Calendar",
       staff: "Staff Profiles",
+      branches: "Branches",
       financials: "Financials",
       configuration: "Configuration",
       customers: "Customers",
@@ -21,7 +22,10 @@ export const businessConfig = {
       reviews: "Reviews",
       gallery: "Gallery",
       blog: "Blog Page",
-      team: "Team Members"
+      team: "Team Members",
+      franchises: "Franchise Tools",
+      waitlist: "Waitlist Pro",
+      integrations: "Public API"
     },
     icons: {
       insights: "LayoutDashboard",
@@ -33,6 +37,10 @@ export const businessConfig = {
       website: "Globe",
       tables: "Table",
       staff: "Users",
+      branches: "Store",
+      franchises: "Users",
+      waitlist: "Clock",
+      integrations: "Key",
       financials: "DollarSign",
       billing: "CreditCard",
       automation: "Bot",
@@ -78,7 +86,7 @@ export const businessConfig = {
       'table_settings', 'menu_settings', 'reservation_rules', 'order_settings', 'delivery_settings', 'pickup_settings', 'tax_and_service_charge', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'tables', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'tables', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Total Revenue', icon: 'DollarSign' },
@@ -99,6 +107,7 @@ export const businessConfig = {
       insights: "Insights",
       calendar: "Calendar",
       staff: "Staff Profiles",
+      branches: "Branches",
       financials: "Financials",
       configuration: "Configuration",
       customers: "Customers",
@@ -109,7 +118,10 @@ export const businessConfig = {
       reviews: "Reviews",
       gallery: "Gallery",
       blog: "Blog Page",
-      team: "Team Members"
+      team: "Team Members",
+      franchises: "Franchise Tools",
+      waitlist: "Waitlist Pro",
+      integrations: "Public API"
     },
     icons: {
       insights: "LayoutDashboard",
@@ -121,6 +133,10 @@ export const businessConfig = {
       website: "Globe",
       tables: "Table",
       staff: "Users",
+      branches: "Store",
+      franchises: "Users",
+      waitlist: "Clock",
+      integrations: "Key",
       financials: "DollarSign",
       billing: "CreditCard",
       automation: "Bot",
@@ -166,7 +182,7 @@ export const businessConfig = {
       'menu_settings', 'pickup_settings', 'reservation_settings', 'loyalty_settings', 'stock_settings', 'tax_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Total Sales', icon: 'DollarSign' },
@@ -187,6 +203,7 @@ export const businessConfig = {
       insights: "Insights",
       calendar: "Calendar",
       staff: "Staff Profiles",
+      branches: "Branches",
       financials: "Financials",
       configuration: "Configuration",
       customers: "Clients",
@@ -198,6 +215,9 @@ export const businessConfig = {
       gallery: "Gallery",
       blog: "Blog Page",
       team: "Team Members",
+      franchises: "Franchise Tools",
+      waitlist: "Waitlist Pro",
+      integrations: "Public API",
       services: "Services Management"
     },
     icons: {
@@ -209,6 +229,10 @@ export const businessConfig = {
       menu: "Briefcase",
       website: "Globe",
       staff: "Users",
+      branches: "Store",
+      franchises: "Users",
+      waitlist: "Clock",
+      integrations: "Key",
       financials: "DollarSign",
       billing: "CreditCard",
       automation: "Bot",
@@ -255,7 +279,7 @@ export const businessConfig = {
       'appointment_settings', 'staff_availability', 'service_duration', 'service_pricing', 'booking_rules', 'cancellation_rules', 'client_reminder_settings', 'product_sales_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'staff', 'financials', 'billing', 'automation', 'inventory', 'services', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'inventory', 'services', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Service Revenue', icon: 'DollarSign' },
@@ -276,6 +300,7 @@ export const businessConfig = {
       insights: "Insights",
       calendar: "Calendar",
       staff: "Staff Profiles",
+      branches: "Branches",
       financials: "Financials",
       configuration: "Configuration",
       customers: "Guests",
@@ -287,6 +312,9 @@ export const businessConfig = {
       gallery: "Gallery",
       blog: "Blog Page",
       team: "Team Members",
+      franchises: "Franchise Tools",
+      waitlist: "Waitlist Pro",
+      integrations: "Public API",
       rooms: "Rooms Management"
     },
     icons: {
@@ -299,6 +327,10 @@ export const businessConfig = {
       website: "Globe",
       tables: "Map",
       staff: "Users",
+      branches: "Store",
+      franchises: "Users",
+      waitlist: "Clock",
+      integrations: "Key",
       financials: "DollarSign",
       billing: "CreditCard",
       automation: "Bot",
@@ -347,7 +379,7 @@ export const businessConfig = {
       'room_settings', 'booking_rules', 'check_in_out_time', 'cancellation_policy', 'room_pricing', 'tax_and_fees', 'housekeeping_settings', 'maintenance_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'menu', 'website', 'tables', 'staff', 'financials', 'billing', 'automation', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'branches', 'franchises', 'waitlist', 'integrations', 'menu', 'website', 'tables', 'staff', 'financials', 'billing', 'automation', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Booking Revenue', icon: 'DollarSign' },

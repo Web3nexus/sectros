@@ -13,6 +13,7 @@ const FEATURE_CATALOGUE = [
   { key: 'insights',          label: 'Insights Dashboard',        icon: LayoutDashboard, alwaysOn: true,  category: 'Core' },
   { key: 'reservations',      label: 'Reservations',              icon: Calendar,        alwaysOn: true,  category: 'Core' },
   { key: 'configuration',     label: 'Business Configuration',    icon: Settings,        alwaysOn: true,  category: 'Core' },
+  { key: 'provisioning',      label: 'Provisioning & Onboarding', icon: Plus,            alwaysOn: true,  category: 'Core' },
   { key: 'billing_plan',      label: 'Billing & Plan Management', icon: CreditCard,      alwaysOn: true,  category: 'Core' },
   // Engagement
   { key: 'social_integration',label: 'Unified Chat (WA/IG/FB)',   icon: MessageSquare,   alwaysOn: false, category: 'Engagement' },
@@ -140,9 +141,6 @@ export default function PricingPage() {
     fetchPlans();
   }, []);
 
-  // Group features by category for the comparison table
-  const categories = [...new Set(FEATURE_CATALOGUE.map(f => f.category))];
-
   return (
     <div className="w-full relative overflow-hidden">
       {/* ── Background ── */}
@@ -201,7 +199,7 @@ export default function PricingPage() {
         ) : (
           <motion.div
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto items-stretch mb-24"
+            className="flex flex-wrap justify-center gap-6 max-w-6xl mx-auto mb-24"
           >
             {plans.map((plan, i) => {
               const accent = getAccent(plan.slug, i, plans.length);
@@ -222,7 +220,7 @@ export default function PricingPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className={`relative rounded-3xl p-8 bg-card/50 backdrop-blur-xl border flex flex-col transition-all duration-300 ${accent.border} ${isPopular ? 'shadow-2xl shadow-blue-900/20 md:scale-105 z-10' : 'hover:bg-card/70'}`}
+                  className={`relative rounded-3xl p-8 bg-card/50 backdrop-blur-xl border flex flex-col transition-all duration-300 w-full md:w-[calc(33.33%-1rem)] min-w-[280px] max-w-md ${accent.border} ${isPopular ? 'shadow-2xl shadow-blue-900/20 md:scale-105 z-10' : 'hover:bg-card/70'}`}
                 >
                   {isPopular && (
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -259,14 +257,21 @@ export default function PricingPage() {
                   {/* Feature Highlights */}
                   <div className="space-y-3 flex-1">
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border/50 pb-3 mb-3">What's included</p>
-                    {FEATURE_CATALOGUE.filter(f => f.alwaysOn || features[f.key]).slice(0, 7).map(feat => (
-                      <div key={feat.key} className="flex items-start gap-3">
-                        <div className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center">
-                          <Check className="w-3 h-3 text-blue-400" />
-                        </div>
-                        <span className="text-sm text-muted-foreground font-medium leading-relaxed">{feat.label}</span>
-                      </div>
-                    ))}
+                    {Object.entries(features)
+                      .filter(([, v]) => v)
+                      .map(([key]) => {
+                        const feat = FEATURE_CATALOGUE.find(f => f.key === key);
+                        return feat ? (
+                          <div key={key} className="flex items-start gap-3">
+                            <div className="shrink-0 mt-0.5 w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center">
+                              <Check className="w-3 h-3 text-blue-400" />
+                            </div>
+                            <span className="text-sm text-muted-foreground font-medium leading-relaxed">{feat.label}</span>
+                          </div>
+                        ) : null;
+                      })
+                      .filter(Boolean)
+                      .slice(0, 7)}
                     {/* Limits Summary */}
                     <div className="pt-4 mt-2 border-t border-border/30 space-y-2">
                       {LIMIT_ROWS.map(row => {
@@ -303,7 +308,28 @@ export default function PricingPage() {
               <p className="text-muted-foreground">See exactly what you get on every plan before you commit.</p>
             </div>
 
-            {/* Table Wrapper */}
+            {/* Build unified feature list from all plans + FEATURE_CATALOGUE */}
+            {(() => {
+              const allKeys = new Set(FEATURE_CATALOGUE.map(f => f.key));
+              plans.forEach(p => {
+                const pf = parseFeatures(p.features);
+                Object.keys(pf).forEach(k => allKeys.add(k));
+              });
+              const unifiedFeatures = FEATURE_CATALOGUE.slice();
+              allKeys.forEach(k => {
+                if (!unifiedFeatures.find(f => f.key === k)) {
+                  unifiedFeatures.push({
+                    key: k,
+                    label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+                    icon: Check,
+                    alwaysOn: false,
+                    category: 'Other',
+                  });
+                }
+              });
+              const categories = [...new Set(unifiedFeatures.map(f => f.category))];
+
+              return (
             <div className="overflow-x-auto rounded-3xl border border-border bg-card/30 backdrop-blur-xl shadow-2xl">
               <table className="w-full min-w-[640px]">
                 {/* Table Head — Plan Columns */}
@@ -355,7 +381,7 @@ export default function PricingPage() {
 
                   {/* Feature Categories */}
                   {categories.map(cat => {
-                    const catFeatures = FEATURE_CATALOGUE.filter(f => f.category === cat);
+                    const catFeatures = unifiedFeatures.filter(f => f.category === cat);
                     return (
                       <React.Fragment key={cat}>
                         <tr>
@@ -378,8 +404,8 @@ export default function PricingPage() {
                               </div>
                             </td>
                             {plans.map((plan, i) => {
-                              const features = parseFeatures(plan.features);
-                              const included = feat.alwaysOn || !!features[feat.key];
+                              const planFeatures = parseFeatures(plan.features);
+                              const included = planFeatures[feat.key] === true;
                               const isPopular = plan.popular || (i === 1 && plans.length === 3);
                               return (
                                 <td key={plan.id || i} className={`px-6 py-4 text-center ${isPopular ? 'bg-blue-500/5' : ''}`}>
@@ -426,6 +452,8 @@ export default function PricingPage() {
                 </tbody>
               </table>
             </div>
+              );
+            })()}
           </motion.div>
         )}
 

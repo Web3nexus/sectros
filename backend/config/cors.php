@@ -24,9 +24,9 @@ return [
     ],
 
     'allowed_origins_patterns' => [
-        '#^https?://.*\.sectrosweb\.test(:\d+)?$#',
-        '#^https?://.*\.sectros\.com(:\d+)?$#',
-        '#^https?://.*\.sectroslr\.test(:\d+)?$#',
+        '#^https?://[a-zA-Z0-9-]+\.sectrosweb\.test(:\d+)?$#',
+        '#^https?://[a-zA-Z0-9-]+\.sectros\.com(:\d+)?$#',
+        '#^https?://[a-zA-Z0-9-]+\.sectroslr\.test(:\d+)?$#',
     ],
 
     'allowed_headers' => ['*'],

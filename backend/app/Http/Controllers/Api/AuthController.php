@@ -33,50 +33,43 @@ class AuthController extends Controller
                            $request->is('*/saas/*') || 
                            str_contains($request->path(), 'saas/');
 
-            if (!$isAdminPath) {
-                $isAdminEmail = \App\Models\Admin::where('email', $request->email)->exists();
-                if ($isAdminEmail) {
-                    $isAdminPath = true;
-                    \Illuminate\Support\Facades\Log::info('DEBUG: Admin email detected on non-admin path', ['email' => $request->email]);
-                }
-            }
+            $adminUser = null;
+            $tenantUser = null;
+            $tenantRecord = null;
 
             if ($isAdminPath) {
-                $user = \App\Models\Admin::where('email', $request->email)->first();
-                if (!$user) {
-                    \Illuminate\Support\Facades\Log::warning('DEBUG: Admin user not found', ['email' => $request->email]);
-                    return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
+                $adminUser = \App\Models\Admin::where('email', $request->email)->first();
+            } else {
+                $isAdminEmail = \App\Models\Admin::where('email', $request->email)->exists();
+                if ($isAdminEmail) {
+                    $adminUser = \App\Models\Admin::where('email', $request->email)->first();
+                } else {
+                    $tenantUser = User::on('tenant')->where('email', $request->email)->first();
+                    if ($tenantUser) {
+                        $tenantRecord = Tenant::on('platform')->find($tenantUser->tenant_id);
+                    }
                 }
-                
-                if (!Hash::check($request->password, $user->password)) {
-                    \Illuminate\Support\Facades\Log::warning('DEBUG: Admin password mismatch', ['email' => $request->email]);
-                    return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
-                }
+            }
 
-                \Illuminate\Support\Facades\Log::info('DEBUG: Admin authenticated successfully', ['email' => $request->email]);
+            // Validate password for the identified user
+            $validAdmin = $adminUser && Hash::check($request->password, $adminUser->password);
+            $validTenant = $tenantUser && $tenantRecord && Hash::check($request->password, $tenantUser->password);
 
-                // Handle 2FA for Super Admin
-                $twoFactorMethod = $user->two_factor_method ?: 'none';
+            if (!$validAdmin && !$validTenant) {
+                return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
+            }
+
+            if ($validAdmin) {
+                $twoFactorMethod = $adminUser->two_factor_method ?: 'none';
                 if ($twoFactorMethod !== 'none') {
-                    return $this->sendTwoFactorCode($user, $twoFactorMethod);
+                    return $this->sendTwoFactorCode($adminUser, $twoFactorMethod);
                 }
-
-                return $this->issueToken($user);
+                return $this->issueToken($adminUser);
             }
 
-            // Tenant user login (single-DB: shared users table)
-            $user = User::on('tenant')->where('email', $request->email)->first();
-            
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                \Illuminate\Support\Facades\Log::warning('DEBUG: Tenant user authentication failed', ['email' => $request->email]);
-                return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
-            }
-
-            $tenant = Tenant::on('platform')->find($user->tenant_id);
-            if (!$tenant) {
-                \Illuminate\Support\Facades\Log::warning('DEBUG: Tenant not found for user', ['tenant_id' => $user->tenant_id]);
-                return response()->json(['message' => 'The provided credentials are incorrect.'], 401);
-            }
+            // Tenant user flow
+            $user = $tenantUser;
+            $tenant = $tenantRecord;
 
             $authData = [
                 'id' => $user->id,

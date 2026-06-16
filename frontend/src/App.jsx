@@ -5,6 +5,11 @@ import { Dashboard } from './pages/Dashboard'
 import BillingView from './pages/BillingView'
 import { MenuView } from './pages/MenuView'
 import { StaffView } from './pages/StaffView'
+import { BranchView } from './pages/BranchView'
+import { OnlineOrderingView } from './pages/OnlineOrderingView'
+import { FranchiseView } from './pages/FranchiseView'
+import { WaitlistView } from './pages/WaitlistView'
+import { IntegrationsView } from './pages/IntegrationsView'
 import { TableView } from './pages/TableView'
 import { POSView } from './pages/POSView'
 import { ReservationsView } from './pages/ReservationsView'
@@ -159,6 +164,10 @@ function AppContent() {
           <Route element={<ProtectedRoute allowedRoles={['owner']} redirectPath="/access-denied" />}>
             <Route path="website" element={<WebsiteDashboardView />} />
             <Route path="staff" element={<StaffView />} />
+            <Route path="branches" element={<BranchView />} />
+            <Route path="franchises" element={<FranchiseView />} />
+            <Route path="waitlist" element={<WaitlistView />} />
+            <Route path="integrations" element={<IntegrationsView />} />
             <Route path="financials" element={<FinancialsView />} />
             <Route path="automation" element={<AutomationView />} />
             <Route path="messages" element={<MessagesView />} />
@@ -167,7 +176,7 @@ function AppContent() {
               <Route path="onboarding" element={<OnboardingView />} />
               <Route path="account" element={<AccountSettingsView />} />
               <Route path="inventory" element={<InventoryView />} />
-              <Route path="online-ordering" element={<ComingSoonView title="Online Ordering" description="Launch your own branded web shop for pickups and deliveries." />} />
+              <Route path="online-ordering" element={<OnlineOrderingView />} />
               {/* Content Management */}
               <Route path="reviews" element={<ContentManager contentType="reviews" />} />
               <Route path="gallery" element={<ContentManager contentType="gallery" />} />

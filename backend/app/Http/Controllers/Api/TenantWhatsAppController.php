@@ -223,7 +223,11 @@ class TenantWhatsAppController extends Controller
     {
         $settings = $this->getSettings();
         $centralDomain = $settings['central_domain'] ?? 'sectros.com';
-        $verifyToken = $settings['social_verify_token'] ?? 'sectros_secret_token';
+        $verifyToken = $settings['social_verify_token'] ?? null;
+        if (!$verifyToken) {
+            Log::error('WhatsApp: social_verify_token not configured');
+            return;
+        }
         $webhookUrl = "https://{$centralDomain}/central-api/social/webhook";
 
         try {
