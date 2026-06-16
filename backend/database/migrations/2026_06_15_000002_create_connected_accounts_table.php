@@ -29,10 +29,10 @@ return new class extends Migration
             $table->timestamp('last_webhook_received_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('tenant_id')->references('id')->on('tenants')->onDelete('cascade');
-            $table->unique(['tenant_id', 'page_id']);
-            $table->unique(['tenant_id', 'instagram_business_account_id']);
-            $table->index('channel');
+            $table->foreign('tenant_id', 'ca_tenant_fk')->references('id')->on('tenants')->onDelete('cascade');
+            $table->unique(['tenant_id', 'page_id'], 'ca_tenant_page_unique');
+            $table->unique(['tenant_id', 'instagram_business_account_id'], 'ca_tenant_ig_unique');
+            $table->index('channel', 'ca_channel_idx');
         });
     }
 
