@@ -26,11 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
             // Tenant API — accessible under both prefixes for transition
             Route::middleware('api')
                 ->prefix('tenant-api')
+                ->name('tenant.')
                 ->group(function () {
                     require base_path('routes/tenant.php');
                 });
             Route::middleware('api')
                 ->prefix('central-api')
+                ->name('central.')
                 ->group(function () {
                     require base_path('routes/tenant.php');
                 });
@@ -48,9 +50,10 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($request->is('api/*') || $request->is('central-api/*') || $request->is('tenant-api/*')) {
                 return null; // Return 401 JSON for API
             }
-            return route('login');
+            // Preserve subdomain context — redirect to same host's /login (SPA handles it)
+            return $request->getSchemeAndHttpHost() . '/login';
         });
-        $middleware->throttleApi('60', '1');
+        $middleware->throttleApi('60,1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
