@@ -17,7 +17,7 @@ foreach (config('tenancy.central_domains') as $domain) {
                     'Expires'       => '0',
                 ]
             );
-        })->where('any', '^(?!(api|central-api|tenant-api|sanctum|_debugbar)).*$');
+        })->where('any', '^(?!(api|central-api|tenant-api|sanctum|cdn-cgi|_debugbar)).*$');
     });
 
     // Match management subdomains (e.g. el-santo.sectros.com)
@@ -33,6 +33,6 @@ foreach (config('tenancy.central_domains') as $domain) {
                     'Expires'       => '0',
                 ]
             );
-        })->where('any', '^(?!(api|central-api|tenant-api|sanctum|_debugbar)).+$');
+        })->where('any', '^(?!(api|central-api|tenant-api|sanctum|cdn-cgi|_debugbar)).+$');
     });
 }
