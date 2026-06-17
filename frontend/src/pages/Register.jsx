@@ -426,8 +426,8 @@ export default function Register() {
 
                   {!trialSettings.require_card_for_trial && (
                     <div className="mt-6 text-center">
-                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-wider leading-none">
+                        <CheckCircle2 className="w-3 h-3" />
                         <span className="whitespace-nowrap">No credit card required &middot; {trialSettings.trial_days || 14}-day free trial</span>
                       </span>
                     </div>
