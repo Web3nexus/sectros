@@ -29,6 +29,7 @@ export default function Register() {
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [accountType, setAccountType] = useState('owner');
+  const hasTurnstileKey = settings.turnstile_site_key || import.meta.env.VITE_TURNSTILE_SITE_KEY;
   
   const [formData, setFormData] = useState({
     name: '',
@@ -367,13 +368,15 @@ export default function Register() {
                               </div>
                             </div>
 
-                            <div className="flex justify-center mt-6">
-                              <Turnstile 
-                                siteKey={settings.turnstile_site_key || import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-                                onSuccess={(token) => setTurnstileToken(token)}
-                                options={{ theme: 'dark' }}
-                              />
-                            </div>
+                            {hasTurnstileKey && (
+                              <div className="flex justify-center mt-6">
+                                <Turnstile 
+                                  siteKey={hasTurnstileKey}
+                                  onSuccess={(token) => setTurnstileToken(token)}
+                                  options={{ theme: 'dark' }}
+                                />
+                              </div>
+                            )}
                           </div>
                         )}
                       </motion.div>
@@ -405,7 +408,7 @@ export default function Register() {
                       ) : (
                         <button 
                           type="submit"
-                          disabled={isLoading || !formData.password || !turnstileToken}
+                          disabled={isLoading || !formData.password || (hasTurnstileKey && !turnstileToken)}
                           className="flex-[2] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-30 text-primary-foreground font-black py-4 rounded-2xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-3 active:scale-95"
                         >
                           {isLoading ? (
@@ -425,7 +428,7 @@ export default function Register() {
                     <div className="mt-6 text-center">
                       <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        No credit card required &middot; {trialSettings.trial_days || 14}-day free trial
+                        <span className="whitespace-nowrap">No credit card required &middot; {trialSettings.trial_days || 14}-day free trial</span>
                       </span>
                     </div>
                   )}
