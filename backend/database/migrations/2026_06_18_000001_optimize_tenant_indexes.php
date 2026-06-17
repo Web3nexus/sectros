@@ -34,6 +34,7 @@ return new class extends Migration
 
         foreach ($tables as $table) {
             if (!Schema::hasTable($table)) continue;
+            if (!Schema::hasColumn($table, 'tenant_id')) continue;
 
             $this->addCompositeIndexIfNotExists($table, ['tenant_id', 'id']);
 
