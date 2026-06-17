@@ -16,6 +16,7 @@ class SubscriptionPlan extends Model
         'reservation_limit',
         'max_staff',
         'ai_credits_limit',
+        'sms_credits_limit',
         'is_active',
     ];
 
@@ -25,5 +26,6 @@ class SubscriptionPlan extends Model
         'reservation_limit'  => 'integer',
         'max_staff'          => 'integer',
         'ai_credits_limit'   => 'integer',
+        'sms_credits_limit'  => 'integer',
     ];
 }

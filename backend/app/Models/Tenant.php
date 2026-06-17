@@ -27,6 +27,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'ai_credits_used',
             'ai_credits_topup',
             'ai_credits_reset_at',
+            'sms_credits_used',
+            'sms_credits_topup',
+            'sms_credits_reset_at',
             'features',
             'country',
             'created_at',
@@ -39,6 +42,9 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'ai_credits_used' => 'integer',
         'ai_credits_topup' => 'integer',
         'ai_credits_reset_at' => 'datetime',
+        'sms_credits_used' => 'integer',
+        'sms_credits_topup' => 'integer',
+        'sms_credits_reset_at' => 'datetime',
         'trial_ends_at' => 'datetime',
     ];
 }

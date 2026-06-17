@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use App\Models\Tenant;
 use App\Services\PaymentService;
+use App\Services\SMSService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -107,6 +108,31 @@ class SubscriptionController extends Controller
         return response()->json([
             'message'          => "Successfully purchased {$request->amount} AI credits.",
             'ai_credits_topup' => $currentTenant->ai_credits_topup
+        ]);
+    }
+
+    /**
+     * Purchase additional SMS credits (Top-up).
+     */
+    public function purchaseSmsCredits(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|integer|min:1',
+        ]);
+
+        $currentTenant = tenant();
+
+        if (!$currentTenant) {
+            return response()->json(['message' => 'Tenant not found.'], 404);
+        }
+
+        // Logic here would normally involve a payment check
+        $currentTenant->increment('sms_credits_topup', $request->amount);
+
+        return response()->json([
+            'message'             => "Successfully purchased {$request->amount} SMS credits.",
+            'sms_credits_topup'   => $currentTenant->sms_credits_topup,
+            'credits'             => SMSService::getCreditsArray(),
         ]);
     }
 }
