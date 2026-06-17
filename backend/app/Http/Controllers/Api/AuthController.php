@@ -183,6 +183,7 @@ class AuthController extends Controller
             \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 1 (Tenant Creation)');
             // Phase 1: Create Tenant
             try {
+                $trialDays = \App\Models\SaaSSetting::get('trial_days', 14);
                 $tenant = Tenant::create([
                     'id' => $tenantId,
                     'business_name' => $validated['business_name'],
@@ -192,6 +193,7 @@ class AuthController extends Controller
                     'owner_name' => $validated['name'],
                     'country' => $validated['country'],
                     'status' => 'active',
+                    'trial_ends_at' => now()->addDays((int) $trialDays),
                     'data' => [
                         'status' => 'active',
                         'owner_name' => $validated['name'],

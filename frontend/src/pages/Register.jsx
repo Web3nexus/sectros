@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {Briefcase, ArrowRight, ArrowLeft, Building2, Mail, Lock, User, Globe, Loader2, CheckCircle2} from 'lucide-react';
@@ -12,6 +12,15 @@ export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const settings = useBranding();
+  const [trialSettings, setTrialSettings] = useState({});
+
+  useEffect(() => {
+    import('../services/centralApi').then(mod => {
+      mod.default.get('saas/settings').then(res => {
+        if (res.data) setTrialSettings(res.data);
+      }).catch(() => {});
+    });
+  }, []);
   // Forced update to clear potential Vite build cache
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -412,7 +421,16 @@ export default function Register() {
                     </div>
                   </form>
 
-                  <div className="mt-10 text-center border-t border-border/50 pt-8">
+                  {!trialSettings.require_card_for_trial && (
+                    <div className="mt-6 text-center">
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        No credit card required &middot; {trialSettings.trial_days || 14}-day free trial
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mt-6 text-center border-t border-border/50 pt-8">
                     <p className="text-muted-foreground text-xs font-medium">
                       {t('auth.already_have_account')} {' '}
                       <Link to="/login" className="text-foreground font-bold hover:text-blue-400 transition-colors tracking-tight">{t('auth.login')}</Link>

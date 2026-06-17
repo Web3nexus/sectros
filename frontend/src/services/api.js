@@ -5,7 +5,7 @@ const getCsrfToken = () => {
   return meta ? meta.getAttribute('content') : null;
 };
 
-const CENTRAL_HOSTNAMES = ['sectros.com', 'www.sectros.com', 'sectrosweb.test', 'sectroslr.test', 'sectrosweb.sectroslr.test', 'localhost', '51.21.32.161'];
+const CENTRAL_HOSTNAMES = ['sectros.com', 'www.sectros.com', 'sectrosweb.test', 'Sectros.test', 'sectrosweb.Sectros.test', 'localhost', '51.21.32.161'];
 
 const getBaseURL = () => {
   const storedTenantDomain = localStorage.getItem('tenant_domain');

@@ -181,10 +181,12 @@ export default function LandingPage() {
                 Start your free trial <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link to="/contact" className="w-full sm:w-auto px-10 py-5 bg-transparent border-2 border-border hover:bg-muted text-foreground rounded-2xl font-black text-lg transition-all flex items-center justify-center active:scale-95 shadow-lg">
-                Contact Sales
+                Book a Demo
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground mt-8 font-medium opacity-60 italic">No credit card required. 14-day free trial.</p>
+            {!s.require_card_for_trial && (
+              <p className="text-sm text-muted-foreground mt-8 font-medium opacity-60 italic">No credit card required. {s.trial_days || 14}-day free trial.</p>
+            )}
           </motion.div>
         </div>
 

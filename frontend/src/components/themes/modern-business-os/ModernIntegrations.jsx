@@ -49,7 +49,7 @@ const featuredIntegrations = [
   {
     name: 'Zapier',
     tagline: 'Automation',
-    description: 'Connect Sectroslr with 3,000+ apps through automated workflows.',
+    description: 'Connect Sectros with 3,000+ apps through automated workflows.',
     category: 'Automation',
   },
 ];

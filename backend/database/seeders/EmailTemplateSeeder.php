@@ -66,6 +66,24 @@ class EmailTemplateSeeder extends Seeder
                 'subject'   => 'Subscription Activated – {business_name}',
                 'content'   => "Success! Your payment for the {plan_name} plan has been processed.\n\nInvoice ID: {invoice_id}\nAmount: {amount}\n\nThank you for choosing {platform_name}!",
                 'variables' => ['business_name', 'plan_name', 'invoice_id', 'amount', 'platform_name'],
+            ],
+            [
+                'slug'      => 'trial_started',
+                'subject'   => 'Welcome to {platform_name} – Your {trial_days}-Day Trial Has Begun!',
+                'content'   => "Hi {name},\n\nWelcome to {platform_name}! Your {trial_days}-day free trial is now active.\n\nHere's what you can do during your trial:\n• Set up your business profile and floor plan\n• Explore the full feature set with no restrictions\n• Invite your team members\n\nYour trial ends on {trial_end_date}. No credit card required.\n\nIf you have any questions, just reply to this email.\n\nCheers,\nThe {platform_name} Team",
+                'variables' => ['name', 'platform_name', 'trial_days', 'trial_end_date'],
+            ],
+            [
+                'slug'      => 'trial_midpoint',
+                'subject'   => 'Halfway Through Your {platform_name} Trial – How Is It Going?',
+                'content'   => "Hi {name},\n\nYou're halfway through your {trial_days}-day free trial of {platform_name}! You have {days_remaining} days remaining.\n\nHere are a few things you can try if you haven't already:\n• Set up online reservations and share your booking link\n• Configure your floor plan and table layout\n• Explore our analytics dashboard\n\nWhen you're ready to upgrade, choose a plan that fits your needs and unlock the full power of {platform_name}.\n\nQuestions? We're here to help.\n\nBest regards,\nThe {platform_name} Team",
+                'variables' => ['name', 'platform_name', 'trial_days', 'days_remaining'],
+            ],
+            [
+                'slug'      => 'trial_ending',
+                'subject'   => 'Last Day of Your {platform_name} Trial – Don\'t Miss Out!',
+                'content'   => "Hi {name},\n\nThis is your last day to try {platform_name} for free! Your trial ends today ({trial_end_date}).\n\nDon't lose access to your venue's data and settings. Upgrade now to keep everything running smoothly.\n\nHere's what you get with a paid plan:\n• Unlimited reservations\n• Staff management\n• Advanced analytics and reporting\n• Priority support\n\n👉 Subscribe now: {pricing_url}\n\nIf you have any questions or need help choosing a plan, just reply to this email.\n\nThank you for trying {platform_name}!\n\nThe {platform_name} Team",
+                'variables' => ['name', 'platform_name', 'trial_end_date', 'pricing_url'],
             ]
         ];
 

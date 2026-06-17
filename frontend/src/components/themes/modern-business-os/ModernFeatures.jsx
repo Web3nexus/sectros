@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, ArrowRight, Check, Shield, Clock, Key, Database, Smartphone, Mail, Bell, CreditCard, Settings, Briefcase, MapPin, Search, ChevronRight, Clock3, DollarSign, TrendingUp, PieChart, Activity, Globe, Github, MessageSquare, Zap, RefreshCw, Layers, Lock, Server, Plus, X, Menu} from 'lucide-react';
@@ -14,6 +14,35 @@ const TAB_ICONS = {
 };
 
 const TAB_IDS = ['reservations', 'floorplan', 'crm', 'automation', 'analytics', 'integrations'];
+
+const Typewriter = ({ texts }) => {
+  const [index, setIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!texts || texts.length === 0) return;
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (currentText.length < texts[index].length) {
+          setCurrentText(texts[index].substring(0, currentText.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        if (currentText.length > 0) {
+          setCurrentText(texts[index].substring(0, currentText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setIndex((index + 1) % texts.length);
+        }
+      }
+    }, isDeleting ? 50 : 100);
+    return () => clearTimeout(timeout);
+  }, [currentText, isDeleting, index, texts]);
+
+  return <span className="text-blue-600">{currentText}<span className="animate-pulse">|</span></span>;
+};
 
 const fadeUp = {
   initial: { opacity: 0, y: 30 },
@@ -84,7 +113,8 @@ export default function ModernFeatures() {
               transition={{ delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.1] mb-6"
             >
-              {get('hero.heading')}
+              {get('hero.heading')}{' '}
+              <Typewriter texts={(get('hero.industries') || 'Modern Hospitality, Fine Dining, Boutique Cafes, Luxury Salons, Bars & Lounges').split(',').map(i => i.trim())} />
             </motion.h1>
             <motion.p
               initial={{ opacity: 0, y: 20 }}
@@ -101,7 +131,7 @@ export default function ModernFeatures() {
               className="flex items-center justify-center gap-4"
             >
               <Link
-                to="/book-demo"
+                to="/contact"
                 className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30"
               >
                 {get('hero.cta_primary')}
@@ -357,7 +387,7 @@ export default function ModernFeatures() {
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Link
-              to="/book-demo"
+              to="/contact"
               className="inline-flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 px-8 py-3.5 rounded-xl font-bold text-base transition-all shadow-xl shadow-blue-900/20"
             >
               {get('cta.cta_primary')}

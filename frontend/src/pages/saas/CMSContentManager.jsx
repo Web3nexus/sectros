@@ -199,6 +199,7 @@ function getPageSections(pageKey, renderSection) {
             { path: 'hero.cta_primary', label: 'Primary CTA' },
             { path: 'hero.cta_secondary', label: 'Secondary CTA' },
             { path: 'hero.tagline', label: 'Tagline' },
+            { path: 'hero.industries', label: 'Animated industries (comma separated)' },
           ], true)}
           {renderSection('Trust Bar', [
             { path: 'trustBar.label', label: 'Label' },
@@ -339,6 +340,7 @@ function getPageSections(pageKey, renderSection) {
           {renderSection('Hero', [
             { path: 'hero.badge', label: 'Badge' }, { path: 'hero.heading', label: 'Heading' }, { path: 'hero.paragraph', label: 'Paragraph', multiline: true },
             { path: 'hero.cta_primary', label: 'Primary CTA' }, { path: 'hero.cta_secondary', label: 'Secondary CTA' },
+            { path: 'hero.industries', label: 'Animated industries (comma separated)' },
           ], true)}
           {renderSection('Tabs', [{ path: 'tabs.labels', label: 'Tab labels (comma separated)' }])}
           {renderSection('Security & Reliability', [

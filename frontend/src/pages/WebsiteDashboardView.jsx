@@ -108,13 +108,13 @@ export default function WebsiteDashboardView() {
 
       if (storedDomain && storedDomain !== 'no-domain' && storedDomain !== 'localhost') {
           if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return `http://${tenantId}.sectroslr.test${path}`;
+              return `http://${tenantId}.Sectros.test${path}`;
           }
           return `${protocol}//${storedDomain}${path}`;
       }
       
       if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return `http://${tenantId}.sectroslr.test${path}`;
+          return `http://${tenantId}.Sectros.test${path}`;
       }
 
       return `${protocol}//${hostname}${path}`;

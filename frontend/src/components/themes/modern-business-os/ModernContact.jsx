@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import {Calendar, Phone, MessageSquare, CheckCircle2, Briefcase, Quote, ArrowRight, PlayCircle, Mail, Users, } from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
+import centralApi from '../../../services/centralApi';
 
 const businessTypes = [
   'Restaurant', 'Lounge / Bar', 'Nightclub', 'Hotel', 'Event Venue', 'Multi-location Group', 'Other',
@@ -68,15 +69,38 @@ export default function ModernContact() {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+    try {
+      await centralApi.post('public/contact-leads', {
+        name: form.name,
+        email: form.email,
+        business: form.business,
+        business_type: form.type,
+        locations: form.locations,
+        message: form.message,
+      });
+      setSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || 
+        'Something went wrong. Please try again later.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   if (submitted) {
     return (
@@ -195,13 +219,21 @@ export default function ModernContact() {
                   className="w-full resize-none rounded-xl border border-gray-200 px-4 py-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
+              {error && (
+                <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
+                  {error}
+                </div>
+              )}
               <motion.button
                 type="submit"
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-8 py-3.5 font-semibold text-white shadow-lg transition hover:bg-blue-700"
+                disabled={loading}
+                whileHover={{ scale: loading ? 1 : 1.01 }}
+                whileTap={{ scale: loading ? 1 : 0.99 }}
+                className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3.5 font-semibold text-white shadow-lg transition ${
+                  loading ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
-                Book demo <ArrowRight size={20} />
+                {loading ? 'Submitting...' : 'Book demo'} <ArrowRight size={20} />
               </motion.button>
             </form>
           </motion.div>

@@ -2,11 +2,12 @@ export const CMS_DEFAULTS = {
   home: {
     hero: {
       badge: 'The all-in-one hospitality platform',
-      heading: 'The Operating System for Modern Hospitality',
+      heading: 'The Operating System for',
       subheading: 'Manage reservations, guests, floor plans, staff, deposits, and communication — all from one beautifully connected platform.',
       cta_primary: 'Book a Demo',
       cta_secondary: 'View Pricing',
       tagline: 'Trusted by hospitality teams · Fast setup · No-code booking',
+      industries: 'Modern Hospitality, Fine Dining, Boutique Cafes, Luxury Salons, Bars & Lounges',
     },
     trustBar: {
       label: 'Trusted by modern hospitality teams',
@@ -159,7 +160,7 @@ export const CMS_DEFAULTS = {
     },
     finalCta: {
       heading: 'Ready to transform your hospitality business?',
-      paragraph: 'Join thousands of venues already using sectroslr.',
+      paragraph: 'Join thousands of venues already using Sectros.',
       button: 'Start your free trial',
     },
   },
@@ -167,10 +168,11 @@ export const CMS_DEFAULTS = {
   features: {
     hero: {
       badge: 'The all-in-one hospitality platform',
-      heading: 'One platform. Every tool your venue needs.',
+      heading: 'The Operating System for',
       paragraph: 'From reservations and floor management to guest relationships and revenue analytics — run every part of your venue from a single, intelligent dashboard.',
       cta_primary: 'Book a Demo',
       cta_secondary: 'Start Free Trial',
+      industries: 'Modern Hospitality, Fine Dining, Boutique Cafes, Luxury Salons, Bars & Lounges',
     },
     tabs: {
       labels: 'Reservations, Floor Plan, Guest CRM, Automation, Analytics, Integrations',
@@ -204,7 +206,7 @@ export const CMS_DEFAULTS = {
   solutions: {
     hero: {
       heading: 'Solutions for every type of hospitality business',
-      paragraph: 'Whether you run a cozy bistro, a high-energy nightclub, or a multi-property group, Sectroslr gives you the tools to streamline operations and delight guests.',
+      paragraph: 'Whether you run a cozy bistro, a high-energy nightclub, or a multi-property group, Sectros gives you the tools to streamline operations and delight guests.',
       cta_primary: 'Get started',
       cta_secondary: 'Watch demo',
     },
@@ -213,7 +215,7 @@ export const CMS_DEFAULTS = {
     },
     video: {
       heading: 'See it in action',
-      paragraph: 'Watch how Sectroslr streamlines every part of your hospitality operation.',
+      paragraph: 'Watch how Sectros streamlines every part of your hospitality operation.',
       button: 'Play product walkthrough',
     },
     testimonials: {
@@ -224,7 +226,7 @@ export const CMS_DEFAULTS = {
     },
     finalCta: {
       heading: 'Ready to transform your hospitality business?',
-      paragraph: 'Join thousands of venues already using Sectroslr to streamline operations and grow revenue.',
+      paragraph: 'Join thousands of venues already using Sectros to streamline operations and grow revenue.',
       cta_primary: 'Book a demo',
       cta_secondary: 'View pricing',
     },
@@ -233,7 +235,7 @@ export const CMS_DEFAULTS = {
   integrations: {
     hero: {
       heading: 'All your connected tools in one place',
-      paragraph: 'Sectroslr integrates with the tools you already use, so your data flows seamlessly across your entire operation.',
+      paragraph: 'Sectros integrates with the tools you already use, so your data flows seamlessly across your entire operation.',
     },
     ecosystem: {
       heading: 'Integration ecosystem',
@@ -265,7 +267,7 @@ export const CMS_DEFAULTS = {
     },
     mission: {
       heading: 'Our mission is simple: help hospitality businesses run better',
-      body1: 'We started Sectroslr after spending years managing restaurants and hotels ourselves. We saw firsthand how outdated tools forced hardworking teams to juggle spreadsheets, paper logs, and half a dozen disconnected apps just to get through a shift.',
+      body1: 'We started Sectros after spending years managing restaurants and hotels ourselves. We saw firsthand how outdated tools forced hardworking teams to juggle spreadsheets, paper logs, and half a dozen disconnected apps just to get through a shift.',
       body2: 'Our platform brings everything into one unified system — reservations, waitlists, payments, marketing, and reporting — so hospitality professionals can focus on what matters most: creating memorable guest experiences.',
     },
     philosophy: {
@@ -291,12 +293,12 @@ export const CMS_DEFAULTS = {
   contact: {
     hero: {
       heading: 'Book a demo',
-      paragraph: 'See how Sectroslr can streamline your operations and help you grow. Fill out the form and we\'ll be in touch within 24 hours.',
+      paragraph: 'See how Sectros can streamline your operations and help you grow. Fill out the form and we\'ll be in touch within 24 hours.',
     },
     rightPanel: {
       heading: 'Why book a demo?',
       bullets: 'See features tailored to your venue type\nLive walkthrough with a product expert\nGet a custom pricing quote with no obligation',
-      testimonial_quote: 'Sectroslr completely changed how we manage reservations. Our team went from three hours of manual data entry per day to zero. It paid for itself in the first month.',
+      testimonial_quote: 'Sectros completely changed how we manage reservations. Our team went from three hours of manual data entry per day to zero. It paid for itself in the first month.',
       testimonial_author: 'Sofia Kim, Owner, Harbor House Restaurant',
     },
     steps: {
@@ -304,14 +306,14 @@ export const CMS_DEFAULTS = {
       paragraph: 'From first call to going live, here\'s what to expect.',
     },
     testimonial: {
-      quote: 'We evaluated five different platforms before choosing Sectroslr. The demo sold us — they understood our specific challenges as a multi-venue group and showed us exactly how they\'d solve them.',
+      quote: 'We evaluated five different platforms before choosing Sectros. The demo sold us — they understood our specific challenges as a multi-venue group and showed us exactly how they\'d solve them.',
       author: 'Marcus Rivera, COO, Rivera Hospitality Group',
     },
     faq: {
       heading: 'Frequently asked questions',
     },
     finalCta: {
-      heading: 'Ready to see Sectroslr in action?',
+      heading: 'Ready to see Sectros in action?',
       paragraph: 'Book your personalized demo today and discover how we can help your business thrive.',
       button: 'Watch overview video',
     },
@@ -330,7 +332,7 @@ export const CMS_DEFAULTS = {
     featured: {
       heading: 'Featured article',
       category: 'Case Studies',
-      title: 'Rivera Hospitality Group: Scaling from one venue to five with Sectroslr',
+      title: 'Rivera Hospitality Group: Scaling from one venue to five with Sectros',
       excerpt: 'When Rivera Hospitality Group expanded from a single restaurant to five distinct venues across the city, they needed a platform that could grow with them.',
       author: 'Priya Kapoor',
       date: 'May 20, 2025',

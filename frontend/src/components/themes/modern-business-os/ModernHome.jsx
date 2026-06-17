@@ -1,10 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {Calendar, Users, Layout, BarChart3, Bell, Clock, CreditCard, MessageSquare, Settings, Briefcase, ArrowRight, Check, Phone, Mail, Globe, Shield, Zap, TrendingUp, PieChart, Download, Menu, X, ChevronDown, ChevronRight, Plus, Minus, BookOpen, Smartphone, Monitor, Building2, Coffee, UtensilsCrossed, Hotel, PartyPopper, Music, HeartHandshake, Target, BrainCircuit, Award, Quote} from 'lucide-react';
 import { useCmsContent } from '../../../hooks/useCmsContent';
 import centralApi from '../../../services/centralApi';
 import { mapFeaturesToList, getDefaultFeatures, defaultPlans } from '../../../utils/planFeatures';
+
+const Typewriter = ({ texts }) => {
+  const [index, setIndex] = useState(0);
+  const [currentText, setCurrentText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    if (!texts || texts.length === 0) return;
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (currentText.length < texts[index].length) {
+          setCurrentText(texts[index].substring(0, currentText.length + 1));
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        if (currentText.length > 0) {
+          setCurrentText(texts[index].substring(0, currentText.length - 1));
+        } else {
+          setIsDeleting(false);
+          setIndex((index + 1) % texts.length);
+        }
+      }
+    }, isDeleting ? 50 : 100);
+    return () => clearTimeout(timeout);
+  }, [currentText, isDeleting, index, texts]);
+
+  return <span className="text-blue-600">{currentText}<span className="animate-pulse">|</span></span>;
+};
 
 const fadeUp = {
   initial: { opacity: 0, y: 40 },
@@ -571,7 +600,8 @@ export default function ModernHome() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div className="text-center max-w-3xl mx-auto" {...fadeUp}>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight tracking-tight">
-              {get('hero.heading')}
+              {get('hero.heading')}{' '}
+              <Typewriter texts={(get('hero.industries') || 'Modern Hospitality, Fine Dining, Boutique Cafes, Luxury Salons, Bars & Lounges').split(',').map(i => i.trim())} />
             </h1>
             <p className="mt-6 text-lg md:text-xl text-slate-500 leading-relaxed max-w-2xl mx-auto">
               {get('hero.subheading')}

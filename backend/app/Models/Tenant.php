@@ -23,6 +23,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'owner_name',
             'owner_email',
             'status',
+            'trial_ends_at',
             'ai_credits_used',
             'ai_credits_topup',
             'ai_credits_reset_at',
@@ -38,5 +39,6 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'ai_credits_used' => 'integer',
         'ai_credits_topup' => 'integer',
         'ai_credits_reset_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
     ];
 }

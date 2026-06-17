@@ -237,7 +237,7 @@ export default function DirectoryDetailPage() {
                   <h3 className="text-xl font-black uppercase tracking-tight">Direct Booking</h3>
                </div>
                <p className="text-sm font-medium text-white/80 mb-8 leading-relaxed">
-                  Book directly through Sectroslr to get instant confirmation and exclusive rewards.
+                  Book directly through Sectros to get instant confirmation and exclusive rewards.
                </p>
                <button className="w-full bg-white text-primary py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95 shadow-lg">
                   Check Availability

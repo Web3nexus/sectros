@@ -64,7 +64,7 @@ const stats = [
 
 const testimonials = [
   {
-    quote: 'Sectroslr transformed how we manage reservations. Our staff spends less time on phones and more time with guests.',
+    quote: 'Sectros transformed how we manage reservations. Our staff spends less time on phones and more time with guests.',
     author: 'Sarah Chen',
     role: 'Owner, The Grand Bistro',
   },
@@ -87,7 +87,7 @@ const faqs = [
   },
   {
     q: 'Can I integrate with my existing POS?',
-    a: 'Yes. Sectroslr connects with 20+ POS systems including Toast, Square, and Clover. Our API also supports custom integrations.',
+    a: 'Yes. Sectros connects with 20+ POS systems including Toast, Square, and Clover. Our API also supports custom integrations.',
   },
   {
     q: 'Is there a minimum contract?',

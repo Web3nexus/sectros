@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2} from 'lucide-react';
+import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer} from 'lucide-react';
 import axios from 'axios';
 import api from '../../services/centralApi';
 import StatusModal from '../../components/common/StatusModal';
@@ -56,6 +56,8 @@ export default function SaaSSettingsView() {
     turnstile_site_key: '',
     turnstile_secret_key: '',
     sales_email: '',
+    trial_days: 14,
+    require_card_for_trial: false,
     website_theme: 'classic-ai',
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -122,6 +124,7 @@ export default function SaaSSettingsView() {
             { id: 'general', label: 'General', icon: Globe },
             { id: 'branding', label: 'Branding', icon: Briefcase },
             { id: 'security', label: 'Security & Auth', icon: Shield },
+            { id: 'trial', label: 'Trial & Subscriptions', icon: Timer },
             { id: 'smtp', label: 'Email (SMTP)', icon: Mail },
             { id: 'ai', label: 'AI Engine', icon: Bot },
              { id: 'social', label: 'Social Webhooks', icon: MessageSquare },
@@ -452,6 +455,59 @@ export default function SaaSSettingsView() {
                      </div>
                    </div>
                  </div>
+              </div>
+            )}
+
+            {activeTab === 'trial' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-medium text-foreground mb-4">Trial & Subscriptions</h3>
+                <p className="text-sm text-muted-foreground mb-6">Configure free trial settings and subscription behavior for new tenants.</p>
+
+                <div className="space-y-6">
+                  <div className="bg-card/50 border border-border/50 rounded-2xl p-6 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-muted-foreground mb-2 font-semibold">Trial Duration (Days)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="365"
+                        value={settings.trial_days}
+                        onChange={e => setSettings({...settings, trial_days: e.target.value === '' ? 0 : parseInt(e.target.value) || 0})}
+                        className="w-full max-w-xs bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
+                      />
+                      <p className="text-xs text-muted-foreground mt-2 font-medium">Number of days for the free trial. Set to 0 to disable trial period.</p>
+                    </div>
+                  </div>
+
+                  <div className="bg-card/50 border border-border/50 rounded-2xl p-6 space-y-4">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={settings.require_card_for_trial}
+                          onChange={e => setSettings({...settings, require_card_for_trial: e.target.checked})}
+                          className="sr-only"
+                        />
+                        <div className={`w-10 h-6 rounded-full transition-colors border ${settings.require_card_for_trial ? 'bg-primary border-primary' : 'bg-muted border-border'}`}></div>
+                        <div className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform shadow-sm ${settings.require_card_for_trial ? 'translate-x-4' : ''}`}></div>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-foreground block">Require Credit Card for Trial Signup</span>
+                        <span className="text-xs text-muted-foreground">When enabled, users must enter their credit card details during registration. The \"No credit card required\" text will be hidden on the landing page and registration form.</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex gap-4">
+                    <Timer className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-xs font-bold text-foreground mb-1">Trial Email Reminders</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        The system will automatically send trial reminder emails based on these settings. Three emails are sent during the trial: a welcome when the trial starts, a midpoint reminder, and a final-day prompt to subscribe. You can customize these email templates in the Email Templates section.
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -1014,7 +1070,7 @@ export default function SaaSSettingsView() {
                         type="text"
                         value={settings.db_database || ''}
                         onChange={e => setSettings({...settings, db_database: e.target.value})}
-                        placeholder="sectroslr"
+                        placeholder="Sectros"
                         className="w-full bg-background border border-border text-foreground rounded-xl py-2.5 px-4 text-sm focus:ring-2 focus:ring-green-500/50 outline-none font-mono"
                       />
                     </div>

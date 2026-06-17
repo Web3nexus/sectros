@@ -123,6 +123,10 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
     Route::put('/translations/{id}', [TranslationController::class, 'update']);
     Route::delete('/translations/{id}', [TranslationController::class, 'destroy']);
 
+    // Contact Leads Management
+    Route::get('/contact-leads', [\App\Http\Controllers\Api\ContactLeadController::class, 'index']);
+    Route::patch('/contact-leads/{lead}', [\App\Http\Controllers\Api\ContactLeadController::class, 'update']);
+
 # Move out of prefix group
 });
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, Grid, Globe, Users, ChevronDown} from 'lucide-react';
+import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, Globe, ChevronDown, Coffee, Music, Scissors, Building, PartyPopper, ChevronRight} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useBranding } from '../../../hooks/useBranding';
@@ -40,12 +40,22 @@ export function ModernPublicLayout() {
   const branding = useBranding();
   const platformName = branding.platform_name || 'Sectros';
 
-  const navLinks = [
-    { label: 'Product', path: '/features' },
-    { label: 'Pricing', path: '/pricing' },
-    { label: 'Solutions', path: '/solutions' },
-    { label: 'Resources', path: '/blog' },
-    { label: 'Company', path: '/about' },
+  const productFeatures = [
+    { label: 'Reservations', icon: Calendar, description: 'Smart booking & table management' },
+    { label: 'Floor Plan', icon: LayoutGrid, description: 'Visual drag-and-drop layout' },
+    { label: 'Guest CRM', icon: Users, description: 'Rich guest profiles & history' },
+    { label: 'Automation', icon: Bot, description: 'Automated workflows & messages' },
+    { label: 'Analytics', icon: BarChart3, description: 'Revenue & performance insights' },
+    { label: 'Integrations', icon: Puzzle, description: 'Connect your existing tools' },
+  ];
+
+  const industrySolutions = [
+    { label: 'Restaurants', icon: Coffee },
+    { label: 'Cafes', icon: Coffee },
+    { label: 'Lounges & Bars', icon: Music },
+    { label: 'Salons & Spas', icon: Scissors },
+    { label: 'Hotels', icon: Building },
+    { label: 'Event Venues', icon: PartyPopper },
   ];
 
   return (
@@ -67,19 +77,129 @@ export function ModernPublicLayout() {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1">
-              {navLinks.map(link => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    location.pathname === link.path
+              {/* Product Mega Menu */}
+              <div
+                className="relative"
+                onMouseEnter={() => handleMouseEnter('product')}
+                onMouseLeave={handleMouseLeave}
+              >
+                <button
+                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    location.pathname === '/features'
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  {link.label}
-                </Link>
-              ))}
+                  Product
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeMenu === 'product' ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {activeMenu === 'product' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[680px]"
+                    >
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 overflow-hidden">
+                        <div className="grid grid-cols-2 gap-0">
+                          <div className="p-5">
+                            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Product Features</h3>
+                            <div className="space-y-1">
+                              {productFeatures.map(f => {
+                                const Icon = f.icon;
+                                return (
+                                  <Link
+                                    key={f.label}
+                                    to="/features"
+                                    className="flex items-start gap-3 px-3 py-2.5 rounded-xl hover:bg-blue-50 group transition-colors"
+                                  >
+                                    <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                      <Icon className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{f.label}</div>
+                                      <div className="text-xs text-slate-400">{f.description}</div>
+                                    </div>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                            <Link
+                              to="/features"
+                              className="flex items-center gap-1.5 text-sm font-semibold text-blue-600 hover:text-blue-700 mt-3 px-3 py-2"
+                            >
+                              View all features <ChevronRight className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                          <div className="p-5 bg-slate-50/50 border-l border-slate-100">
+                            <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">Industry Solutions</h3>
+                            <div className="space-y-1">
+                              {industrySolutions.map(s => {
+                                const Icon = s.icon;
+                                return (
+                                  <Link
+                                    key={s.label}
+                                    to="/solutions"
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white group transition-colors"
+                                  >
+                                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                      <Icon className="w-4 h-4" />
+                                    </div>
+                                    <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{s.label}</div>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <Link
+                to="/pricing"
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/pricing'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Pricing
+              </Link>
+              <Link
+                to="/solutions"
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/solutions'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Solutions
+              </Link>
+              <Link
+                to="/blog"
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/blog'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Resources
+              </Link>
+              <Link
+                to="/about"
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  location.pathname === '/about'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
+              >
+                Company
+              </Link>
             </nav>
 
             <div className="hidden lg:flex items-center gap-3">
@@ -120,15 +240,29 @@ export function ModernPublicLayout() {
             className="fixed inset-0 z-40 bg-white pt-20 px-6 lg:hidden overflow-y-auto pb-8"
           >
             <div className="flex flex-col gap-2">
-              {navLinks.map(link => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              <div className="px-4 py-2">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Product</div>
+                <div className="grid grid-cols-1 gap-1">
+                  {productFeatures.map(f => {
+                    const Icon = f.icon;
+                    return (
+                      <Link key={f.label} to="/features" className="flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-slate-50 transition-colors">
+                        <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900">{f.label}</div>
+                          <div className="text-xs text-slate-400">{f.description}</div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+              <Link to="/pricing" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Pricing</Link>
+              <Link to="/solutions" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Solutions</Link>
+              <Link to="/blog" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Resources</Link>
+              <Link to="/about" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Company</Link>
               <div className="h-px bg-slate-200 my-4" />
               {!loading && (
                 user ? (

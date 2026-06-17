@@ -622,7 +622,7 @@ class SaaSController extends Controller
         try {
             $domain = $tenant->domains->first()?->domain;
             if (!$domain) {
-                $centralDomain = config('tenancy.central_domains')[0] ?? 'sectroslr.test';
+                $centralDomain = config('tenancy.central_domains')[0] ?? 'Sectros.test';
                 $newDomain = $id . '.' . $centralDomain;
                 $tenant->domains()->create(['domain' => $newDomain]);
                 $domain = $newDomain;
@@ -841,6 +841,8 @@ class SaaSController extends Controller
             'landing_cta_section_body' => $this->sanitizeLanding($settings['landing_cta_section_body'] ?? 'Join hundreds of restaurants already using Sectros. Get set up in under 5 minutes — no tech skills required.'),
             'landing_cta_section_button' => $this->sanitizeLanding($settings['landing_cta_section_button'] ?? 'Start your 14-day free trial'),
             'website_theme' => $settings['website_theme'] ?? 'classic-ai',
+            'trial_days' => (int) ($settings['trial_days'] ?? 14),
+            'require_card_for_trial' => (bool) ($settings['require_card_for_trial'] ?? false),
             'platform_logo_url' => $settings['platform_logo_url'] ?? '/brand/logo-black.png',
             'platform_favicon_url' => $settings['platform_favicon_url'] ?? '/brand/icon-light.png',
             'email_logo_url' => $settings['email_logo_url'] ?? '',
@@ -902,6 +904,7 @@ class SaaSController extends Controller
             'landing_bento_heading', 'landing_bento_subheading', 'landing_bento_items',
             'landing_cta_section_title', 'landing_cta_section_body', 'landing_cta_section_button',
             'website_theme',
+            'trial_days', 'require_card_for_trial',
             'email_logo_url',
             'turnstile_site_key', 'turnstile_secret_key',
         ];
@@ -942,7 +945,7 @@ class SaaSController extends Controller
 
         try {
             if ($tenant->domains->isEmpty()) {
-                $centralDomain = config('tenancy.central_domains')[0] ?? 'sectroslr.test';
+                $centralDomain = config('tenancy.central_domains')[0] ?? 'Sectros.test';
                 $newDomain = $id . '.' . $centralDomain;
                 $tenant->domains()->create(['domain' => $newDomain]);
                 Log::info("Self-healed missing domain during sync", ['id' => $id, 'domain' => $newDomain]);

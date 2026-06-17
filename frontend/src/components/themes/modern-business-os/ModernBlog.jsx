@@ -74,8 +74,8 @@ const articles = [
 
 const featured = {
   category: 'Case Studies',
-  title: 'Rivera Hospitality Group: Scaling from one venue to five with Sectroslr',
-  excerpt: 'When Rivera Hospitality Group expanded from a single restaurant to five distinct venues across the city, they needed a platform that could grow with them. Here\'s how Sectroslr helped them maintain consistency while scaling operations.',
+  title: 'Rivera Hospitality Group: Scaling from one venue to five with Sectros',
+  excerpt: 'When Rivera Hospitality Group expanded from a single restaurant to five distinct venues across the city, they needed a platform that could grow with them. Here\'s how Sectros helped them maintain consistency while scaling operations.',
   author: 'Priya Kapoor',
   date: 'May 20, 2025',
   readTime: '8 min read',

@@ -76,4 +76,8 @@ Route::group(['prefix' => 'public'], function () {
     Route::get('/directory/listings/{slug}', [\App\Http\Controllers\Api\DirectoryController::class, 'show']);
     Route::post('/directory/listings/{id}/claim', [\App\Http\Controllers\Api\DirectoryController::class, 'claim']);
     Route::post('/directory/listings/{id}/verify-claim', [\App\Http\Controllers\Api\DirectoryController::class, 'verifyClaim']);
+
+    // Contact Leads
+    Route::post('/contact-leads', [\App\Http\Controllers\Api\ContactLeadController::class, 'store'])->middleware('throttle:10,1');
 });
+

@@ -113,10 +113,8 @@ function AppContent() {
         <Route path="/integrations" element={<ThemedPage classic={<IntegrationsPage />} modern={<ModernIntegrations />} />} />
         <Route path="/directory" element={<DirectoryPage />} />
         <Route path="/directory/:slug" element={<DirectoryDetailPage />} />
+        <Route path="/contact" element={<ThemedPage classic={null} modern={<ModernContact />} />} />
       </Route>
-
-      {/* Contact/Demo page uses a dedicated route */}
-      <Route path="/contact" element={<ThemedPage classic={null} modern={<ModernContact />} />} />
 
       {/* Tenant Login / Register */}
       <Route path="/login" element={<TenantLogin />} />
