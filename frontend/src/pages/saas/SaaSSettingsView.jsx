@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer} from 'lucide-react';
+import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer, Eye, EyeOff} from 'lucide-react';
 import axios from 'axios';
 import api from '../../services/centralApi';
 import StatusModal from '../../components/common/StatusModal';
@@ -69,7 +69,7 @@ export default function SaaSSettingsView() {
   const [showSecrets, setShowSecrets] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'success' });
 
-  const secretKeys = ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
+  const secretKeys = ['social_verify_token', 'mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
     'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key'];
 
@@ -867,13 +867,22 @@ export default function SaaSSettingsView() {
 
                         <div>
                             <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Verify Token</label>
-                            <input 
-                                type="text"
-                                value={settings.social_verify_token}
-                                onChange={e => setSettings({...settings, social_verify_token: e.target.value})}
-                                placeholder="sectros_secret_token"
-                                className="w-full bg-background border border-border rounded-xl py-3 px-4 text-foreground font-mono text-sm focus:ring-2 focus:ring-primary outline-none"
-                            />
+                            <div className="relative">
+                                <input 
+                                    type={showSecrets ? "text" : "password"}
+                                    value={displayValue('social_verify_token', settings.social_verify_token)}
+                                    onChange={e => setSettings({...settings, social_verify_token: e.target.value})}
+                                    placeholder="sectros_secret_token"
+                                    className="w-full bg-background border border-border rounded-xl py-3 px-4 text-foreground font-mono text-sm focus:ring-2 focus:ring-primary outline-none pr-10"
+                                />
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowSecrets(!showSecrets)}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                >
+                                    {showSecrets ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            </div>
                             <p className="text-[10px] text-muted-foreground mt-2 font-medium">Same value as <b>Verify Token</b> in Meta App configuration.</p>
                         </div>
 
