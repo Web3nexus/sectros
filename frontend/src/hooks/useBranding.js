@@ -5,7 +5,8 @@ export function useBranding() {
   const [settings, setSettings] = useState({
     platform_name: localStorage.getItem('platform_name') || import.meta.env.VITE_APP_NAME || 'Sectros',
     platform_logo_url: '',
-    platform_favicon_url: ''
+    platform_favicon_url: '',
+    turnstile_site_key: import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
   });
 
   useEffect(() => {
@@ -16,7 +17,8 @@ export function useBranding() {
         setSettings({
           platform_name: data.platform_name || import.meta.env.VITE_APP_NAME || 'Sectros',
           platform_logo_url: data.platform_logo_url || '',
-          platform_favicon_url: data.platform_favicon_url || ''
+          platform_favicon_url: data.platform_favicon_url || '',
+          turnstile_site_key: data.turnstile_site_key || import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
         });
 
         // Update localStorage for immediate use elsewhere
