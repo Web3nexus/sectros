@@ -321,6 +321,14 @@ Route::middleware(['api'])->group(function () {
             Route::get('/expenses', [ExpenseController::class, 'index']);
             Route::post('/expenses', [ExpenseController::class, 'store']);
 
+            Route::prefix('finance')->middleware('role:owner,admin')->group(function () {
+                Route::get('/overview', [\App\Http\Controllers\Api\FinanceController::class, 'overview']);
+                Route::get('/transactions', [\App\Http\Controllers\Api\FinanceController::class, 'transactions']);
+                Route::get('/revenue-trend', [\App\Http\Controllers\Api\FinanceController::class, 'revenueTrend']);
+                Route::get('/settlements', [\App\Http\Controllers\Api\FinanceController::class, 'settlements']);
+                Route::get('/export', [\App\Http\Controllers\Api\FinanceController::class, 'export']);
+            });
+
             Route::apiResource('/shifts', ShiftController::class);
             Route::apiResource('/attendance', AttendanceController::class);
             Route::apiResource('/settlements', SettlementController::class);

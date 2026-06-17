@@ -34,6 +34,7 @@ Route::get('/data-deletion', function() {
 Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleStripe']);
 Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);
 Route::post('/webhooks/flutterwave', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleFlutterwave']);
+Route::post('/webhooks/dodo', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleDodo']);
 
 Route::get('/debug-config', function() {
     if (!config('app.debug')) {

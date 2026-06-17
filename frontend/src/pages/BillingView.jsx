@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X} from 'lucide-react';
 import api from '../services/api';
 import { COUNTRIES } from '../utils/countries';
@@ -10,6 +11,7 @@ const ADDON_ICONS = {
 };
 
 export default function BillingView() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [plans, setPlans] = useState([]);
   const [status, setStatus] = useState(null);
   const [addons, setAddons] = useState([]);
@@ -20,6 +22,7 @@ export default function BillingView() {
   const [purchasingAddon, setPurchasingAddon] = useState(null);
   const [cancellingAddon, setCancellingAddon] = useState(null);
   const [error, setError] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
   const [country, setCountry] = useState('');
 
   const fetchData = async () => {
@@ -68,6 +71,18 @@ export default function BillingView() {
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    const success = searchParams.get('success');
+    const canceled = searchParams.get('canceled');
+    if (success === 'true') {
+      setSuccessMsg('Payment successful! Your purchase has been processed.');
+      setSearchParams({}, { replace: true });
+    } else if (canceled === 'true') {
+      setError('Payment was cancelled. You can try again anytime.');
+      setSearchParams({}, { replace: true });
+    }
   }, []);
 
   const handleSubscribe = async (planSlug, interval = 'monthly') => {
@@ -190,6 +205,13 @@ export default function BillingView() {
           </div>
         </div>
       </div>
+
+      {successMsg && (
+        <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-2xl flex items-center gap-3 text-emerald-400 font-medium animate-in fade-in slide-in-from-top-2">
+          <CheckCircle className="w-5 h-5 flex-shrink-0" />
+          {successMsg}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl flex items-center gap-3 text-red-400 font-medium animate-in fade-in slide-in-from-top-2">

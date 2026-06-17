@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class TenantAddon extends Model
 {
+    use BelongsToTenant;
+
     protected $connection = 'platform';
 
     protected $table = 'tenant_addon';
@@ -24,10 +27,5 @@ class TenantAddon extends Model
     public function addon()
     {
         return $this->belongsTo(Addon::class);
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 }

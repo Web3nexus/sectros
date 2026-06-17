@@ -49,6 +49,10 @@ export default function SaaSSettingsView() {
     flutterwave_public_key: '',
     flutterwave_secret_key: '',
     flutterwave_encryption_key: '',
+    dodo_enabled: false,
+    dodo_publishable_key: '',
+    dodo_secret_key: '',
+    dodo_webhook_secret: '',
     default_currency: 'USD',
     platform_logo_url: '',
     platform_favicon_url: '',
@@ -67,7 +71,7 @@ export default function SaaSSettingsView() {
 
   const secretKeys = ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
-    'flutterwave_encryption_key', 'turnstile_secret_key'];
+    'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key'];
 
   const displayValue = (key, val) => {
     if (!secretKeys.includes(key)) return val;
@@ -1294,6 +1298,65 @@ export default function SaaSSettingsView() {
                             type="password" 
                             value={settings.flutterwave_encryption_key}
                             onChange={e => setSettings({...settings, flutterwave_encryption_key: e.target.value})}
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dodo Payments */}
+                  <div className="bg-card/50 border border-border/50 rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                          <CreditCard className="w-5 h-5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-foreground font-bold">Dodo Payments</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Emerging Markets / Asia / Latin America</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={settings.dodo_enabled}
+                          onChange={e => setSettings({...settings, dodo_enabled: e.target.checked})}
+                          className="sr-only peer" 
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                    
+                    {settings.dodo_enabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Publishable Key</label>
+                          <input 
+                            type="text" 
+                            value={settings.dodo_publishable_key}
+                            onChange={e => setSettings({...settings, dodo_publishable_key: e.target.value})}
+                            placeholder="dodo_pub_..."
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Secret Key</label>
+                          <input 
+                            type="password" 
+                            value={settings.dodo_secret_key}
+                            onChange={e => setSettings({...settings, dodo_secret_key: e.target.value})}
+                            placeholder="dodo_sec_..."
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Webhook Secret</label>
+                          <input 
+                            type="password" 
+                            value={settings.dodo_webhook_secret}
+                            onChange={e => setSettings({...settings, dodo_webhook_secret: e.target.value})}
+                            placeholder="dodo_whsec_..."
                             className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
                           />
                         </div>

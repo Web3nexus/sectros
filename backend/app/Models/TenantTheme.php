@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class TenantTheme extends Model
 {
+    use BelongsToTenant;
+
     protected $connection = 'platform';
 
     protected $fillable = [
@@ -23,10 +26,5 @@ class TenantTheme extends Model
     public function template()
     {
         return $this->belongsTo(WebsiteTemplate::class, 'website_template_id');
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 }

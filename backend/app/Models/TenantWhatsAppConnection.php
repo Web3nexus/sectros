@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
 class TenantWhatsAppConnection extends Model
 {
+    use BelongsToTenant;
+
     protected $connection = 'platform';
 
     protected $fillable = [
@@ -26,11 +29,6 @@ class TenantWhatsAppConnection extends Model
         'token_expires_at' => 'datetime',
         'webhook_subscribed_at' => 'datetime',
     ];
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class, 'tenant_id', 'id');
-    }
 
     public function setAccessTokenAttribute(string $value): void
     {
@@ -52,11 +50,6 @@ class TenantWhatsAppConnection extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'connected');
-    }
-
-    public function scopeForTenant($query, string $tenantId)
-    {
-        return $query->where('tenant_id', $tenantId);
     }
 
     public function isExpired(): bool

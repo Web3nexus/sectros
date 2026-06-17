@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TenantResolver;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
@@ -21,4 +22,18 @@ class AuditLog extends Model
     protected $casts = [
         'details' => 'array',
     ];
+
+    public function scopeForTenant($query, $tenantId = null)
+    {
+        $tenantId = $tenantId ?? TenantResolver::id();
+        if ($tenantId) {
+            return $query->where('tenant_id', $tenantId);
+        }
+        return $query;
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
 }

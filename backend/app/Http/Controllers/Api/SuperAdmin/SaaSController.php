@@ -846,6 +846,24 @@ class SaaSController extends Controller
             'platform_logo_url' => $settings['platform_logo_url'] ?? '/brand/logo-black.png',
             'platform_favicon_url' => $settings['platform_favicon_url'] ?? '/brand/icon-light.png',
             'email_logo_url' => $settings['email_logo_url'] ?? '',
+            // Payment Gateways
+            'stripe_enabled' => (bool) ($settings['stripe_enabled'] ?? false),
+            'stripe_publishable_key' => $this->maskSecret($settings['stripe_publishable_key'] ?? ''),
+            'stripe_secret_key' => $this->maskSecret($settings['stripe_secret_key'] ?? ''),
+            'stripe_webhook_secret' => $this->maskSecret($settings['stripe_webhook_secret'] ?? ''),
+            'paystack_enabled' => (bool) ($settings['paystack_enabled'] ?? false),
+            'paystack_public_key' => $this->maskSecret($settings['paystack_public_key'] ?? ''),
+            'paystack_secret_key' => $this->maskSecret($settings['paystack_secret_key'] ?? ''),
+            'flutterwave_enabled' => (bool) ($settings['flutterwave_enabled'] ?? false),
+            'flutterwave_public_key' => $this->maskSecret($settings['flutterwave_public_key'] ?? ''),
+            'flutterwave_secret_key' => $this->maskSecret($settings['flutterwave_secret_key'] ?? ''),
+            'flutterwave_encryption_key' => $this->maskSecret($settings['flutterwave_encryption_key'] ?? ''),
+            'dodo_enabled' => (bool) ($settings['dodo_enabled'] ?? false),
+            'dodo_publishable_key' => $this->maskSecret($settings['dodo_publishable_key'] ?? ''),
+            'dodo_secret_key' => $this->maskSecret($settings['dodo_secret_key'] ?? ''),
+            'dodo_webhook_secret' => $this->maskSecret($settings['dodo_webhook_secret'] ?? ''),
+            'default_currency' => $settings['default_currency'] ?? 'USD',
+            'sales_email' => $settings['sales_email'] ?? '',
         ]);
     }
 
@@ -907,12 +925,17 @@ class SaaSController extends Controller
             'trial_days', 'require_card_for_trial',
             'email_logo_url',
             'turnstile_site_key', 'turnstile_secret_key',
+            'stripe_enabled', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret',
+            'paystack_enabled', 'paystack_public_key', 'paystack_secret_key',
+            'flutterwave_enabled', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key',
+            'dodo_enabled', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret',
+            'default_currency', 'sales_email',
         ];
         
         $settings = $request->only($allowedKeys);
         
         foreach ($settings as $key => $value) {
-            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'turnstile_secret_key']) && !empty($value) && str_contains($value, '*')) {
+            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key']) && !empty($value) && str_contains($value, '*')) {
                 continue;
             }
 

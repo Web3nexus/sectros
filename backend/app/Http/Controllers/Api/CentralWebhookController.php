@@ -134,17 +134,20 @@ class CentralWebhookController extends Controller
         foreach ($potentialIds as $id) {
             if (empty($id)) continue;
 
-            // Check WhatsApp connections
-            $connection = TenantWhatsAppConnection::where('phone_number_id', $id)
-                ->orWhere('waba_id', $id)
+            // Check WhatsApp connections (cross-tenant lookup — bypass scope)
+            $connection = TenantWhatsAppConnection::allTenants()
+                ->where(function ($q) use ($id) {
+                    $q->where('phone_number_id', $id)
+                      ->orWhere('waba_id', $id);
+                })
                 ->first();
 
             if ($connection) {
                 return Tenant::find($connection->tenant_id);
             }
 
-            // Check connected_accounts for Facebook/Instagram
-            $account = ConnectedAccount::active()->where(function ($q) use ($id) {
+            // Check connected_accounts for Facebook/Instagram (cross-tenant lookup)
+            $account = ConnectedAccount::allTenants()->active()->where(function ($q) use ($id) {
                     $q->where('page_id', $id)
                       ->orWhere('instagram_business_account_id', $id);
                 })

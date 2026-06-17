@@ -45,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
         $middleware->alias([
             'tenancy.header' => \App\Http\Middleware\InitializeTenancyByHeader::class,
+            'tenant.throttle' => \App\Http\Middleware\TenantThrottle::class,
         ]);
         $middleware->redirectGuestsTo(function ($request) {
             if ($request->is('api/*') || $request->is('central-api/*') || $request->is('tenant-api/*')) {

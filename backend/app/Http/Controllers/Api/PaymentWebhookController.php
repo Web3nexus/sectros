@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\SaaSSetting;
 use App\Models\SubscriptionPlan;
+use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Stripe\Webhook;
@@ -53,7 +54,7 @@ class PaymentWebhookController extends Controller
                 } elseif ($type === 'reservation_deposit') {
                     $reservationId = $session->metadata->reservation_id ?? null;
                     if ($tenantId && $reservationId) {
-                        $this->fulfillReservationDeposit($tenantId, $reservationId, $session->id);
+                        $this->fulfillReservationDeposit($tenantId, $reservationId, $session->id, 'stripe');
                     }
                 } else {
                     $planSlug = $session->metadata->plan_slug ?? null;
@@ -73,8 +74,7 @@ class PaymentWebhookController extends Controller
             // Invalid signature
             Log::error("Stripe Webhook Invalid Signature: " . $e->getMessage());
             return response()->json(['message' => 'Invalid signature'], 401);
-        }
- catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error("Stripe Webhook Error: " . $e->getMessage());
             return response()->json(['message' => 'Webhook handling failed'], 400);
         }
@@ -106,6 +106,11 @@ class PaymentWebhookController extends Controller
                 if ($tenantId && $addonId) {
                     $this->fulfillAddonPurchase($tenantId, $addonId, (int) $quantity);
                 }
+            } elseif ($type === 'reservation_deposit') {
+                $reservationId = $data['metadata']['reservation_id'] ?? null;
+                if ($tenantId && $reservationId) {
+                    $this->fulfillReservationDeposit($tenantId, $reservationId, $data['reference'], 'paystack');
+                }
             } else {
                 $planSlug = $data['metadata']['plan_slug'] ?? null;
                 $reference = $data['reference'];
@@ -123,7 +128,7 @@ class PaymentWebhookController extends Controller
         $secretHash = SaaSSetting::where('key', 'flutterwave_encryption_key')->value('value');
         $signature = $request->header('verif-hash');
 
-        if ($secretHash && ($signature !== $secretHash)) {
+        if (!$secretHash || $signature !== $secretHash) {
             return response()->json(['message' => 'Invalid signature'], 401);
         }
 
@@ -144,11 +149,79 @@ class PaymentWebhookController extends Controller
                 if ($tenantId && $addonId) {
                     $this->fulfillAddonPurchase($tenantId, $addonId, (int) $quantity);
                 }
+            } elseif ($type === 'reservation_deposit') {
+                $reservationId = $data['meta']['reservation_id'] ?? null;
+                if ($tenantId && $reservationId) {
+                    $this->fulfillReservationDeposit($tenantId, $reservationId, $data['id'], 'flutterwave');
+                }
             } else {
                 $planSlug = $data['meta']['plan_slug'] ?? null;
                 $txRef = $data['tx_ref'];
                 if ($tenantId && $planSlug) {
                     $this->updateTenantSubscription($tenantId, 'flutterwave', $txRef, $planSlug);
+                }
+            }
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
+    public function handleDodo(Request $request)
+    {
+        $webhookSecret = SaaSSetting::where('key', 'dodo_webhook_secret')->value('value');
+        $signature = $request->header('webhook-signature');
+        $timestamp = $request->header('webhook-timestamp');
+        $payload = $request->getContent();
+
+        if (!$webhookSecret) {
+            Log::error("Dodo Webhook Secret not configured.");
+            return response()->json(['message' => 'Webhook secret missing'], 500);
+        }
+
+        if (!$signature || !$timestamp) {
+            Log::error("Dodo Webhook missing required headers");
+            return response()->json(['message' => 'Missing signature headers'], 401);
+        }
+
+        $signedPayload = "{$timestamp}.{$payload}";
+        $expected = base64_encode(hash_hmac('sha256', $signedPayload, $webhookSecret, true));
+
+        $parts = explode(',', $signature);
+        $actual = trim(end($parts));
+
+        if (!hash_equals($expected, $actual)) {
+            Log::error("Dodo Webhook Invalid Signature");
+            return response()->json(['message' => 'Invalid signature'], 401);
+        }
+
+        $event = $request->input('event');
+        if ($event === 'payment.completed') {
+            $data = $request->input('data');
+            $metadata = $data['metadata'] ?? [];
+            $tenantId = $metadata['tenant_id'] ?? null;
+            $type = $metadata['type'] ?? 'subscription';
+
+            if ($type === 'theme_purchase') {
+                $templateId = $metadata['template_id'] ?? null;
+                if ($tenantId && $templateId) {
+                    $this->fulfillThemePurchase($tenantId, $templateId, $data['amount'] / 100);
+                }
+            } elseif ($type === 'addon_purchase') {
+                $addonId = $metadata['addon_id'] ?? null;
+                $quantity = $metadata['quantity'] ?? 1;
+                if ($tenantId && $addonId) {
+                    $this->fulfillAddonPurchase($tenantId, $addonId, (int) $quantity);
+                }
+            } elseif ($type === 'reservation_deposit') {
+                $reservationId = $metadata['reservation_id'] ?? null;
+                if ($tenantId && $reservationId) {
+                    $this->fulfillReservationDeposit($tenantId, $reservationId, $data['payment_id'], 'dodo');
+                }
+            } else {
+                $planSlug = $metadata['plan_slug'] ?? null;
+                $paymentId = $data['payment_id'] ?? null;
+                if ($tenantId && $planSlug) {
+                    $this->updateTenantSubscription($tenantId, 'dodo', $paymentId, $planSlug);
                 }
             }
         }
@@ -198,6 +271,7 @@ class PaymentWebhookController extends Controller
         $template = \App\Models\WebsiteTemplate::find($templateId);
 
         if ($tenant && $template) {
+            TenantResolver::set($tenant);
             \App\Models\TenantTheme::updateOrCreate(
                 ['tenant_id' => $tenantId, 'website_template_id' => $templateId],
                 ['purchased_at' => now(), 'price_paid' => $amount]
@@ -224,6 +298,7 @@ class PaymentWebhookController extends Controller
         $addon = \App\Models\Addon::find($addonId);
 
         if ($tenant && $addon) {
+            TenantResolver::set($tenant);
             $wasAlreadyActive = \App\Models\TenantAddon::where('tenant_id', $tenantId)
                 ->where('addon_id', $addonId)
                 ->where('status', 'active')
@@ -263,20 +338,20 @@ class PaymentWebhookController extends Controller
         }
     }
 
-    private function fulfillReservationDeposit($tenantId, $reservationId, $paymentId)
+    private function fulfillReservationDeposit($tenantId, $reservationId, $paymentId, $provider = 'stripe')
     {
         $tenant = Tenant::find($tenantId);
         if (!$tenant) return;
 
         // Switch to tenant context to update the reservation
-        $tenant->run(function () use ($reservationId, $paymentId) {
+        $tenant->run(function () use ($reservationId, $paymentId, $provider) {
             $reservation = \App\Models\Reservation::find($reservationId);
             if ($reservation) {
                 $reservation->update([
                     'payment_status' => 'paid',
                     'status' => 'confirmed',
                     'stripe_payment_id' => $paymentId,
-                    'payment_method' => 'stripe'
+                    'payment_method' => $provider
                 ]);
 
                 Log::info("Reservation {$reservationId} deposit fulfilled for tenant " . tenant('id'));

@@ -22,6 +22,7 @@ class PaymentService
         $stripeEnabled = SaaSSetting::where('key', 'stripe_enabled')->first()?->value === 'true';
         $paystackEnabled = SaaSSetting::where('key', 'paystack_enabled')->first()?->value === 'true';
         $flutterwaveEnabled = SaaSSetting::where('key', 'flutterwave_enabled')->first()?->value === 'true';
+        $dodoEnabled = SaaSSetting::where('key', 'dodo_enabled')->first()?->value === 'true';
 
         // Paystack is great for NG, GH, ZA, KE
         $paystackCountries = ['NG', 'GH', 'ZA', 'KE'];
@@ -35,6 +36,12 @@ class PaymentService
             return 'flutterwave';
         }
 
+        // Dodo Payments for emerging markets (Asia, LatAm, parts of Africa/MENA)
+        $dodoCountries = ['IN', 'ID', 'BR', 'MX', 'CO', 'PE', 'CL', 'PH', 'VN', 'TH', 'BD', 'PK', 'MY', 'SG', 'AE', 'SA', 'TR', 'ZA', 'KE', 'EG', 'NG', 'GH'];
+        if ($dodoEnabled && in_array($country, $dodoCountries)) {
+            return 'dodo';
+        }
+
         // Default to Stripe if enabled
         if ($stripeEnabled) {
             return 'stripe';
@@ -43,6 +50,7 @@ class PaymentService
         // Fallback to whatever is enabled if the primary choice isn't
         if ($paystackEnabled) return 'paystack';
         if ($flutterwaveEnabled) return 'flutterwave';
+        if ($dodoEnabled) return 'dodo';
 
         return null;
     }
@@ -64,7 +72,28 @@ class PaymentService
             'stripe' => $this->initStripe($tenant, $plan, $amount, $currency, $interval),
             'paystack' => $this->initPaystack($tenant, $plan, $amount, $currency, $interval),
             'flutterwave' => $this->initFlutterwave($tenant, $plan, $amount, $currency, $interval),
+            'dodo' => $this->initDodo($tenant, $plan, $amount, $currency, $interval),
             default => throw new \Exception("Unsupported gateway."),
+        };
+    }
+
+    /**
+     * Initialize a payment session for a Reservation Deposit.
+     */
+    public function initializeReservationDeposit(Tenant $tenant, \App\Models\Reservation $reservation, string $successUrl, string $cancelUrl)
+    {
+        $gateway = self::getGateway($tenant->country);
+
+        if (!$gateway) {
+            throw new \Exception("No payment gateway available for this region.");
+        }
+
+        return match($gateway) {
+            'stripe' => $this->initStripeDeposit($tenant, $reservation, $successUrl, $cancelUrl),
+            'paystack' => $this->initPaystackDeposit($tenant, $reservation, $successUrl, $cancelUrl),
+            'flutterwave' => $this->initFlutterwaveDeposit($tenant, $reservation, $successUrl, $cancelUrl),
+            'dodo' => $this->initDodoDeposit($tenant, $reservation, $successUrl, $cancelUrl),
+            default => throw new \Exception("Unsupported gateway for reservation deposit."),
         };
     }
 
@@ -85,6 +114,7 @@ class PaymentService
             'stripe' => $this->initStripeTheme($tenant, $template, $amount, $currency),
             'paystack' => $this->initPaystackTheme($tenant, $template, $amount, $currency),
             'flutterwave' => $this->initFlutterwaveTheme($tenant, $template, $amount, $currency),
+            'dodo' => $this->initDodoTheme($tenant, $template, $amount, $currency),
             default => throw new \Exception("Unsupported gateway for theme purchase."),
         };
     }
@@ -107,6 +137,7 @@ class PaymentService
             'stripe' => $this->initStripeAddon($tenant, $addon, $total, $currency, $quantity, $isRecurring),
             'paystack' => $this->initPaystackAddon($tenant, $addon, $total, $currency, $quantity),
             'flutterwave' => $this->initFlutterwaveAddon($tenant, $addon, $total, $currency, $quantity),
+            'dodo' => $this->initDodoAddon($tenant, $addon, $total, $currency, $quantity),
             default => throw new \Exception("Unsupported gateway for add-on purchase."),
         };
     }
@@ -177,7 +208,7 @@ class PaymentService
             ]
         ]);
 
-        if ($response->failed()) throw new \Exception("Paystack error");
+        if ($response->failed()) throw new \Exception("Paystack error: " . ($response->json('message') ?? 'Unknown error'));
 
         return [
             'url' => $response->json('data.authorization_url'),
@@ -212,7 +243,7 @@ class PaymentService
             ]
         ]);
 
-        if ($response->failed()) throw new \Exception("Flutterwave error");
+        if ($response->failed()) throw new \Exception("Flutterwave error: " . ($response->json('message') ?? 'Unknown error'));
 
         return [
             'url' => $response->json('data.link'),
@@ -277,7 +308,7 @@ class PaymentService
             ]
         ]);
 
-        if ($response->failed()) throw new \Exception("Paystack error");
+        if ($response->failed()) throw new \Exception("Paystack error: " . ($response->json('message') ?? 'Unknown error'));
 
         return [
             'url' => $response->json('data.authorization_url'),
@@ -310,7 +341,7 @@ class PaymentService
             ]
         ]);
 
-        if ($response->failed()) throw new \Exception("Flutterwave error");
+        if ($response->failed()) throw new \Exception("Flutterwave error: " . ($response->json('message') ?? 'Unknown error'));
 
         return [
             'url' => $response->json('data.link'),
@@ -370,6 +401,7 @@ class PaymentService
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/billing?vendor=paystack",
             'metadata' => [
+                'type' => 'subscription',
                 'tenant_id' => $tenant->id,
                 'plan_slug' => $plan->slug,
                 'interval' => $interval
@@ -402,6 +434,7 @@ class PaymentService
                 'name' => $tenant->business_name,
             ],
             'meta' => [
+                'type' => 'subscription',
                 'tenant_id' => $tenant->id,
                 'plan_slug' => $plan->slug,
                 'interval' => $interval
@@ -420,6 +453,255 @@ class PaymentService
             'url' => $response->json('data.link'),
             'provider' => 'flutterwave',
             'tx_ref' => $response->json('data.tx_ref')
+        ];
+    }
+
+    private function initDodo($tenant, $plan, $amount, $currency, $interval)
+    {
+        $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Dodo not configured.");
+
+        $response = Http::withToken($secretKey)->timeout(30)->post('https://api.dodopayments.com/v1/payments', [
+            'amount' => (int) round($amount * 100),
+            'currency' => $currency,
+            'description' => "{$plan->name} - Sectros Subscription",
+            'success_url' => config('app.url') . "/dashboard/billing?success=true&provider=dodo",
+            'cancel_url' => config('app.url') . "/dashboard/billing?canceled=true",
+            'customer' => [
+                'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
+                'name' => $tenant->business_name,
+            ],
+            'metadata' => [
+                'type' => 'subscription',
+                'tenant_id' => $tenant->id,
+                'plan_slug' => $plan->slug,
+                'interval' => $interval,
+            ],
+        ]);
+
+        if ($response->failed()) {
+            Log::error("Dodo Payment Init Failed: " . $response->body());
+            throw new \Exception("Failed to initialize Dodo payment.");
+        }
+
+        return [
+            'url' => $response->json('payment_link'),
+            'provider' => 'dodo',
+            'checkout_id' => $response->json('payment_id'),
+        ];
+    }
+
+    private function initDodoTheme($tenant, $template, $amount, $currency)
+    {
+        $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Dodo not configured.");
+
+        $response = Http::withToken($secretKey)->timeout(30)->post('https://api.dodopayments.com/v1/payments', [
+            'amount' => (int) round($amount * 100),
+            'currency' => $currency,
+            'description' => "Theme: {$template->name} - Sectros Website Builder",
+            'success_url' => config('app.url') . "/dashboard/website?success=true&provider=dodo",
+            'cancel_url' => config('app.url') . "/dashboard/website?canceled=true",
+            'customer' => [
+                'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
+                'name' => $tenant->business_name,
+            ],
+            'metadata' => [
+                'type' => 'theme_purchase',
+                'tenant_id' => $tenant->id,
+                'template_id' => $template->id,
+            ],
+        ]);
+
+        if ($response->failed()) {
+            Log::error("Dodo Theme Purchase Init Failed: " . $response->body());
+            throw new \Exception("Failed to initialize Dodo theme payment.");
+        }
+
+        return [
+            'url' => $response->json('payment_link'),
+            'provider' => 'dodo',
+            'checkout_id' => $response->json('payment_id'),
+        ];
+    }
+
+    private function initDodoAddon($tenant, $addon, $amount, $currency, $quantity)
+    {
+        $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Dodo not configured.");
+
+        $response = Http::withToken($secretKey)->timeout(30)->post('https://api.dodopayments.com/v1/payments', [
+            'amount' => (int) round($amount * 100),
+            'currency' => $currency,
+            'description' => "Add-on: {$addon->name}" . ($quantity > 1 ? " (x{$quantity})" : ''),
+            'success_url' => config('app.url') . "/dashboard/billing?success=true&provider=dodo",
+            'cancel_url' => config('app.url') . "/dashboard/billing?canceled=true",
+            'customer' => [
+                'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
+                'name' => $tenant->business_name,
+            ],
+            'metadata' => [
+                'type' => 'addon_purchase',
+                'tenant_id' => $tenant->id,
+                'addon_id' => $addon->id,
+                'addon_slug' => $addon->slug,
+                'quantity' => $quantity,
+            ],
+        ]);
+
+        if ($response->failed()) {
+            Log::error("Dodo Addon Purchase Init Failed: " . $response->body());
+            throw new \Exception("Failed to initialize Dodo add-on payment.");
+        }
+
+        return [
+            'url' => $response->json('payment_link'),
+            'provider' => 'dodo',
+            'checkout_id' => $response->json('payment_id'),
+        ];
+    }
+
+    private function initStripeDeposit($tenant, $reservation, $successUrl, $cancelUrl)
+    {
+        $secretKey = SaaSSetting::where('key', 'stripe_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Stripe not configured.");
+        $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
+
+        $response = Http::withToken($secretKey)->post('https://api.stripe.com/v1/checkout/sessions', [
+            'payment_method_types' => ['card'],
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => strtolower($currency),
+                    'product_data' => [
+                        'name' => 'Reservation Deposit',
+                        'description' => "Deposit for reservation on {$reservation->reservation_time->format('M d, Y H:i')}",
+                    ],
+                    'unit_amount' => (int) round($reservation->deposit_amount * 100),
+                ],
+                'quantity' => 1,
+            ]],
+            'mode' => 'payment',
+            'success_url' => $successUrl . '?session_id={CHECKOUT_SESSION_ID}',
+            'cancel_url' => $cancelUrl,
+            'client_reference_id' => (string) $reservation->id,
+            'customer_email' => $reservation->customer_email,
+            'metadata' => [
+                'type' => 'reservation_deposit',
+                'reservation_id' => $reservation->id,
+                'tenant_id' => $tenant->id,
+            ],
+        ]);
+
+        if ($response->failed()) {
+            Log::error("Stripe Deposit Init Failed: " . $response->body());
+            throw new \Exception("Failed to initialize Stripe deposit.");
+        }
+
+        return [
+            'url' => $response->json('url'),
+            'provider' => 'stripe',
+            'checkout_id' => $response->json('id'),
+        ];
+    }
+
+    private function initPaystackDeposit($tenant, $reservation, $successUrl, $cancelUrl)
+    {
+        $secretKey = SaaSSetting::where('key', 'paystack_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Paystack not configured.");
+        $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
+
+        $response = Http::withToken($secretKey)->post('https://api.paystack.co/transaction/initialize', [
+            'email' => $reservation->customer_email,
+            'amount' => (int) round($reservation->deposit_amount * 100),
+            'currency' => $currency,
+            'callback_url' => $successUrl . '?vendor=paystack',
+            'metadata' => [
+                'type' => 'reservation_deposit',
+                'reservation_id' => $reservation->id,
+                'tenant_id' => $tenant->id,
+            ],
+        ]);
+
+        if ($response->failed()) {
+            throw new \Exception("Paystack error: " . ($response->json('message') ?? 'Unknown error'));
+        }
+
+        return [
+            'url' => $response->json('data.authorization_url'),
+            'provider' => 'paystack',
+            'reference' => $response->json('data.reference'),
+        ];
+    }
+
+    private function initFlutterwaveDeposit($tenant, $reservation, $successUrl, $cancelUrl)
+    {
+        $secretKey = SaaSSetting::where('key', 'flutterwave_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Flutterwave not configured.");
+        $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
+
+        $response = Http::withToken($secretKey)->post('https://api.flutterwave.com/v3/payments', [
+            'tx_ref' => 'dep_' . uniqid() . '_' . $tenant->id,
+            'amount' => $reservation->deposit_amount,
+            'currency' => $currency,
+            'redirect_url' => $successUrl . '?vendor=flutterwave',
+            'customer' => [
+                'email' => $reservation->customer_email,
+                'name' => $reservation->customer_name,
+            ],
+            'meta' => [
+                'type' => 'reservation_deposit',
+                'reservation_id' => $reservation->id,
+                'tenant_id' => $tenant->id,
+            ],
+            'customizations' => [
+                'title' => 'Reservation Deposit',
+                'description' => "Deposit for {$reservation->reservation_time->format('M d, Y H:i')}",
+            ],
+        ]);
+
+        if ($response->failed()) {
+            throw new \Exception("Flutterwave error: " . ($response->json('message') ?? 'Unknown error'));
+        }
+
+        return [
+            'url' => $response->json('data.link'),
+            'provider' => 'flutterwave',
+            'tx_ref' => $response->json('data.tx_ref'),
+        ];
+    }
+
+    private function initDodoDeposit($tenant, $reservation, $successUrl, $cancelUrl)
+    {
+        $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
+        if (!$secretKey) throw new \Exception("Dodo not configured.");
+        $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
+
+        $response = Http::withToken($secretKey)->timeout(30)->post('https://api.dodopayments.com/v1/payments', [
+            'amount' => (int) round($reservation->deposit_amount * 100),
+            'currency' => $currency,
+            'description' => "Reservation deposit on {$reservation->reservation_time->format('M d, Y H:i')}",
+            'success_url' => $successUrl . '?provider=dodo',
+            'cancel_url' => $cancelUrl,
+            'customer' => [
+                'email' => $reservation->customer_email,
+                'name' => $reservation->customer_name,
+            ],
+            'metadata' => [
+                'type' => 'reservation_deposit',
+                'reservation_id' => $reservation->id,
+                'tenant_id' => $tenant->id,
+            ],
+        ]);
+
+        if ($response->failed()) {
+            Log::error("Dodo Deposit Init Failed: " . $response->body());
+            throw new \Exception("Failed to initialize Dodo deposit.");
+        }
+
+        return [
+            'url' => $response->json('payment_link'),
+            'provider' => 'dodo',
+            'checkout_id' => $response->json('payment_id'),
         ];
     }
 }
