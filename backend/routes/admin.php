@@ -72,6 +72,13 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
     Route::post('/tenants/{id}/send-welcome', [SaaSController::class, 'sendWelcomeEmail']);
     Route::post('/tenants/{id}/staff/{userId}/reset-credentials', [SaaSController::class, 'resetStaffCredentials']);
     
+    // Domain Management (Admin)
+    Route::get('/tenants/{id}/domain-status', [\App\Http\Controllers\Api\DomainController::class, 'adminCheckTenant']);
+    Route::post('/tenants/{id}/domain/{domainId}/verify', [\App\Http\Controllers\Api\DomainController::class, 'adminVerifyDomain']);
+    Route::post('/tenants/{id}/domain/check-availability', [\App\Http\Controllers\Api\DomainController::class, 'adminCheckAvailability']);
+    Route::post('/tenants/{id}/domain/purchase', [\App\Http\Controllers\Api\DomainController::class, 'adminPurchaseDomain']);
+    Route::post('/tenants/{id}/domain/{domainId}/configure-dns', [\App\Http\Controllers\Api\DomainController::class, 'adminConfigureDns']);
+
     // Stats & Health
     Route::get('/stats', [SaaSController::class, 'getDashboardStats']);
     Route::get('/health', [SaaSController::class, 'getSystemHealth']);

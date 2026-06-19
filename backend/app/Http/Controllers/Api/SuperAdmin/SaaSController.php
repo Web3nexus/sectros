@@ -135,7 +135,8 @@ class SaaSController extends Controller
                     'plan_performance' => [
                         'labels' => $dates,
                         'series' => $planPerformanceTrend
-                    ]
+                    ],
+                    'domain_stats' => $this->getDomainStats(),
                 ],
                 'recent_tenants' => Tenant::latest()->take(5)->get(),
                 'active_tickets_count' => SupportTicket::where('status', '!=', 'resolved')->count()
@@ -167,12 +168,16 @@ class SaaSController extends Controller
                     ->value('two_factor_method');
                 $twoFactorEnabled = $twoFactorMethod && $twoFactorMethod !== 'none';
 
+                $firstDomain = $tenant->domains->first();
                 return [
                     'id' => $tenant->id,
                     'business_name' => $tenant->business_name ?? 'Unnamed Restaurant',
                     'plan' => $tenant->plan ?? 'free',
                     'created_at' => $tenant->created_at,
-                    'domain' => $tenant->domains->first()?->domain ?? 'no-domain',
+                    'domain' => $firstDomain?->domain ?? 'no-domain',
+                    'domain_verified' => (bool) ($firstDomain?->is_verified ?? false),
+                    'domain_type' => $firstDomain?->type ?? 'subdomain',
+                    'domain_count' => $tenant->domains->count(),
                     'status' => $tenant->status ?? 'active',
                     'owner_email' => $tenant->owner_email ?? 'unknown',
                     'owner_name' => $tenant->owner_name ?? 'unknown',
@@ -866,6 +871,22 @@ class SaaSController extends Controller
             'dodo_webhook_secret' => $this->maskSecret($settings['dodo_webhook_secret'] ?? ''),
             'default_currency' => $settings['default_currency'] ?? 'USD',
             'sales_email' => $settings['sales_email'] ?? '',
+            'server_ip' => $settings['server_ip'] ?? gethostbyname(gethostname()),
+            // NameSilo Domain Registration
+            'namesilo_enabled' => filter_var($settings['namesilo_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'namesilo_api_key' => $this->maskSecret($settings['namesilo_api_key'] ?? ''),
+            'namesilo_registrant_first_name' => $settings['namesilo_registrant_first_name'] ?? 'Sectros',
+            'namesilo_registrant_last_name' => $settings['namesilo_registrant_last_name'] ?? 'Admin',
+            'namesilo_registrant_address' => $settings['namesilo_registrant_address'] ?? '123 Main St',
+            'namesilo_registrant_city' => $settings['namesilo_registrant_city'] ?? 'New York',
+            'namesilo_registrant_state' => $settings['namesilo_registrant_state'] ?? 'NY',
+            'namesilo_registrant_zip' => $settings['namesilo_registrant_zip'] ?? '10001',
+            'namesilo_registrant_country' => $settings['namesilo_registrant_country'] ?? 'US',
+            'namesilo_registrant_email' => $settings['namesilo_registrant_email'] ?? '',
+            'namesilo_registrant_phone' => $settings['namesilo_registrant_phone'] ?? '',
+            'namesilo_domain_price' => (float) ($settings['namesilo_domain_price'] ?? 15),
+            'namesilo_cost_price' => (float) ($settings['namesilo_cost_price'] ?? 11.05),
+            'namesilo_charge_tenant' => filter_var($settings['namesilo_charge_tenant'] ?? true, FILTER_VALIDATE_BOOLEAN),
         ]);
     }
 
@@ -932,12 +953,20 @@ class SaaSController extends Controller
             'flutterwave_enabled', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key',
             'dodo_enabled', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret',
             'default_currency', 'sales_email',
+            'server_ip',
+            'namesilo_enabled', 'namesilo_api_key',
+            'namesilo_registrant_first_name', 'namesilo_registrant_last_name',
+            'namesilo_registrant_address', 'namesilo_registrant_city',
+            'namesilo_registrant_state', 'namesilo_registrant_zip',
+            'namesilo_registrant_country', 'namesilo_registrant_email',
+            'namesilo_registrant_phone',
+            'namesilo_domain_price', 'namesilo_cost_price', 'namesilo_charge_tenant',
         ];
         
         $settings = $request->only($allowedKeys);
         
         foreach ($settings as $key => $value) {
-            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key']) && !empty($value) && str_contains($value, '*')) {
+            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key']) && !empty($value) && str_contains($value, '*')) {
                 continue;
             }
 
@@ -1653,6 +1682,45 @@ class SaaSController extends Controller
         } catch (\Exception $e) {
             Log::error("Failed to reset staff credentials", ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Failed to reset credentials: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get domain registration stats for dashboard widget.
+     */
+    protected function getDomainStats(): array
+    {
+        try {
+            $domains = \Stancl\Tenancy\Database\Models\Domain::where('registrar', 'namesilo')->get();
+
+            $totalDomains = $domains->count();
+            $totalRevenue = $domains->sum('purchase_price');
+            $totalCost = $domains->sum('cost_price');
+            $totalProfit = $totalRevenue - $totalCost;
+            $profitMargin = $totalRevenue > 0 ? round(($totalProfit / $totalRevenue) * 100, 1) : 0;
+
+            $namesiloCostPrice = SaaSSetting::get('namesilo_cost_price', 11.05);
+            $namesiloSellPrice = SaaSSetting::get('namesilo_domain_price', 15);
+
+            return [
+                'total_domains' => $totalDomains,
+                'total_revenue' => round($totalRevenue, 2),
+                'total_cost' => round($totalCost, 2),
+                'total_profit' => round($totalProfit, 2),
+                'profit_margin' => $profitMargin,
+                'cost_per_domain' => (float) $namesiloCostPrice,
+                'sell_per_domain' => (float) $namesiloSellPrice,
+                'profit_per_domain' => round($namesiloSellPrice - $namesiloCostPrice, 2),
+            ];
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch domain stats", ['error' => $e->getMessage()]);
+            return [
+                'total_domains' => 0, 'total_revenue' => 0, 'total_cost' => 0,
+                'total_profit' => 0, 'profit_margin' => 0,
+                'cost_per_domain' => SaaSSetting::get('namesilo_cost_price', 11.05),
+                'sell_per_domain' => SaaSSetting::get('namesilo_domain_price', 15),
+                'profit_per_domain' => round(SaaSSetting::get('namesilo_domain_price', 15) - SaaSSetting::get('namesilo_cost_price', 11.05), 2),
+            ];
         }
     }
 }

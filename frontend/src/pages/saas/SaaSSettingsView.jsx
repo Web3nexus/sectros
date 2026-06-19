@@ -71,7 +71,8 @@ export default function SaaSSettingsView() {
 
   const secretKeys = ['social_verify_token', 'mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
-    'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key'];
+    'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key',
+    'namesilo_api_key'];
 
   const displayValue = (key, val) => {
     if (!secretKeys.includes(key)) return val;
@@ -135,6 +136,7 @@ export default function SaaSSettingsView() {
             { id: 'legal', label: 'Legal & Privacy', icon: FileText },
             { id: 'external_links', label: 'Social & Community', icon: ExternalLink },
             { id: 'database', label: 'Database Routing', icon: Database },
+            { id: 'domains', label: 'Domains', icon: Globe },
             { id: 'payments', label: 'Payments', icon: CreditCard },
             { id: 'website_theme', label: 'Website Theme', icon: Briefcase },
             { id: 'cms', label: 'Content CMS', icon: PenSquare },
@@ -1134,6 +1136,137 @@ export default function SaaSSettingsView() {
                         ))}
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'domains' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                   <Globe className="w-6 h-6 text-primary" />
+                   <h3 className="text-lg font-medium text-foreground">Domain Registration (NameSilo)</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">Configure NameSilo API integration so admins can register domains directly for tenants. Domain purchases are charged to your NameSilo account balance.</p>
+
+                <div className="space-y-6">
+                  {/* NameSilo */}
+                  <div className="bg-card/50 border border-border/50 rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                          <Globe className="w-5 h-5 text-amber-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-foreground font-bold">NameSilo</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Domain Registration / DNS Management</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={settings.namesilo_enabled}
+                          onChange={e => setSettings({...settings, namesilo_enabled: e.target.checked})}
+                          className="sr-only peer" 
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                    
+                    {settings.namesilo_enabled && (
+                      <div className="space-y-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">API Key</label>
+                          <input 
+                            type="password" 
+                            value={settings.namesilo_api_key || ''}
+                            onChange={e => setSettings({...settings, namesilo_api_key: e.target.value})}
+                            placeholder="Your NameSilo API key"
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">Find in your NameSilo account: Account → API Manager.</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Sell Price (Annual)</label>
+                            <input 
+                              type="number" 
+                              step="0.01"
+                              value={settings.namesilo_domain_price || 15}
+                              onChange={e => setSettings({...settings, namesilo_domain_price: parseFloat(e.target.value) || 15})}
+                              className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                            />
+                            <p className="text-[10px] text-muted-foreground mt-1">What you charge tenants. Profit = Sell − Cost.</p>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Cost Price (Annual)</label>
+                            <input 
+                              type="number" 
+                              step="0.01"
+                              value={settings.namesilo_cost_price || 11.05}
+                              onChange={e => setSettings({...settings, namesilo_cost_price: parseFloat(e.target.value) || 11.05})}
+                              className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                            />
+                            <p className="text-[10px] text-muted-foreground mt-1">What NameSilo charges you per domain. Current margin: <strong className="text-emerald-500">{'$'}{((settings.namesilo_domain_price || 15) - (settings.namesilo_cost_price || 11.05)).toFixed(2)}</strong></p>
+                          </div>
+                        </div>
+                        <div className="mt-4">
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Server IP</label>
+                          <input 
+                            type="text"
+                            value={settings.server_ip || ''}
+                            onChange={e => setSettings({...settings, server_ip: e.target.value})}
+                            placeholder="Server IP address"
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none font-mono" 
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">Used for A record DNS configuration.</p>
+                        </div>
+
+                        <div className="border-t border-border pt-4">
+                          <h5 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">Default Registrant Contact</h5>
+                          <p className="text-[10px] text-muted-foreground mb-4">Used as the WHOIS contact for all domains registered via NameSilo.</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">First Name</label>
+                              <input type="text" value={settings.namesilo_registrant_first_name || 'Sectros'} onChange={e => setSettings({...settings, namesilo_registrant_first_name: e.target.value})} className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Last Name</label>
+                              <input type="text" value={settings.namesilo_registrant_last_name || 'Admin'} onChange={e => setSettings({...settings, namesilo_registrant_last_name: e.target.value})} className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Email</label>
+                              <input type="email" value={settings.namesilo_registrant_email || ''} onChange={e => setSettings({...settings, namesilo_registrant_email: e.target.value})} placeholder="admin@sectros.com" className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Address</label>
+                              <input type="text" value={settings.namesilo_registrant_address || '123 Main St'} onChange={e => setSettings({...settings, namesilo_registrant_address: e.target.value})} className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">City</label>
+                              <input type="text" value={settings.namesilo_registrant_city || 'New York'} onChange={e => setSettings({...settings, namesilo_registrant_city: e.target.value})} className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">State</label>
+                              <input type="text" value={settings.namesilo_registrant_state || 'NY'} onChange={e => setSettings({...settings, namesilo_registrant_state: e.target.value})} className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">ZIP / Postal Code</label>
+                              <input type="text" value={settings.namesilo_registrant_zip || '10001'} onChange={e => setSettings({...settings, namesilo_registrant_zip: e.target.value})} className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Country</label>
+                              <input type="text" value={settings.namesilo_registrant_country || 'US'} onChange={e => setSettings({...settings, namesilo_registrant_country: e.target.value})} placeholder="US" className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Phone</label>
+                              <input type="text" value={settings.namesilo_registrant_phone || ''} onChange={e => setSettings({...settings, namesilo_registrant_phone: e.target.value})} placeholder="+1.2125550100" className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

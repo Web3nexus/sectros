@@ -398,6 +398,13 @@ Route::middleware(['api'])->group(function () {
 
             Route::patch('/staff/{id}/2fa', [StaffController::class, 'toggle2FA']);
 
+            // Domain Management
+            Route::prefix('domain')->group(function () {
+                Route::post('/connect', [\App\Http\Controllers\Api\DomainController::class, 'connect']);
+                Route::post('/verify', [\App\Http\Controllers\Api\DomainController::class, 'verify']);
+                Route::get('/status', [\App\Http\Controllers\Api\DomainController::class, 'status']);
+            });
+
             Route::post('/logout', [AuthController::class, 'logout']);
 
         }); // end auth:sanctum

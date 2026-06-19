@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Building2, TrendingUp, Cpu, Activity, ArrowUpRight, CreditCard} from 'lucide-react';
+import {Building2, TrendingUp, Cpu, Activity, ArrowUpRight, CreditCard, Globe, DollarSign} from 'lucide-react';
 import api from '../../services/centralApi';
 
 export default function SaaSDashboard() {
@@ -10,7 +10,12 @@ export default function SaaSDashboard() {
     non_subscribed_count: 0,
     monthly_mrr: 0,
     system_load: '0%',
-    plan_performance: { labels: [], series: [] }
+    plan_performance: { labels: [], series: [] },
+    domain_stats: {
+      total_domains: 0, total_revenue: 0, total_cost: 0,
+      total_profit: 0, profit_margin: 0,
+      cost_per_domain: 11.05, sell_per_domain: 15, profit_per_domain: 3.95
+    }
   });
   const [recentTenants, setRecentTenants] = useState([]);
   const [health, setHealth] = useState(null);
@@ -35,7 +40,12 @@ export default function SaaSDashboard() {
             non_subscribed_count: statsRes.data.stats.non_subscribed_count ?? 0,
             monthly_mrr: statsRes.data.stats.monthly_mrr ?? 0,
             system_load: statsRes.data.stats.system_load ?? '0%',
-            plan_performance: statsRes.data.stats.plan_performance ?? { labels: [], series: [] }
+            plan_performance: statsRes.data.stats.plan_performance ?? { labels: [], series: [] },
+            domain_stats: statsRes.data.stats.domain_stats ?? {
+              total_domains: 0, total_revenue: 0, total_cost: 0,
+              total_profit: 0, profit_margin: 0,
+              cost_per_domain: 11.05, sell_per_domain: 15, profit_per_domain: 3.95
+            }
           });
         }
         
@@ -130,6 +140,55 @@ export default function SaaSDashboard() {
             </div>
         </div>
       </div>
+
+      {/* Domain Registration Profit Widget */}
+      {stats.domain_stats && (
+      <div className="rounded-2xl bg-card border border-amber-500/20 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+              <Globe className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Domain Registration Revenue</h3>
+              <p className="text-muted-foreground text-xs">NameSilo domains — profit tracking</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border/50">
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Domains Sold</p>
+            <p className="text-2xl font-bold text-foreground">{stats.domain_stats.total_domains}</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Revenue</p>
+            <p className="text-2xl font-bold text-emerald-500">${stats.domain_stats.total_revenue.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">@ ${stats.domain_stats.sell_per_domain}/domain</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Cost</p>
+            <p className="text-2xl font-bold text-red-500">${stats.domain_stats.total_cost.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">@ ${stats.domain_stats.cost_per_domain}/domain</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Profit</p>
+            <p className="text-2xl font-bold text-foreground">${stats.domain_stats.total_profit.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">${stats.domain_stats.profit_per_domain}/domain margin</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Profit Margin</p>
+            <p className={`text-2xl font-bold ${stats.domain_stats.profit_margin >= 20 ? 'text-emerald-500' : stats.domain_stats.profit_margin > 0 ? 'text-amber-500' : 'text-red-500'}`}>
+              {stats.domain_stats.profit_margin}%
+            </p>
+            <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-500 ${stats.domain_stats.profit_margin >= 20 ? 'bg-emerald-500' : stats.domain_stats.profit_margin > 0 ? 'bg-amber-500' : 'bg-red-500'}`}
+                style={{ width: `${Math.min(stats.domain_stats.profit_margin, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
       
       {/* Chart and Recent activity Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

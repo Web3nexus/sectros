@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../services/centralApi';
 import ConfirmationModal from '../../components/common/ConfirmationModal';
 import Toast from '../../components/common/Toast';
-import {Building2, Search, Plus, MoreVertical, Shield, ShieldAlert, ShieldCheck, CheckCircle, Activity, Play, Pause, Edit, Trash2, X, ExternalLink, Palette, Key, RefreshCw, Download, CheckSquare, Square} from 'lucide-react';
+import {Building2, Search, Plus, MoreVertical, Shield, ShieldAlert, ShieldCheck, CheckCircle, Globe, Activity, Play, Pause, Edit, Trash2, X, ExternalLink, Palette, Key, RefreshCw, Download, CheckSquare, Square, Loader2, Settings} from 'lucide-react';
 
 export default function TenantManagementView() {
   const [tenants, setTenants] = useState([]);
@@ -40,6 +40,14 @@ export default function TenantManagementView() {
   const [filterPlan, setFilterPlan] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterBusinessType, setFilterBusinessType] = useState('all');
+
+  const [tenantDomains, setTenantDomains] = useState([]);
+  const [isDomainsLoading, setIsDomainsLoading] = useState(false);
+  const [domainRegisterInput, setDomainRegisterInput] = useState('');
+  const [domainAvailability, setDomainAvailability] = useState(null);
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
+  const [isPurchasingDomain, setIsPurchasingDomain] = useState(false);
+  const [domainPurchaseResult, setDomainPurchaseResult] = useState(null);
 
   const businessTypes = [
     { value: 'restaurant', label: 'Restaurant' },
@@ -122,6 +130,7 @@ export default function TenantManagementView() {
     if (selectedTenant) {
       fetchTenantStaff(selectedTenant.id);
       fetchUnlockedThemes(selectedTenant.id);
+      fetchTenantDomains(selectedTenant.id);
     }
   }, [selectedTenant]);
 
@@ -166,6 +175,73 @@ export default function TenantManagementView() {
       console.error("Failed to fetch tenant staff", error);
     } finally {
       setIsStaffLoading(false);
+    }
+  };
+
+  const fetchTenantDomains = async (id) => {
+    setIsDomainsLoading(true);
+    try {
+      const response = await api.get(`/saas/tenants/${id}/domain-status`);
+      setTenantDomains(Array.isArray(response.data.domains) ? response.data.domains : []);
+    } catch (error) {
+      console.error("Failed to fetch tenant domains", error);
+      setTenantDomains([]);
+    } finally {
+      setIsDomainsLoading(false);
+    }
+  };
+
+  const handleCheckAvailability = async () => {
+    if (!domainRegisterInput.trim()) return;
+    setIsCheckingAvailability(true);
+    setDomainAvailability(null);
+    try {
+      const response = await api.post(`/saas/tenants/${selectedTenant.id}/domain/check-availability`, {
+        domain: domainRegisterInput.trim(),
+      });
+      setDomainAvailability(response.data);
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to check availability', 'error');
+    } finally {
+      setIsCheckingAvailability(false);
+    }
+  };
+
+  const handlePurchaseDomain = async () => {
+    if (!domainAvailability?.available) return;
+    setIsPurchasingDomain(true);
+    try {
+      const response = await api.post(`/saas/tenants/${selectedTenant.id}/domain/purchase`, {
+        domain: domainAvailability.domain,
+      });
+      setDomainPurchaseResult(response.data);
+      showToast(`Domain ${response.data.domain} registered successfully!`, 'success');
+      setDomainRegisterInput('');
+      setDomainAvailability(null);
+      fetchTenantDomains(selectedTenant.id);
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to register domain', 'error');
+    } finally {
+      setIsPurchasingDomain(false);
+    }
+  };
+
+  const handleVerifyDomain = async (domainId) => {
+    try {
+      const response = await api.post(`/saas/tenants/${selectedTenant.id}/domain/${domainId}/verify`);
+      showToast(response.data.connected ? 'Domain verified!' : 'DNS not pointing correctly yet.', 'success');
+      fetchTenantDomains(selectedTenant.id);
+    } catch (error) {
+      showToast('Verification failed.', 'error');
+    }
+  };
+
+  const handleConfigureDns = async (domainId) => {
+    try {
+      await api.post(`/saas/tenants/${selectedTenant.id}/domain/${domainId}/configure-dns`);
+      showToast('DNS records re-configured.', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'DNS configuration failed.', 'error');
     }
   };
 
@@ -539,8 +615,13 @@ export default function TenantManagementView() {
                         <div className="flex items-center gap-1.5 text-muted-foreground text-[10px] mt-0.5">
                             <span className="bg-muted px-1.5 py-0.5 rounded text-muted-foreground border border-border font-bold uppercase">{tenant.id}</span>
                             <span>•</span>
-                            <span className="hover:text-primary transition-colors font-medium">
+                            <span className="hover:text-primary transition-colors font-medium flex items-center gap-1">
                                 {tenant.domain}
+                                {tenant.domain_count > 0 && (
+                                    tenant.domain_verified
+                                        ? <CheckCircle size={10} className="text-emerald-500" />
+                                        : <Globe size={10} className="text-amber-500" />
+                                )}
                             </span>
                         </div>
                       </div>
@@ -1029,10 +1110,112 @@ export default function TenantManagementView() {
                             ))
                         )}
                     </div>
-                 </div>
-              </div>
+                  </div>
+               </div>
 
-              <div className="mt-8 pt-8 border-t border-border">
+               {/* Domain Management */}
+               <div className="mt-8">
+                  <div className="flex items-center justify-between mb-4">
+                     <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest">Connected Domains</h4>
+                     <Globe className="w-4 h-4 text-amber-500" />
+                  </div>
+
+                  <div className="bg-muted/30 border border-border/50 rounded-2xl p-4 space-y-4">
+                     {isDomainsLoading ? (
+                        <div className="h-12 bg-muted/20 rounded-xl animate-pulse border border-border" />
+                     ) : tenantDomains.length === 0 ? (
+                        <p className="text-center text-muted-foreground text-xs py-3">No domains connected yet.</p>
+                     ) : (
+                        <div className="space-y-2">
+                           {tenantDomains.map(d => (
+                              <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/50 border border-border">
+                                 <div className="flex flex-col min-w-0">
+                                    <div className="flex items-center gap-2">
+                                       <span className="text-sm font-bold text-foreground truncate">{d.domain}</span>
+                                       <span className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                                          d.is_verified ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
+                                       }`}>
+                                          {d.is_verified ? <CheckCircle size={10} /> : <Globe size={10} />}
+                                          {d.is_verified ? 'Verified' : d.type === 'registered' ? 'Configured' : 'Pending'}
+                                       </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                                       <span className="capitalize">{d.type}</span>
+                                       {d.registrar && <span>• {d.registrar}</span>}
+                                       {d.expires_at && <span>• Expires {new Date(d.expires_at).toLocaleDateString()}</span>}
+                                       <span>• SSL: {d.ssl_status}</span>
+                                    </div>
+                                 </div>
+                                 <div className="flex items-center gap-1 shrink-0 ml-3">
+                                    <button onClick={() => handleVerifyDomain(d.id)} className="p-1.5 rounded-lg border bg-muted border-border text-muted-foreground hover:text-foreground transition-all" title="Verify DNS">
+                                       <RefreshCw size={12} />
+                                    </button>
+                                    {d.registrar === 'namesilo' && (
+                                       <button onClick={() => handleConfigureDns(d.id)} className="p-1.5 rounded-lg border bg-muted border-border text-muted-foreground hover:text-foreground transition-all" title="Re-configure DNS">
+                                          <Settings size={12} />
+                                       </button>
+                                    )}
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
+
+                     <div className="border-t border-border pt-4">
+                        <p className="text-[10px] font-bold text-muted-foreground mb-2">Register via NameSilo</p>
+                        <div className="flex gap-2">
+                           <input
+                              type="text"
+                              placeholder="e.g., myrestaurant.com"
+                              value={domainRegisterInput}
+                              onChange={(e) => { setDomainRegisterInput(e.target.value); setDomainAvailability(null); }}
+                              className="flex-1 bg-card border border-border text-foreground text-sm rounded-xl py-2 px-3 outline-none focus:ring-2 focus:ring-primary"
+                           />
+                           <button
+                              onClick={handleCheckAvailability}
+                              disabled={!domainRegisterInput.trim() || isCheckingAvailability}
+                              className="bg-primary text-primary-foreground px-3 py-2 rounded-xl text-xs font-medium transition-colors disabled:opacity-50"
+                           >
+                              {isCheckingAvailability ? <Loader2 size={14} className="animate-spin" /> : 'Check'}
+                           </button>
+                        </div>
+
+                        {domainAvailability && (
+                           <div className={`mt-3 p-3 rounded-xl border ${domainAvailability.available ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+                              {domainAvailability.available ? (
+                                 <div className="flex items-center justify-between">
+                                    <div>
+                                       <p className="text-sm font-bold text-emerald-500">{domainAvailability.domain} is available!</p>
+                                       <p className="text-[10px] text-muted-foreground mt-0.5">Registration fee will be charged to account balance.</p>
+                                    </div>
+                                    <button
+                                       onClick={handlePurchaseDomain}
+                                       disabled={isPurchasingDomain}
+                                       className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                       {isPurchasingDomain ? <Loader2 size={14} className="animate-spin" /> : null}
+                                       Register ${15}/yr
+                                    </button>
+                                 </div>
+                              ) : (
+                                 <p className="text-sm text-red-500">{domainAvailability.domain} is not available.</p>
+                              )}
+                           </div>
+                        )}
+
+                        {domainPurchaseResult && (
+                           <div className="mt-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                              <p className="text-sm font-bold text-emerald-500 flex items-center gap-1">
+                                 <CheckCircle size={14} /> {domainPurchaseResult.domain} registered & configured!
+                              </p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">DNS records (A, CNAME, TXT) have been configured automatically.</p>
+                           </div>
+                        )}
+                     </div>
+                  </div>
+               </div>
+
+               <div className="mt-8 pt-8 border-t border-border">
                   <button onClick={() => confirmDelete(selectedTenant.id)} className="w-full py-4 rounded-2xl border border-red-500/20 text-red-500 font-black text-xs uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all">
                     Purge Instance Data
                   </button>

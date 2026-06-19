@@ -142,7 +142,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'business_name' => 'required|string|max:255',
             'business_type' => 'required|string|in:restaurant,cafe,salon,hotel',
-            'email' => 'required|email|max:255|unique:users',
+            'email' => 'required|email|max:255',
             'password' => 'required|string|min:8',
             'country' => 'required|string|size:2',
             'turnstile_token' => 'nullable|string'
@@ -155,8 +155,7 @@ class AuthController extends Controller
             }
             $turnstileSecret = \App\Models\SaaSSetting::get('turnstile_secret_key')
                 ?: env('TURNSTILE_SECRET_KEY', '1x0000000000000000000000000000000AA');
-            
-            \Illuminate\Support\Facades\Log::info('Registration: Starting Turnstile Verification');
+
             $response = \Illuminate\Support\Facades\Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
                 'secret' => $turnstileSecret,
                 'response' => $validated['turnstile_token'],
@@ -180,67 +179,73 @@ class AuthController extends Controller
                 $tenantId = $tenantId . '-' . rand(1000, 9999);
             }
 
-            \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 1 (Tenant Creation)');
             // Phase 1: Create Tenant
-            try {
-                $trialDays = \App\Models\SaaSSetting::get('trial_days', 14);
-                $tenant = Tenant::create([
-                    'id' => $tenantId,
-                    'business_name' => $validated['business_name'],
-                    'business_type' => $validated['business_type'],
-                    'plan' => 'free',
-                    'owner_email' => $validated['email'],
-                    'owner_name' => $validated['name'],
-                    'country' => $validated['country'],
+            $trialDays = \App\Models\SaaSSetting::get('trial_days', 14);
+            $tenant = Tenant::create([
+                'id' => $tenantId,
+                'business_name' => $validated['business_name'],
+                'business_type' => $validated['business_type'],
+                'plan' => 'free',
+                'owner_email' => $validated['email'],
+                'owner_name' => $validated['name'],
+                'country' => $validated['country'],
+                'status' => 'active',
+                'trial_ends_at' => now()->addDays((int) $trialDays),
+                'data' => [
                     'status' => 'active',
-                    'trial_ends_at' => now()->addDays((int) $trialDays),
-                    'data' => [
-                        'status' => 'active',
-                        'owner_name' => $validated['name'],
-                        'owner_email' => $validated['email'],
-                        'business_type' => $validated['business_type'],
-                    ]
-                ]);
-            } catch (\Exception $e) {
-                return response()->json(['message' => 'Registration failed at Phase 1 (Tenant Creation): ' . $e->getMessage()], 500);
-            }
+                    'owner_name' => $validated['name'],
+                    'owner_email' => $validated['email'],
+                    'business_type' => $validated['business_type'],
+                ]
+            ]);
 
-            \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 2 (Domain Creation)');
             // Phase 2: Create Domain
-            try {
-                $centralDomain = config('tenancy.central_domains')[0] ?? 'localhost';
-                $tenant->domains()->create(['domain' => $tenantId . '.' . $centralDomain]);
-            } catch (\Exception $e) {
-                return response()->json(['message' => 'Registration failed at Phase 2 (Domain Creation): ' . $e->getMessage()], 500);
-            }
+            $centralDomain = config('tenancy.central_domains')[0] ?? 'localhost';
+            $tenant->domains()->create(['domain' => $tenantId . '.' . $centralDomain]);
 
-            \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 3 (User Creation)');
-            // Phase 3: Create User (shared tenant connection)
-            try {
-                $user = User::on('tenant')->create([
-                    'name' => $validated['name'],
-                    'email' => $validated['email'],
-                    'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
-                    'role' => 'owner',
-                    'tenant_id' => $tenant->id,
-                ]);
+            // At this point the synchronous TenantCreated pipeline has already:
+            // 1. Created the tenant database (tenant_{$tenantId})
+            // 2. Run tenant migrations (including users table)
+            // 3. Seeded default data (TenantSeeder created an owner user with placeholder password)
+
+            // Phase 3: Initialize tenancy and create/update the owner user
+            // in the correct tenant database (not the central DB).
+            $authToken = null;
+            $userData = null;
+
+            $tenant->run(function () use ($validated, &$authToken, &$userData) {
+                $user = User::where('email', $validated['email'])->first();
+
+                if ($user) {
+                    $user->update([
+                        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                        'name' => $validated['name'],
+                    ]);
+                } else {
+                    $user = User::create([
+                        'name' => $validated['name'],
+                        'email' => $validated['email'],
+                        'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+                        'role' => 'owner',
+                    ]);
+                }
+
+                $token = $user->createToken('auth-token')->plainTextToken;
+                $authToken = $token;
                 $userData = $user->toArray();
-            } catch (\Exception $e) {
-                return response()->json(['message' => 'Registration failed at Phase 3 (User Creation): ' . $e->getMessage()], 500);
-            }
+            });
 
-            \Illuminate\Support\Facades\Log::info('Registration: Starting Phase 4 (Welcome Email)');
             // Phase 4: Welcome Email
             try {
                 $template = \App\Models\EmailTemplate::on('platform')->where('slug', 'welcome_email')->first();
             } catch (\Exception $e) {
-                return response()->json(['message' => 'Registration failed at Phase 4 (Email Template Fetch): ' . $e->getMessage()], 500);
+                // Non-fatal
             }
             $subject = $template ? $template->subject : 'Welcome to ' . config('app.name');
             $content = $template ? $template->content : "Hello {name}, your account has been created successfully. Welcome to {platform_name}!";
-            
+
             $platformName = \App\Models\SaaSSetting::get('platform_name', config('app.name'));
-            
+
             try {
                 \Illuminate\Support\Facades\Mail::to($userData['email'])->send(new \App\Mail\SystemMail($subject, $content, [
                     'name' => $userData['name'],
@@ -250,10 +255,6 @@ class AuthController extends Controller
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to send welcome email: " . $e->getMessage());
             }
-
-            // Generate auth token for auto-login after registration
-            $freshUser = \App\Models\User::on('tenant')->where('email', $userData['email'])->first();
-            $authToken = $freshUser ? $freshUser->createToken('auth-token')->plainTextToken : null;
 
             return response()->json([
                 'success' => true,
