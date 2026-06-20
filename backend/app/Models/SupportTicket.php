@@ -16,6 +16,13 @@ class SupportTicket extends Model
         'status',
         'priority',
         'category',
+        'submitter_name',
+        'submitter_email',
+        'dismissed_at',
+    ];
+
+    protected $casts = [
+        'dismissed_at' => 'datetime',
     ];
 
     public function scopeForTenant($query, $tenantId = null)

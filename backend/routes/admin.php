@@ -79,6 +79,11 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
     Route::get('/stats', [SaaSController::class, 'getDashboardStats']);
     Route::get('/health', [SaaSController::class, 'getSystemHealth']);
     Route::get('/tickets', [SaaSController::class, 'getSupportTickets']);
+    Route::get('/tickets/unresolved-count', [SaaSController::class, 'getUnresolvedTicketCount']);
+    Route::patch('/tickets/{id}', [SaaSController::class, 'updateTicketStatus']);
+    Route::get('/notifications', [SaaSController::class, 'getAdminNotifications']);
+    Route::post('/notifications/{id}/dismiss', [SaaSController::class, 'dismissTicketNotification']);
+    Route::post('/notifications/dismiss-all', [SaaSController::class, 'dismissAllTicketNotifications']);
     
     // Subscription Plans (Management)
     Route::post('/plans', [SaaSController::class, 'storeSubscriptionPlan']);

@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, BookOpen, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap} from 'lucide-react';
-import { useNotifications } from '../hooks/useNotifications';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
 import { useBranding } from '../hooks/useBranding';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import ThemeToggle from '../components/ThemeToggle';
+import centralApi from '../services/centralApi';
 
 export function SaaSAdminLayout() {
   const location = useLocation();
@@ -14,8 +14,54 @@ export function SaaSAdminLayout() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications(20000);
+  const [unresolvedTickets, setUnresolvedTickets] = useState(0);
+  const [adminNotifications, setAdminNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const intervalRef = useRef(null);
   const settings = useBranding();
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const res = await centralApi.get('saas/notifications');
+      setAdminNotifications(res.data?.notifications || []);
+      setUnreadCount(res.data?.unread_count || 0);
+    } catch (e) { /* silent */ }
+  }, []);
+
+  const fetchUnresolved = useCallback(async () => {
+    try {
+      const res = await centralApi.get('saas/tickets/unresolved-count');
+      setUnresolvedTickets(res.data?.count ?? 0);
+    } catch (e) { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    fetchUnresolved();
+    intervalRef.current = setInterval(() => {
+      fetchNotifications();
+      fetchUnresolved();
+    }, 30000);
+    return () => clearInterval(intervalRef.current);
+  }, [fetchNotifications, fetchUnresolved]);
+
+  const markRead = useCallback(async (id) => {
+    const ticketId = id.replace('ticket_', '');
+    setAdminNotifications(prev => prev.map(n => n.id === id ? { ...n, status: 'read' } : n));
+    try {
+      await centralApi.post(`saas/notifications/${ticketId}/dismiss`);
+      fetchUnresolved();
+    } catch (e) { /* silent */ }
+  }, [fetchUnresolved]);
+
+  const markAllRead = useCallback(async () => {
+    setAdminNotifications(prev => prev.map(n => ({ ...n, status: 'read' })));
+    setUnreadCount(0);
+    try {
+      await centralApi.post('saas/notifications/dismiss-all');
+      fetchUnresolved();
+    } catch (e) { /* silent */ }
+  }, [fetchUnresolved]);
 
   // Register inactivity logout monitoring
   useInactivityLogout();
@@ -84,7 +130,14 @@ export function SaaSAdminLayout() {
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                <div className="relative">
+                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                  {item.name === t('admin.support') && unresolvedTickets > 0 && (
+                    <span className="absolute -top-1.5 -right-2 bg-amber-500 text-white text-[8px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse">
+                      {unresolvedTickets > 99 ? '99+' : unresolvedTickets}
+                    </span>
+                  )}
+                </div>
                 {!isSidebarCollapsed && <span className="truncate">{item.name}</span>}
               </Link>
             );
@@ -140,24 +193,24 @@ export function SaaSAdminLayout() {
                             <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)}></div>
                             <div className="absolute right-0 mt-3 w-80 bg-card rounded-2xl shadow-2xl border border-border p-4 z-50 animate-in zoom-in-95 duration-200 origin-top-right">
                                 <div className="flex justify-between items-center mb-4 px-1">
-                                    <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">System Alerts</h3>
-                                    {unreadCount > 0 && <span className="text-[10px] text-blue-400 font-bold">{unreadCount} NEW</span>}
+                                    <h3 className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Support Tickets</h3>
+                                    {unreadCount > 0 && <span className="text-[10px] text-amber-400 font-bold">{unreadCount} NEW</span>}
                                 </div>
                                 <div className="space-y-2 max-h-72 overflow-y-auto">
-                                    {notifications.length === 0 ? (
+                                    {adminNotifications.length === 0 ? (
                                         <div className="text-center py-10">
                                             <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-20" />
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hub Clear</p>
                                         </div>
-                                    ) : (Array.isArray(notifications) ? notifications : []).map(n => (
+                                    ) : (Array.isArray(adminNotifications) ? adminNotifications : []).map(n => (
                                         <button 
                                             key={n.id} 
                                             onClick={() => { markRead(n.id); }}
-                                            className={`w-full text-left p-3 rounded-xl border transition-all ${n.status === 'unread' ? 'bg-primary/5 border-primary/20' : 'bg-background border-border hover:bg-muted'}`}
+                                            className={`w-full text-left p-3 rounded-xl border transition-all ${n.status === 'unread' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-background border-border hover:bg-muted'}`}
                                         >
                                             <div className="flex items-start gap-3">
-                                                <div className={`mt-1 p-1 rounded-lg ${n.type === 'error' ? 'bg-red-500/10 text-red-500' : 'bg-primary/10 text-primary'}`}>
-                                                    {n.type === 'error' ? <AlertTriangle size={12} /> : <CheckCircle size={12} />}
+                                                <div className={`mt-1 p-1 rounded-lg ${n.type === 'error' ? 'bg-red-500/10 text-red-500' : 'bg-amber-500/10 text-amber-500'}`}>
+                                                    {n.type === 'error' ? <AlertTriangle size={12} /> : <MessageSquare size={12} />}
                                                 </div>
                                                 <div>
                                                     <div className="text-[11px] font-bold text-foreground leading-tight mb-0.5">{n.title}</div>
@@ -167,12 +220,12 @@ export function SaaSAdminLayout() {
                                         </button>
                                     ))}
                                 </div>
-                                {notifications.length > 0 && (
+                                {adminNotifications.length > 0 && (
                                     <button 
                                         onClick={markAllRead} 
-                                        className="w-full mt-4 py-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest hover:text-blue-400 transition-colors border-t border-border pt-3"
+                                        className="w-full mt-4 py-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest hover:text-amber-400 transition-colors border-t border-border pt-3"
                                     >
-                                        {t('common.markAllRead')}
+                                        Dismiss All
                                     </button>
                                 )}
                             </div>

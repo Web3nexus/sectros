@@ -4,10 +4,10 @@ import api from '../../services/api';
 import { useBusinessConfig } from '../../hooks/useBusinessConfig';
 
 const FIELD_TYPE_STYLES = {
-  salon: { accent: '#8B0000', bg: '#FAF6F2', cardBg: '#F3DDCF', font: 'serif' },
-  hotel: { accent: '#1a3a5c', bg: '#f0f4f8', cardBg: '#dce6f0', font: 'sans-serif' },
-  cafe: { accent: '#6B4E31', bg: '#f8f5f0', cardBg: '#ede4d8', font: 'sans-serif' },
-  restaurant: { accent: '#1a1a2e', bg: '#f8f9fc', cardBg: '#e8e9f0', font: 'sans-serif' },
+  salon: { accent: '#D4A853', bg: '#FFF8F0', cardBg: '#FFF0DB', font: 'sans-serif' },
+  hotel: { accent: '#4A90D9', bg: '#F0F7FF', cardBg: '#DCE8F8', font: 'sans-serif' },
+  cafe: { accent: '#C8A96E', bg: '#FCF8F0', cardBg: '#F5ECD8', font: 'sans-serif' },
+  restaurant: { accent: '#3B82F6', bg: '#F0F5FF', cardBg: '#DBE5FF', font: 'sans-serif' },
 };
 
 const BUSINESS_ICONS = {

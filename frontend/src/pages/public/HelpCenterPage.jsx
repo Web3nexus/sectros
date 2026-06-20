@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {Search, ChevronRight, HelpCircle, Utensils, CreditCard, LayoutDashboard, Settings, Loader2, BookOpen, MessageSquare, ExternalLink} from 'lucide-react';
+import {Search, ChevronRight, HelpCircle, Utensils, CreditCard, LayoutDashboard, Settings, Loader2, BookOpen, MessageSquare, ExternalLink, Send, CheckCircle2, AlertCircle} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import centralApi from '../../services/centralApi';
 
@@ -9,10 +9,28 @@ export default function HelpCenterPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedArticle, setSelectedArticle] = useState(null);
+    const [showTicketForm, setShowTicketForm] = useState(false);
+    const [ticketForm, setTicketForm] = useState({ name: '', email: '', subject: '', message: '' });
+    const [ticketStatus, setTicketStatus] = useState('idle');
+    const [ticketError, setTicketError] = useState('');
 
     useEffect(() => {
         fetchArticles();
     }, []);
+
+    const submitTicket = async (e) => {
+        e.preventDefault();
+        setTicketStatus('loading');
+        setTicketError('');
+        try {
+            await centralApi.post('public/support-tickets', ticketForm);
+            setTicketStatus('success');
+            setTicketForm({ name: '', email: '', subject: '', message: '' });
+        } catch (err) {
+            setTicketStatus('error');
+            setTicketError(err.response?.data?.message || 'Failed to submit. Please try again.');
+        }
+    };
 
     const fetchArticles = async () => {
         try {
@@ -211,14 +229,57 @@ export default function HelpCenterPage() {
                         <p className="text-xl text-muted-foreground mb-10 leading-relaxed font-medium">Our human operators and technical staff are standing by globally to ensure your restaurant operations never skip a beat.</p>
                         
                         <div className="flex flex-col sm:flex-row gap-6">
-                            <Link to="/login" className="px-10 py-5 bg-foreground text-background text-lg font-black rounded-2xl hover:opacity-90 transition-all flex items-center gap-3 group">
-                                Open Priority Ticket
-                                <ExternalLink size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                            </Link>
+                            <button onClick={() => setShowTicketForm(!showTicketForm)} className="px-10 py-5 bg-foreground text-background text-lg font-black rounded-2xl hover:opacity-90 transition-all flex items-center gap-3 group">
+                                {showTicketForm ? 'Close Form' : 'Open Priority Ticket'}
+                                <MessageSquare size={20} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                            </button>
                             <a href="mailto:hq@sectros.com" className="px-10 py-5 bg-muted border border-border text-foreground text-lg font-black rounded-2xl hover:bg-muted/80 transition-all">
                                 Email Staff
                             </a>
                         </div>
+
+                        {showTicketForm && ticketStatus !== 'success' && (
+                            <form onSubmit={submitTicket} className="mt-12 max-w-xl mx-auto text-left space-y-5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div>
+                                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2">Your Name</label>
+                                        <input type="text" required value={ticketForm.name} onChange={e => setTicketForm(p => ({...p, name: e.target.value}))} placeholder="John Doe" className="w-full bg-muted border border-border rounded-2xl px-5 py-3.5 font-bold text-foreground focus:border-emerald-500 transition-all" />
+                                    </div>
+                                    <div>
+                                        <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2">Email</label>
+                                        <input type="email" required value={ticketForm.email} onChange={e => setTicketForm(p => ({...p, email: e.target.value}))} placeholder="john@example.com" className="w-full bg-muted border border-border rounded-2xl px-5 py-3.5 font-bold text-foreground focus:border-emerald-500 transition-all" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2">Subject</label>
+                                    <input type="text" required value={ticketForm.subject} onChange={e => setTicketForm(p => ({...p, subject: e.target.value}))} placeholder="Brief title of your issue" className="w-full bg-muted border border-border rounded-2xl px-5 py-3.5 font-bold text-foreground focus:border-emerald-500 transition-all" />
+                                </div>
+                                <div>
+                                    <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2">Message</label>
+                                    <textarea rows={4} required value={ticketForm.message} onChange={e => setTicketForm(p => ({...p, message: e.target.value}))} placeholder="Describe your issue in detail..." className="w-full bg-muted border border-border rounded-2xl px-5 py-3.5 font-bold text-foreground focus:border-emerald-500 transition-all resize-none" />
+                                </div>
+                                {ticketStatus === 'error' && (
+                                    <div className="p-4 bg-red-500/10 text-red-400 rounded-2xl text-xs font-bold flex items-center gap-2 border border-red-500/20">
+                                        <AlertCircle size={14} /> {ticketError}
+                                    </div>
+                                )}
+                                <button type="submit" disabled={ticketStatus === 'loading'} className="w-full py-4 bg-emerald-500 text-white rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-emerald-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-xl shadow-emerald-500/20">
+                                    {ticketStatus === 'loading' ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
+                                    Submit Ticket
+                                </button>
+                            </form>
+                        )}
+
+                        {showTicketForm && ticketStatus === 'success' && (
+                            <div className="mt-12 max-w-md mx-auto bg-emerald-500/10 border border-emerald-500/30 rounded-3xl p-8 text-center">
+                                <CheckCircle2 size={48} className="text-emerald-400 mx-auto mb-4" />
+                                <h4 className="text-xl font-black text-foreground mb-2">Ticket Submitted!</h4>
+                                <p className="text-muted-foreground text-sm">Our support team will respond within 24 hours.</p>
+                                <button onClick={() => { setShowTicketForm(false); setTicketStatus('idle'); }} className="mt-6 text-[10px] font-black text-emerald-400 uppercase tracking-widest hover:text-emerald-300 transition-colors">
+                                    Submit Another
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 

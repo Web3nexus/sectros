@@ -27,6 +27,9 @@ export default function SettingsView() {
   const [bookingForm, setBookingForm] = useState(null)
   const [bookingFormSaving, setBookingFormSaving] = useState(false)
   const [newField, setNewField] = useState({ name: '', label: '', type: 'text', required: false, enabled: true })
+  const [editingKey, setEditingKey] = useState(null)
+  const [editingValue, setEditingValue] = useState('')
+  const [schemaSaving, setSchemaSaving] = useState(false)
 
   useEffect(() => {
     Promise.all([fetchSettings(), fetchSchema(), fetchBookingForm()])
@@ -124,6 +127,26 @@ export default function SettingsView() {
       ;[fields[idx], fields[target]] = [fields[target], fields[idx]]
       return { ...prev, fields }
     })
+  }
+
+  const openSchemaEdit = (key, item) => {
+    setEditingKey(key)
+    setEditingValue(settings[`business_${key}`] || '')
+  }
+
+  const saveSchemaItem = async () => {
+    if (!editingKey) return
+    setSchemaSaving(true)
+    try {
+      await api.post('configuration', { [`business_${editingKey}`]: editingValue })
+      setSettings(prev => ({ ...prev, [`business_${editingKey}`]: editingValue }))
+      setEditingKey(null)
+      setEditingValue('')
+    } catch (e) {
+      console.error('Save schema item failed:', e)
+    } finally {
+      setSchemaSaving(false)
+    }
   }
 
   const saveBookingForm = async () => {
@@ -437,7 +460,7 @@ export default function SettingsView() {
                         )}
                       </div>
                     </div>
-                    <button className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-3 py-1.5 rounded-lg border border-border bg-white hover:border-blue-200 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100">
+                    <button onClick={(e) => { e.stopPropagation(); openSchemaEdit(key, item); }} className="text-[9px] font-black text-muted-foreground uppercase tracking-widest px-3 py-1.5 rounded-lg border border-border bg-white hover:border-blue-200 hover:text-blue-600 transition-all opacity-0 group-hover:opacity-100">
                       Edit
                     </button>
                   </div>
@@ -451,6 +474,38 @@ export default function SettingsView() {
           )}
         </div>
       )}
+
+      {/* Schema Edit Modal */}
+      {editingKey && (() => {
+        const item = schema[editingKey]
+        if (!item) return null
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setEditingKey(null)}>
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg mx-4 p-6 space-y-5" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <h4 className="font-black text-slate-800 uppercase tracking-tight text-sm">{item.label}</h4>
+                <button onClick={() => setEditingKey(null)} className="h-8 w-8 rounded-xl bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-all">
+                  <XCircle size={16} />
+                </button>
+              </div>
+              {item.type === 'textarea' ? (
+                <textarea rows={6} value={editingValue} onChange={e => setEditingValue(e.target.value)} placeholder={`Enter ${item.label.toLowerCase()}...`} className="w-full bg-slate-50 border-2 border-border rounded-2xl px-5 py-3 font-bold text-sm text-slate-700 focus:border-blue-600 transition-all resize-none placeholder:text-slate-300" />
+              ) : (
+                <input type="text" value={editingValue} onChange={e => setEditingValue(e.target.value)} placeholder={`Configure ${item.label.toLowerCase()}...`} className="w-full bg-slate-50 border-2 border-border rounded-2xl px-5 py-3 font-bold text-sm text-slate-700 focus:border-blue-600 transition-all placeholder:text-slate-300" />
+              )}
+              <div className="flex justify-end gap-3">
+                <button onClick={() => setEditingKey(null)} className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest text-muted-foreground border border-border hover:bg-slate-50 transition-all">
+                  Cancel
+                </button>
+                <button onClick={saveSchemaItem} disabled={schemaSaving} className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-primary text-white hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 flex items-center gap-2">
+                  {schemaSaving ? <Loader2 size={14} className="animate-spin" /> : null}
+                  {schemaSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Engine Tab */}
       {activeTab === 'engine' && (

@@ -8,14 +8,14 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\SupportTicket;
 use App\Models\SubscriptionPlan;
 use App\Models\EmailTemplate;
 use App\Models\AuditLog;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
 
 use App\Traits\AuditsOperation;
 
@@ -442,6 +442,120 @@ class SaaSController extends Controller
         $ticket->update($request->only(['status', 'priority']));
         
         return response()->json(['message' => 'Ticket updated successfully', 'ticket' => $ticket]);
+    }
+
+    /**
+     * Get unresolved ticket count for badge.
+     */
+    public function getUnresolvedTicketCount()
+    {
+        $count = SupportTicket::where('status', '!=', 'resolved')->count();
+        return response()->json(['count' => $count]);
+    }
+
+    /**
+     * Store a new support ticket (public).
+     */
+    public function storeSupportTicket(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+            'tenant_id' => 'nullable|string|max:36',
+        ]);
+
+        $ticket = SupportTicket::create([
+            'tenant_id' => $validated['tenant_id'] ?? null,
+            'subject' => $validated['subject'],
+            'message' => $validated['message'],
+            'status' => 'open',
+            'priority' => 'normal',
+            'category' => 'general',
+            'submitter_name' => $validated['name'],
+            'submitter_email' => $validated['email'],
+        ]);
+
+        // Notify admin by email
+        try {
+            $notifyEmail = \App\Models\SaaSSetting::get('support_email')
+                ?? \App\Models\SaaSSetting::get('sales_email')
+                ?? config('mail.from.address');
+
+            if ($notifyEmail) {
+                Mail::raw(
+                    implode("\n", [
+                        "New Support Request (#{$ticket->id})",
+                        "===========================",
+                        "From:   {$ticket->submitter_name} <{$ticket->submitter_email}>",
+                        "Subject: {$ticket->subject}",
+                        "",
+                        "Message:",
+                        $ticket->message,
+                    ]),
+                    fn($msg) => $msg
+                        ->to($notifyEmail)
+                        ->subject("New Support Request: {$ticket->subject}")
+                );
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Support ticket email notification failed: ' . $e->getMessage());
+        }
+
+        return response()->json([
+            'message' => 'Support request submitted successfully.',
+            'ticket' => $ticket,
+        ], 201);
+    }
+
+    /**
+     * Get admin notifications (from unresolved support tickets).
+     */
+    public function getAdminNotifications()
+    {
+        $tickets = SupportTicket::latest()
+            ->take(50)
+            ->get()
+            ->map(fn($t) => [
+                'id' => 'ticket_' . $t->id,
+                'type' => $t->priority === 'high' || $t->priority === 'urgent' ? 'error' : 'info',
+                'title' => $t->subject,
+                'message' => ($t->submitter_name ? "{$t->submitter_name}" : 'Unknown') . ($t->status !== 'resolved' ? ' • Open' : ' • Resolved'),
+                'status' => $t->dismissed_at ? 'read' : ($t->status === 'resolved' ? 'read' : 'unread'),
+                'ticket_id' => $t->id,
+                'created_at' => $t->created_at->toISOString(),
+            ]);
+
+        $unreadCount = SupportTicket::whereNull('dismissed_at')
+            ->where('status', '!=', 'resolved')
+            ->count();
+
+        return response()->json([
+            'notifications' => $tickets,
+            'unread_count' => $unreadCount,
+        ]);
+    }
+
+    /**
+     * Dismiss a support ticket notification.
+     */
+    public function dismissTicketNotification($id)
+    {
+        $ticket = SupportTicket::findOrFail($id);
+        $ticket->update(['dismissed_at' => now()]);
+        return response()->json(['status' => 'ok']);
+    }
+
+    /**
+     * Dismiss all support ticket notifications.
+     */
+    public function dismissAllTicketNotifications()
+    {
+        SupportTicket::whereNull('dismissed_at')
+            ->where('status', '!=', 'resolved')
+            ->update(['dismissed_at' => now()]);
+        return response()->json(['status' => 'ok', 'unread_count' => 0]);
     }
 
     /**

@@ -21,7 +21,9 @@ class TenantResolver
         }
 
         if (auth()->check() && ($tid = auth()->user()->tenant_id)) {
-            self::$resolved = Tenant::find($tid);
+            self::$resolved = \Illuminate\Support\Facades\Cache::remember("tenant:{$tid}", 300, function () use ($tid) {
+                return Tenant::find($tid);
+            });
             if (self::$resolved) {
                 return self::$resolved;
             }
@@ -30,9 +32,12 @@ class TenantResolver
         try {
             $domain = request()->getHost();
             if ($domain) {
-                self::$resolved = Tenant::whereHas('domains', function ($q) use ($domain) {
-                    $q->where('domain', $domain);
-                })->first();
+                $cacheKey = 'tenant:domain:' . md5($domain);
+                self::$resolved = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () use ($domain) {
+                    return Tenant::whereHas('domains', function ($q) use ($domain) {
+                        $q->where('domain', $domain);
+                    })->first();
+                });
                 if (self::$resolved) {
                     return self::$resolved;
                 }
@@ -60,7 +65,18 @@ class TenantResolver
 
     public static function clear(): void
     {
+        if (self::$resolved) {
+            self::forgetCache(self::$resolved->id);
+        }
         self::$resolved = null;
+    }
+
+    public static function forgetCache(string $tenantId, ?string $domain = null): void
+    {
+        \Illuminate\Support\Facades\Cache::forget("tenant:{$tenantId}");
+        if ($domain) {
+            \Illuminate\Support\Facades\Cache::forget('tenant:domain:' . md5($domain));
+        }
     }
 
     public static function isResolved(): bool

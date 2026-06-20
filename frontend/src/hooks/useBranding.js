@@ -1,8 +1,30 @@
 import { useState, useEffect } from 'react';
 import api from '../services/centralApi';
 
+const CACHE_TTL = 3600000; // 1 hour in ms
+
+function getCachedOrNull(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed._expiry && Date.now() > parsed._expiry) {
+      localStorage.removeItem(key);
+      return null;
+    }
+    return parsed.data;
+  } catch { return null; }
+}
+
+function setWithExpiry(key, data, ttl = CACHE_TTL) {
+  try {
+    localStorage.setItem(key, JSON.stringify({ data, _expiry: Date.now() + ttl }));
+  } catch { /* storage full */ }
+}
+
 export function useBranding() {
-  const [settings, setSettings] = useState({
+  const cached = getCachedOrNull('branding_cache');
+  const [settings, setSettings] = useState(cached || {
     platform_name: localStorage.getItem('platform_name') || import.meta.env.VITE_APP_NAME || 'Sectros',
     platform_logo_url: '',
     platform_favicon_url: '',
@@ -14,6 +36,7 @@ export function useBranding() {
       try {
         const res = await api.get('public/branding');
         const data = res.data;
+        setWithExpiry('branding_cache', data);
         setSettings({
           platform_name: data.platform_name || import.meta.env.VITE_APP_NAME || 'Sectros',
           platform_logo_url: data.platform_logo_url || '',

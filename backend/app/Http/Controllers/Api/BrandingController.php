@@ -27,6 +27,10 @@ class BrandingController extends Controller
         $settings['platform_site_domain'] = $saaSSettings['platform_site_domain'] ?? '';
 
         $settings['business_type'] = tenant('business_type') ?? 'restaurant';
+        $settings['rating'] ??= null;
+        $settings['delivery_time'] ??= '25-35 min';
+        $settings['delivery_tagline'] ??= 'Free Delivery on all orders above $20';
+        $settings['business_status'] ??= 'Open Now';
 
         return response()->json($settings);
     }
@@ -41,6 +45,7 @@ class BrandingController extends Controller
             'opening_hours', 'about_text', 'hero_title', 'hero_subtitle',
             'show_reservation_button', 'show_menu_button',
             'reservation_link', 'menu_link',
+            'rating', 'delivery_time', 'delivery_tagline', 'business_status',
         ];
 
         $settings = $request->only($allowedKeys);

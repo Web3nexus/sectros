@@ -30,7 +30,19 @@ export function useNotifications(pollInterval = 15000) {
   useEffect(() => {
     fetchNotifications()
     intervalRef.current = setInterval(fetchNotifications, pollInterval)
-    return () => clearInterval(intervalRef.current)
+    const handleVisibility = () => {
+      if (document.hidden) {
+        clearInterval(intervalRef.current)
+      } else {
+        fetchNotifications()
+        intervalRef.current = setInterval(fetchNotifications, pollInterval)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => {
+      clearInterval(intervalRef.current)
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
   }, [fetchNotifications, pollInterval])
 
   const markAsRead = useCallback(async (id) => {

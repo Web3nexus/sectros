@@ -128,17 +128,17 @@ export default function SupportTicketsView() {
                 </div>
               </div>
               <p className="text-muted-foreground text-sm line-clamp-2 mb-4 leading-relaxed">{ticket.message}</p>
-              <div className="flex items-center justify-between pt-4 border-t border-border/30">
-                 <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-bold uppercase">
-                       {ticket.tenant_id?.substring(0,2) || '??'}
-                    </div>
-                    <span className="text-xs text-muted-foreground font-medium">{ticket.tenant_id || 'Global User'}</span>
-                 </div>
-                 <button className="text-xs font-bold text-primary hover:underline transition-colors uppercase tracking-widest">
-                    View Thread
-                 </button>
-              </div>
+               <div className="flex items-center justify-between pt-4 border-t border-border/30">
+                  <div className="flex items-center gap-2">
+                     <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] text-foreground font-bold uppercase">
+                        {(ticket.submitter_name || ticket.tenant_id || '??').substring(0,2)}
+                     </div>
+                     <span className="text-xs text-muted-foreground font-medium">{ticket.submitter_name || ticket.tenant_id || 'Global User'}</span>
+                  </div>
+                  <button className="text-xs font-bold text-primary hover:underline transition-colors uppercase tracking-widest">
+                     View Thread
+                  </button>
+               </div>
             </div>
           ))
         )}
@@ -166,15 +166,16 @@ export default function SupportTicketsView() {
 
               <div className="flex-1 space-y-6">
                  <div className="p-6 rounded-2xl bg-background border border-border">
-                    <div className="flex items-center gap-3 mb-4">
-                       <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground uppercase">
-                          {selectedTicket.tenant_id?.substring(0,2) || '??'}
-                       </div>
-                       <div>
-                          <p className="text-sm font-bold text-foreground">{selectedTicket.tenant_id || 'System User'}</p>
-                          <p className="text-[10px] text-muted-foreground">{new Date(selectedTicket.created_at).toLocaleString()}</p>
-                       </div>
-                    </div>
+                     <div className="flex items-center gap-3 mb-4">
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold text-primary-foreground uppercase">
+                           {(selectedTicket.submitter_name || selectedTicket.tenant_id || '??').substring(0,2)}
+                        </div>
+                        <div>
+                           <p className="text-sm font-bold text-foreground">{selectedTicket.submitter_name || selectedTicket.tenant_id || 'System User'}</p>
+                           {selectedTicket.submitter_email && <p className="text-[10px] text-muted-foreground">{selectedTicket.submitter_email}</p>}
+                           <p className="text-[10px] text-muted-foreground">{new Date(selectedTicket.created_at).toLocaleString()}</p>
+                        </div>
+                     </div>
                     <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-wrap">{selectedTicket.message}</p>
                  </div>
 
