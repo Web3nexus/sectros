@@ -3,20 +3,18 @@
 namespace App\Bootstrappers;
 
 use App\Services\TenantConnectionManager;
+use Illuminate\Support\Facades\DB;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
 
 class TenantDatabaseBootstrapper extends DatabaseTenancyBootstrapper
 {
-    public function start(): void
+    public function bootstrap(\Stancl\Tenancy\Contracts\Tenant $tenant): void
     {
-        $tenant = tenant();
-        if (!$tenant) return;
-
         TenantConnectionManager::setAsCurrent('tenant');
     }
 
-    public function end(): void
+    public function revert(): void
     {
-        // No-op: shared connection persists
+        DB::purge('tenant');
     }
 }

@@ -6,7 +6,6 @@ use App\Services\TenantResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use RuntimeException;
 
 class StrictTenantScope implements Scope
 {
@@ -14,13 +13,10 @@ class StrictTenantScope implements Scope
     {
         $tenantId = TenantResolver::resolve()?->id;
 
-        if (!$tenantId) {
-            throw new RuntimeException(
-                'Tenant context could not be resolved for ' . get_class($model) .
-                '. Ensure TenantResolver can resolve a tenant before querying tenant-scoped models.'
-            );
+        if ($tenantId) {
+            $builder->where($model->getTable() . '.tenant_id', $tenantId);
+        } else {
+            $builder->whereRaw('1 = 0');
         }
-
-        $builder->where($model->getTable() . '.tenant_id', $tenantId);
     }
 }
