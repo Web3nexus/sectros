@@ -20,6 +20,7 @@ class InitializeTenancyByHeader
 
             if ($tenant) {
                 TenantResolver::set($tenant);
+                tenancy()->initialize($tenant);
             }
         }
 

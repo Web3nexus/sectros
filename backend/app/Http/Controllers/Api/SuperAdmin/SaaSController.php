@@ -357,6 +357,25 @@ class SaaSController extends Controller
 
         $tenant->save();
 
+        // When the plan changed, sync features to all users in the tenant DB
+        if ($request->has('plan')) {
+            $plan = SubscriptionPlan::on('platform')->where('slug', $tenant->plan)->first();
+            if ($plan) {
+                $planFeatures = $plan->features ?? [];
+                try {
+                    \Illuminate\Support\Facades\DB::connection('tenant')
+                        ->table('users')
+                        ->where('tenant_id', $tenant->id)
+                        ->update(['features' => json_encode($planFeatures)]);
+                } catch (\Exception $e) {
+                    Log::warning('Could not sync user features on plan change', [
+                        'tenant' => $tenant->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+        }
+
         return response()->json(['message' => 'Tenant updated successfully', 'tenant' => $tenant]);
     }
 
