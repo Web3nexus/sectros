@@ -405,12 +405,17 @@ export default function TenantManagementView() {
   const handleEditTenant = async (e) => {
     e.preventDefault();
     try {
-      await api.patch(`/saas/tenants/${editingTenant.id}`, {
+      const payload = {
         business_name: editingTenant.business_name,
         business_type: editingTenant.business_type,
         plan: editingTenant.plan,
         status: editingTenant.status,
-      });
+        is_testing: editingTenant.is_testing,
+      };
+      if (editingTenant.is_testing && editingTenant.testing_days) {
+        payload.testing_days = editingTenant.testing_days;
+      }
+      await api.patch(`/saas/tenants/${editingTenant.id}`, payload);
       setEditingTenant(null);
       fetchTenants();
     } catch (error) {
@@ -644,6 +649,11 @@ export default function TenantManagementView() {
                     }`}>
                         {tenant.plan}
                     </span>
+                    {tenant.is_testing && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider border bg-amber-500/10 text-amber-600 border-amber-300 dark:text-amber-400 dark:border-amber-500/20 ml-1">
+                        Testing
+                      </span>
+                    )}
                   </td>
                   <td className="p-4 text-center">
                     <button 
@@ -924,6 +934,52 @@ export default function TenantManagementView() {
                   <option value="suspended">Suspended</option>
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">Subscription Mode</label>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setEditingTenant({...editingTenant, is_testing: false, testing_days: ''})}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 font-medium transition-all ${
+                      !editingTenant.is_testing
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Paid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingTenant({...editingTenant, is_testing: true})}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 font-medium transition-all ${
+                      editingTenant.is_testing
+                        ? 'border-amber-500 bg-amber-500/10 text-amber-600'
+                        : 'border-border text-muted-foreground hover:bg-muted'
+                    }`}
+                  >
+                    Testing
+                  </button>
+                </div>
+              </div>
+              {editingTenant.is_testing && (
+                <div>
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">Testing Duration (days)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="365"
+                    className="w-full bg-background border border-border rounded-xl py-3 px-4 text-foreground focus:ring-2 focus:ring-amber-500 outline-none transition-all"
+                    value={editingTenant.testing_days || ''}
+                    onChange={e => setEditingTenant({...editingTenant, testing_days: e.target.value})}
+                    placeholder="e.g. 30"
+                  />
+                  {editingTenant.testing_ends_at && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Currently testing until {new Date(editingTenant.testing_ends_at).toLocaleDateString()}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="pt-4 flex gap-3">
                 <button
                   type="button"

@@ -46,10 +46,12 @@ class SubscriptionController extends Controller
             'provider'          => $currentTenant->subscription_provider ?? null,
             'ends_at'           => $currentTenant->subscription_ends_at ?? null,
             'country'           => $currentTenant->country ?? null,
-            'ai_credits_limit'  => $plan?->ai_credits_limit,          // null = Unlimited
+            'ai_credits_limit'  => $plan?->ai_credits_limit,
             'ai_credits_used'   => $currentTenant->ai_credits_used ?? 0,
             'ai_credits_topup'  => $currentTenant->ai_credits_topup ?? 0,
             'sales_email'       => $salesEmail,
+            'is_testing'        => $currentTenant->is_testing ?? false,
+            'testing_ends_at'   => $currentTenant->testing_ends_at ?? null,
         ]);
     }
 

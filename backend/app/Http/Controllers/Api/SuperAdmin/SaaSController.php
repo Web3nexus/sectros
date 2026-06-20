@@ -183,7 +183,10 @@ class SaaSController extends Controller
                     'owner_name' => $tenant->owner_name ?? 'unknown',
                     'owner_user_id' => $ownerUserId,
                     'two_factor_enabled' => $twoFactorEnabled ?? false,
-                    'staff_count' => $staffCount
+                    'staff_count' => $staffCount,
+                    'is_testing' => (bool) ($tenant->is_testing ?? false),
+                    'trial_ends_at' => $tenant->trial_ends_at,
+                    'testing_ends_at' => $tenant->testing_ends_at,
                 ];
             })
             ->values(); // Reset keys after filtering
@@ -317,7 +320,7 @@ class SaaSController extends Controller
     }
 
     /**
-     * General update for a tenant (plan, business name, status).
+     * General update for a tenant (plan, business name, status, testing mode).
      */
     public function updateTenant(Request $request, $id)
     {
@@ -326,11 +329,30 @@ class SaaSController extends Controller
         if ($request->has('business_name')) {
             $tenant->business_name = $request->input('business_name');
         }
+        if ($request->has('business_type')) {
+            $tenant->business_type = $request->input('business_type');
+        }
         if ($request->has('plan')) {
             $tenant->plan = $request->input('plan');
         }
         if ($request->has('status') && in_array($request->input('status'), ['active', 'suspended'])) {
             $tenant->status = $request->input('status');
+        }
+
+        if ($request->has('is_testing')) {
+            $isTesting = filter_var($request->input('is_testing'), FILTER_VALIDATE_BOOLEAN);
+            $tenant->is_testing = $isTesting;
+
+            if ($isTesting && $request->has('testing_days')) {
+                $testingDays = (int) $request->input('testing_days');
+                $tenant->testing_ends_at = now()->addDays($testingDays);
+                $tenant->trial_ends_at = null;
+                $tenant->subscription_id = null;
+                $tenant->subscription_provider = null;
+                $tenant->subscription_status = 'active';
+            } elseif (!$isTesting) {
+                $tenant->testing_ends_at = null;
+            }
         }
 
         $tenant->save();

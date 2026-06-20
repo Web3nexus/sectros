@@ -19,7 +19,8 @@ class TenantObserver
 
     public function updated(Tenant $tenant): void
     {
-        \App\Services\TenantResolver::forgetCache($tenant->id);
+        $domain = $tenant->domains->first()?->domain;
+        \App\Services\TenantResolver::forgetCache($tenant->id, $domain);
     }
 
     public function deleted(Tenant $tenant): void
