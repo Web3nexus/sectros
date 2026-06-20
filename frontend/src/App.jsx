@@ -20,7 +20,6 @@ import { OrderPortal } from './pages/OrderPortal'
 import AutomationView from './pages/AutomationView'
 import MessagesView from './pages/MessagesView'
 import SettingsView from './pages/SettingsView'
-import OnboardingView from './pages/OnboardingView'
 import AccountSettingsView from './pages/AccountSettingsView'
 import SecuregateLogin from './pages/SecuregateLogin'
 import TenantLogin from './pages/TenantLogin'
@@ -173,7 +172,7 @@ function AppContent() {
             <Route path="messages" element={<MessagesView />} />
              <Route path="settings" element={<SettingsView />} />
              <Route path="domain" element={<DomainSetupView />} />
-              <Route path="onboarding" element={<OnboardingView />} />
+
               <Route path="account" element={<AccountSettingsView />} />
               <Route path="inventory" element={<InventoryView />} />
               <Route path="online-ordering" element={<OnlineOrderingView />} />

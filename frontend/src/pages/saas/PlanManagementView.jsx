@@ -25,6 +25,7 @@ const ALL_FEATURES = [
   { key: 'ai_automation',      label: 'AI Command',          description: 'AI workflow & intelligent responses', icon: Bot, alwaysOn: false },
   { key: 'online_ordering',    label: 'Online Ordering',      description: 'Customer ordering web portal', icon: ShoppingBag, alwaysOn: false },
   { key: 'inventory_tracking', label: 'Inventory Management', description: 'Stock levels & ingredient tracking', icon: Package, alwaysOn: false },
+  { key: 'reservation_deposits', label: 'Reservation Deposits', description: 'Require deposits or payments on bookings', icon: DollarSign, alwaysOn: false },
   // Enterprise & Marketplace
   { key: 'directory_featured', label: 'Featured Listing',     description: 'Prioritized visibility in directory', icon: Briefcase, alwaysOn: false },
   { key: 'branch_management',  label: 'Multi-Branch',         description: 'Manage multiple physical locations', icon: Building2, alwaysOn: false },

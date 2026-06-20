@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import {Check, X, Briefcase, Building2, Crown, ChevronRight, Plus, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Infinity, HelpCircle} from 'lucide-react';
+import {Check, X, Briefcase, Building2, Crown, ChevronRight, Plus, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Infinity, HelpCircle, Shield} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../services/centralApi';
 import BackgroundParticles from '../../components/common/BackgroundParticles';
@@ -27,6 +27,7 @@ const FEATURE_CATALOGUE = [
   { key: 'floor_plan',        label: 'Space & Layout Manager',    icon: Table,           alwaysOn: false, category: 'Operations' },
   { key: 'inventory_tracking',label: 'Inventory Management',      icon: Package,         alwaysOn: false, category: 'Operations' },
   { key: 'waitlist_automation',label: 'Automated Waitlist',       icon: Plus,            alwaysOn: false, category: 'Operations' },
+  { key: 'reservation_deposits',label: 'Reservation Deposits',     icon: DollarSign,      alwaysOn: false, category: 'Operations' },
   // Enterprise
   { key: 'branch_management', label: 'Multi-Branch Support',      icon: Building2,       alwaysOn: false, category: 'Enterprise' },
   { key: 'public_api',        label: 'Public Developer API',      icon: Settings,        alwaysOn: false, category: 'Enterprise' },

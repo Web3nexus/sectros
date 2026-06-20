@@ -138,6 +138,7 @@ export default function SaaSSettingsView() {
             { id: 'database', label: 'Database Routing', icon: Database },
             { id: 'domains', label: 'Domains', icon: Globe },
             { id: 'payments', label: 'Payments', icon: CreditCard },
+            { id: 'features', label: 'Features', icon: Settings },
             { id: 'website_theme', label: 'Website Theme', icon: Briefcase },
             { id: 'cms', label: 'Content CMS', icon: PenSquare },
           ].map((tab) => (
@@ -1508,6 +1509,10 @@ export default function SaaSSettingsView() {
                 </div>
               </div>
             )}
+            {activeTab === 'features' && (
+              <FeatureManagement settings={settings} onSettingsChange={setSettings} />
+            )}
+
             {activeTab === 'cms' && (
               <CMSContentManager settings={settings} onSettingsChange={setSettings} />
             )}
@@ -1721,6 +1726,107 @@ export default function SaaSSettingsView() {
         message={modal.message}
         type={modal.type}
       />
+    </div>
+  );
+}
+
+const ALL_FEATURES = [
+  { key: 'social_integration', label: 'Unified Chat' },
+  { key: 'pos_terminal', label: 'POS Terminal' },
+  { key: 'menu_builder', label: 'Menu Builder' },
+  { key: 'service_builder', label: 'Service Builder' },
+  { key: 'room_manager', label: 'Room Manager' },
+  { key: 'floor_plan', label: 'Space Manager' },
+  { key: 'staff_management', label: 'Staff Profiles' },
+  { key: 'financial_reports', label: 'Financials' },
+  { key: 'ai_automation', label: 'AI Command' },
+  { key: 'online_ordering', label: 'Online Ordering' },
+  { key: 'inventory_tracking', label: 'Inventory Management' },
+  { key: 'branch_management', label: 'Multi-Branch' },
+  { key: 'waitlist_automation', label: 'Waitlist Pro' },
+  { key: 'public_api', label: 'Public API' },
+  { key: 'custom_domain', label: 'Custom Domain' },
+  { key: 'franchise_tools', label: 'Franchise Tools' },
+  { key: 'directory_featured', label: 'Featured Listing' },
+  { key: 'reservation_deposits', label: 'Reservation Deposits' },
+];
+
+function FeatureManagement({ settings, onSettingsChange }) {
+  const [disabledFeatures, setDisabledFeatures] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (Array.isArray(settings.disabled_features)) {
+      setDisabledFeatures(settings.disabled_features);
+    }
+  }, [settings.disabled_features]);
+
+  const toggleFeature = (key) => {
+    setDisabledFeatures(prev => {
+      const next = prev.includes(key) ? prev.filter(f => f !== key) : [...prev, key];
+      onSettingsChange(s => ({ ...s, disabled_features: next }));
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaved(false);
+    try {
+      const res = await api.post('saas/settings', { disabled_features: disabledFeatures });
+      onSettingsChange(prev => ({ ...prev, disabled_features: disabledFeatures }));
+      setSaved(true);
+      localStorage.setItem('disabled_features', JSON.stringify(disabledFeatures));
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      alert('Failed to save feature settings.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-medium text-foreground mb-4">Feature Management</h3>
+      <p className="text-sm text-muted-foreground mb-6">
+        Globally disable features for all tenants. Disabled features will be hidden from every tenant's sidebar regardless of their plan.
+      </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {ALL_FEATURES.map(f => {
+          const isDisabled = disabledFeatures.includes(f.key);
+          return (
+            <button
+              key={f.key}
+              onClick={() => toggleFeature(f.key)}
+              className={`flex items-center justify-between p-4 rounded-2xl border transition-all text-left ${
+                isDisabled
+                  ? 'bg-red-50 border-red-200 text-red-700'
+                  : 'bg-white border-border hover:border-slate-300'
+              }`}
+            >
+              <span className="font-medium text-sm">{f.label}</span>
+              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                isDisabled
+                  ? 'bg-red-200 text-red-700'
+                  : 'bg-green-100 text-green-700'
+              }`}>
+                {isDisabled ? 'Disabled' : 'Active'}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={handleSave}
+        disabled={isSaving}
+        className="flex items-center gap-2 bg-stone-900 hover:bg-stone-800 text-white font-bold px-6 py-3 rounded-2xl transition-all disabled:opacity-50"
+      >
+        {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+        {saved ? 'Saved!' : 'Save Feature Settings'}
+      </button>
     </div>
   );
 }

@@ -24,6 +24,8 @@ class ConfigurationController extends Controller
             'auto_responder' => false,
             'predictive_analytics' => false,
             'notification_email' => $tenant?->owner_email ?? '',
+            'reservations_deposit_required' => false,
+            'reservations_deposit_amount' => 0,
         ];
 
         return response()->json(array_merge($defaults, $settings));
@@ -37,6 +39,7 @@ class ConfigurationController extends Controller
             'business_hours', 'reservation_rules', 'cancellation_policy', 'check_in_out_time',
             'delivery_settings', 'pickup_settings', 'tax_settings', 'service_charge',
             'staff_roles', 'notification_settings', 'booking_rules',
+            'reservations_deposit_required', 'reservations_deposit_amount',
         ];
 
         $this->transaction(function () use ($request, $allowed) {

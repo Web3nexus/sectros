@@ -385,6 +385,36 @@ export default function SettingsView() {
       )}
 
       {/* Business Settings Tab */}
+      {/* Deposit Config */}
+      {activeTab === 'booking' && (
+        <div className="mt-6 bg-white rounded-[32px] border border-border shadow-sm p-8 space-y-6">
+          <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm flex items-center gap-2">
+            <DollarSign size={18} className="text-primary" /> Deposit & Payment
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex items-center justify-between p-6 bg-slate-50 rounded-3xl border border-border">
+              <div>
+                <div className="font-black text-foreground text-sm uppercase tracking-tight">Require Deposit</div>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Guests pay before confirming</p>
+              </div>
+              <button onClick={() => handleSettingChange('reservations_deposit_required', !settings.reservations_deposit_required)}
+                className={`h-8 w-14 rounded-full transition-all relative ${settings.reservations_deposit_required ? 'bg-primary' : 'bg-slate-300'}`}>
+                <div className={`absolute top-1 h-6 w-6 rounded-full bg-white transition-all ${settings.reservations_deposit_required ? 'left-7' : 'left-1'}`}></div>
+              </button>
+            </div>
+            <div className="p-6 bg-slate-50 rounded-3xl border border-border">
+              <div className="font-black text-foreground text-sm uppercase tracking-tight mb-3">Deposit Amount</div>
+              <div className="flex items-center gap-3">
+                <span className="text-lg font-black text-slate-400">{settings.currency_symbol || '$'}</span>
+                <input type="number" min="0" step="0.01" value={settings.reservations_deposit_amount || 0}
+                  onChange={e => handleSettingChange('reservations_deposit_amount', parseFloat(e.target.value) || 0)}
+                  className="flex-1 bg-white border-2 border-border rounded-2xl px-5 py-3 font-bold text-slate-700 focus:border-blue-600 transition-all" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'business' && (
         <div className="bg-white rounded-[32px] border border-border shadow-sm p-8 space-y-6">
           <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm flex items-center gap-2">

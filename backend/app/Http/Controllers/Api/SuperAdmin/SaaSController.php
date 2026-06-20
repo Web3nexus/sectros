@@ -734,13 +734,16 @@ class SaaSController extends Controller
      */
     public function getPublicBranding()
     {
-        $settings = \App\Models\SaaSSetting::whereIn('key', ['platform_name', 'platform_logo_url', 'platform_favicon_url', 'turnstile_site_key'])->pluck('value', 'key');
+        $settings = \App\Models\SaaSSetting::whereIn('key', ['platform_name', 'platform_logo_url', 'platform_favicon_url', 'turnstile_site_key', 'disabled_features'])->pluck('value', 'key');
+        
+        $disabledFeatures = $this->normalizeDisabledFeatures($settings['disabled_features'] ?? []);
         
         return response()->json([
             'platform_name'       => $settings['platform_name'] ?? config('app.name'),
             'platform_logo_url'   => $settings['platform_logo_url'] ?? null,
             'platform_favicon_url'=> $settings['platform_favicon_url'] ?? null,
             'turnstile_site_key'  => $settings['turnstile_site_key'] ?? null,
+            'disabled_features'   => $disabledFeatures,
         ]);
     }
 
@@ -780,6 +783,17 @@ class SaaSController extends Controller
     private function sanitizeLanding(string $value): string
     {
         return strip_tags($value, '<b><i><u><a><br>');
+    }
+
+    private function normalizeDisabledFeatures($raw): array
+    {
+        if (is_string($raw)) {
+            $raw = json_decode($raw, true);
+        }
+        if (!is_array($raw)) {
+            return [];
+        }
+        return array_values(array_filter($raw, fn($v) => is_string($v) && $v !== ''));
     }
 
     private function maskSecret(?string $value): string
@@ -887,6 +901,7 @@ class SaaSController extends Controller
             'namesilo_domain_price' => (float) ($settings['namesilo_domain_price'] ?? 15),
             'namesilo_cost_price' => (float) ($settings['namesilo_cost_price'] ?? 11.05),
             'namesilo_charge_tenant' => filter_var($settings['namesilo_charge_tenant'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'disabled_features' => $this->normalizeDisabledFeatures($settings['disabled_features'] ?? []),
         ]);
     }
 
@@ -961,9 +976,14 @@ class SaaSController extends Controller
             'namesilo_registrant_country', 'namesilo_registrant_email',
             'namesilo_registrant_phone',
             'namesilo_domain_price', 'namesilo_cost_price', 'namesilo_charge_tenant',
+            'disabled_features',
         ];
         
         $settings = $request->only($allowedKeys);
+        
+        if (array_key_exists('disabled_features', $settings)) {
+            $settings['disabled_features'] = $this->normalizeDisabledFeatures($settings['disabled_features']);
+        }
         
         foreach ($settings as $key => $value) {
             if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key']) && !empty($value) && str_contains($value, '*')) {

@@ -26,6 +26,20 @@ export function useBranding() {
           localStorage.setItem('platform_name', data.platform_name);
         }
 
+        try {
+          const normalized = Array.isArray(data.disabled_features)
+            ? data.disabled_features
+            : (typeof data.disabled_features === 'string' ? JSON.parse(data.disabled_features) : []);
+
+          if (Array.isArray(normalized)) {
+            localStorage.setItem('disabled_features', JSON.stringify(normalized));
+          } else {
+            localStorage.removeItem('disabled_features');
+          }
+        } catch {
+          localStorage.removeItem('disabled_features');
+        }
+
         // Update Favicon
         if (data.platform_favicon_url) {
           let link = document.querySelector("link[rel~='icon']");

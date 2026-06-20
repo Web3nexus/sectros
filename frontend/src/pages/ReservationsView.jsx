@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react'
-import {Calendar, Clock, Users, MessageCircle, CheckCircle, CircleX as XCircle, Clock4, Search, Filter, Loader2, Globe, Instagram, Facebook, Link as LinkIcon, Smartphone, MapPin} from 'lucide-react'
+import {Calendar, Clock, Users, MessageCircle, CheckCircle, CircleX as XCircle, Clock4, Search, Filter, Loader2, Globe, Instagram, Facebook, Link as LinkIcon, Smartphone, MapPin, DollarSign} from 'lucide-react'
 import api from '../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
+import { useAuth } from '../context/AuthContext'
 
 export function ReservationsView() {
   const config = useBusinessConfig();
+  const { user } = useAuth();
+  const hasDeposits = (() => {
+    const features = user?.features || {};
+    if (Array.isArray(features)) return features.includes('reservation_deposits');
+    if (typeof features === 'object' && features !== null) return !!features.reservation_deposits;
+    return false;
+  })();
   const b = config.labels;
   const [loading, setLoading] = useState(true);
   const [reservations, setReservations] = useState([]);
@@ -16,6 +24,7 @@ export function ReservationsView() {
   const [staffOptions, setStaffOptions] = useState([]);
   const [timeFilter, setTimeFilter] = useState('All');
   
+  const [payingDepositId, setPayingDepositId] = useState(null);
   const [newReservation, setNewReservation] = useState({
     customer_name: '',
     customer_email: '',
@@ -91,6 +100,29 @@ export function ReservationsView() {
       console.error('Reservation Sync Failed:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePayDeposit = async (reservation) => {
+    if (payingDepositId) return;
+    setPayingDepositId(reservation.id);
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    try {
+      const res = await api.post('public/payments/create-checkout', {
+        reservation_id: reservation.id,
+        success_url: `${protocol}//${host}/dashboard/reservations?paid=${reservation.id}`,
+        cancel_url: `${protocol}//${host}/dashboard/reservations`,
+      });
+      if (res.data.url) {
+        window.open(res.data.url, '_blank');
+      } else {
+        alert('No checkout URL returned. Please try again.');
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to create payment. Is a payment gateway configured?');
+    } finally {
+      setPayingDepositId(null);
     }
   };
 
@@ -226,6 +258,7 @@ export function ReservationsView() {
                     <th className="px-8 py-5">Capacity / Unit</th>
                     <th className="px-8 py-5">Origin</th>
                     <th className="px-8 py-5">Status</th>
+                    {hasDeposits && <th className="px-8 py-5">Deposit</th>}
                     <th className="px-8 py-5 text-right">Integrations</th>
                   </tr>
                </thead>
@@ -268,41 +301,68 @@ export function ReservationsView() {
                              <span className="text-[10px] font-black text-slate-800 uppercase tracking-widest leading-none">{res.source || 'Website'}</span>
                           </div>
                        </td>
-                       <td className="px-8 py-5">
-                          <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
-                            res.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                            res.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
-                            'bg-red-50 text-red-600 border-red-100'
-                          }`}>
-                            {res.status}
-                          </span>
-                       </td>
-                       <td className="px-8 py-5 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                             {res.status === 'pending' && (
-                               <>
-                                 <button 
-                                   onClick={() => handleStatusUpdate(res.id, 'confirmed')}
-                                   className="p-1 px-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-emerald-600/10 hover:bg-emerald-700 active:scale-95 transition-all"
+                        <td className="px-8 py-5">
+                           <span className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
+                             res.status === 'confirmed' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                             res.status === 'pending' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                             'bg-red-50 text-red-600 border-red-100'
+                           }`}>
+                             {res.status}
+                           </span>
+                        </td>
+                        {hasDeposits && (
+                          <td className="px-8 py-5">
+                            {res.deposit_amount > 0 ? (
+                              <div className="flex items-center gap-2">
+                                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                                  res.payment_status === 'paid' ? 'bg-emerald-50 text-emerald-600' :
+                                  res.payment_status === 'pending' ? 'bg-amber-50 text-amber-600' :
+                                  'bg-slate-50 text-slate-500'
+                                }`}>
+                                  {res.payment_status === 'paid' ? 'Paid' : res.payment_status === 'pending' ? 'Pending' : 'Unpaid'}
+                                </span>
+                                <span className="text-xs font-black text-slate-700">${parseFloat(res.deposit_amount).toFixed(2)}</span>
+                                {res.payment_status !== 'paid' && (
+                                  <button
+                                    onClick={() => handlePayDeposit(res)}
+                                    disabled={payingDepositId === res.id}
+                                    className="px-3 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
+                                  >
+                                    {payingDepositId === res.id ? 'Processing...' : 'Pay Now'}
+                                  </button>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-[10px] text-slate-400 font-medium">—</span>
+                            )}
+                          </td>
+                        )}
+                        <td className="px-8 py-5 text-right">
+                           <div className="flex items-center justify-end gap-2">
+                              {res.status === 'pending' && (
+                                <>
+                                  <button 
+                                    onClick={() => handleStatusUpdate(res.id, 'confirmed')}
+                                    className="p-1 px-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-emerald-600/10 hover:bg-emerald-700 active:scale-95 transition-all"
+                                  >
+                                     Confirm
+                                  </button>
+                                  <button 
+                                    onClick={() => handleStatusUpdate(res.id, 'cancelled')}
+                                    className="p-1 px-4 bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-200 active:scale-95 transition-all"
+                                  >
+                                     Decline
+                                  </button>
+                                </>
+                              )}
+                              {res.status === 'confirmed' && (
+                                <button 
+                                  onClick={() => handleStatusUpdate(res.id, 'completed')}
+                                  className="p-1 px-4 bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-card transition-all"
                                  >
-                                    Confirm
-                                 </button>
-                                 <button 
-                                   onClick={() => handleStatusUpdate(res.id, 'cancelled')}
-                                   className="p-1 px-4 bg-red-100 text-red-600 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-red-200 active:scale-95 transition-all"
-                                 >
-                                    Decline
-                                 </button>
-                               </>
-                             )}
-                             {res.status === 'confirmed' && (
-                               <button 
-                                 onClick={() => handleStatusUpdate(res.id, 'completed')}
-                                 className="p-1 px-4 bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-card transition-all"
-                                >
-                                  {config.type === 'hotel' ? 'Check-in' : config.type === 'salon' ? 'Check-out' : 'Seat Guest'}
-                               </button>
-                             )}
+                                   {config.type === 'hotel' ? 'Check-in' : config.type === 'salon' ? 'Check-out' : 'Seat Guest'}
+                                </button>
+                              )}
                           </div>
                        </td>
                     </tr>

@@ -46,7 +46,13 @@ export function DashboardLayout() {
   
   const hasFeature = (feat) => {
     if (!feat) return true;
-    
+
+    // Check globally disabled features first
+    try {
+      const disabled = JSON.parse(localStorage.getItem('disabled_features') || '[]');
+      if (Array.isArray(disabled) && disabled.includes(feat)) return false;
+    } catch (e) {}
+
     const features = user?.features || {};
     if (Array.isArray(features)) return features.includes(feat);
     if (typeof features === 'object' && features !== null) return !!features[feat];
@@ -155,7 +161,6 @@ export function DashboardLayout() {
                  />
                )
             ))}
-            <SidebarItem to="/dashboard/onboarding" icon={Plus} label={t('dashboard.provisioning')} alwaysOn isCollapsed={isSidebarCollapsed} />
           </nav>
         </div>
         <div className={`p-6 border-t border-border flex ${isSidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
@@ -455,7 +460,13 @@ function SidebarItem({ to, icon: Icon, label, feature, alwaysOn, roleCheck = tru
   const hasFeature = (feat) => {
     if (!feat) return true;
     if (alwaysOn) return true;
-    
+
+    // Check globally disabled features first
+    try {
+      const disabled = JSON.parse(localStorage.getItem('disabled_features') || '[]');
+      if (Array.isArray(disabled) && disabled.includes(feat)) return false;
+    } catch (e) {}
+
     const features = user?.features || {};
     if (Array.isArray(features)) return features.includes(feat);
     if (typeof features === 'object' && features !== null) return !!features[feat];
