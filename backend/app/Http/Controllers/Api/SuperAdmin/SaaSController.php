@@ -1874,8 +1874,8 @@ class SaaSController extends Controller
             $totalProfit = $totalRevenue - $totalCost;
             $profitMargin = $totalRevenue > 0 ? round(($totalProfit / $totalRevenue) * 100, 1) : 0;
 
-            $namesiloCostPrice = SaaSSetting::get('namesilo_cost_price', 11.05);
-            $namesiloSellPrice = SaaSSetting::get('namesilo_domain_price', 15);
+            $namesiloCostPrice = \App\Models\SaaSSetting::get('namesilo_cost_price', 11.05);
+            $namesiloSellPrice = \App\Models\SaaSSetting::get('namesilo_domain_price', 15);
 
             return [
                 'total_domains' => $totalDomains,
@@ -1892,9 +1892,9 @@ class SaaSController extends Controller
             return [
                 'total_domains' => 0, 'total_revenue' => 0, 'total_cost' => 0,
                 'total_profit' => 0, 'profit_margin' => 0,
-                'cost_per_domain' => SaaSSetting::get('namesilo_cost_price', 11.05),
-                'sell_per_domain' => SaaSSetting::get('namesilo_domain_price', 15),
-                'profit_per_domain' => round(SaaSSetting::get('namesilo_domain_price', 15) - SaaSSetting::get('namesilo_cost_price', 11.05), 2),
+                'cost_per_domain' => \App\Models\SaaSSetting::get('namesilo_cost_price', 11.05),
+                'sell_per_domain' => \App\Models\SaaSSetting::get('namesilo_domain_price', 15),
+                'profit_per_domain' => round(\App\Models\SaaSSetting::get('namesilo_domain_price', 15) - \App\Models\SaaSSetting::get('namesilo_cost_price', 11.05), 2),
             ];
         }
     }
