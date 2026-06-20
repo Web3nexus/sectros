@@ -10,7 +10,9 @@ class TableController extends Controller
 {
     public function index()
     {
-        return response()->json(RestaurantTable::all());
+        return response()->json(
+            RestaurantTable::orderBy('table_number')->paginate(50)
+        );
     }
 
     public function store(Request $request)

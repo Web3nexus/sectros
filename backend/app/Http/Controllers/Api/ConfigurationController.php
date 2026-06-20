@@ -10,7 +10,7 @@ class ConfigurationController extends Controller
 {
     public function index()
     {
-        $settings = TenantSetting::pluck('value', 'key')->toArray();
+        $settings = $this->cacheTenantSettings();
         $tenant = tenant();
 
         $defaults = [
@@ -38,10 +38,14 @@ class ConfigurationController extends Controller
             'staff_roles', 'notification_settings', 'booking_rules',
         ];
 
-        foreach ($request->only($allowed) as $key => $value) {
-            $storeValue = is_array($value) ? json_encode($value) : (is_bool($value) ? ($value ? 'true' : 'false') : $value);
-            TenantSetting::updateOrCreate(['key' => $key], ['value' => $storeValue]);
-        }
+        $this->transaction(function () use ($request, $allowed) {
+            foreach ($request->only($allowed) as $key => $value) {
+                $storeValue = is_array($value) ? json_encode($value) : (is_bool($value) ? ($value ? 'true' : 'false') : $value);
+                TenantSetting::updateOrCreate(['key' => $key], ['value' => $storeValue]);
+            }
+        });
+
+        TenantSetting::forgetCache();
 
         return response()->json(['message' => 'Settings saved successfully.']);
     }

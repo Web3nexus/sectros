@@ -14,7 +14,9 @@ class ReservationController extends Controller
      */
     public function index()
     {
-        return response()->json(Reservation::with('table')->orderBy('reservation_time')->get());
+        return response()->json(
+            Reservation::with('table')->orderBy('reservation_time')->paginate(50)
+        );
     }
 
     /**
@@ -104,32 +106,36 @@ class ReservationController extends Controller
             }
         }
 
-        $reservation = Reservation::create($validated);
+        $reservation = $this->transaction(function () use ($validated) {
+            $reservation = Reservation::create($validated);
 
-        // Send New Reservation Email
+            NotificationController::dispatch(
+                'reservation',
+                'New Reservation',
+                $validated['customer_name'] . ' booked a table for ' . $validated['party_size'] . ' guests.',
+                'calendar',
+                $reservation->id
+            );
+
+            return $reservation;
+        });
+
         $template = \App\Models\EmailTemplate::where('slug', 'new_reservation')->first();
         if ($template) {
             try {
-                \Illuminate\Support\Facades\Mail::to($validated['customer_email'])->send(new \App\Mail\SystemMail($template->subject, $template->content, [
-                    'reservation_id' => $reservation->id,
-                    'customer_name' => $reservation->customer_name,
-                    'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
-                    'reservation_time' => $reservation->reservation_time->format('H:i'),
-                    'guest_count' => $reservation->party_size
-                ]));
+                \Illuminate\Support\Facades\Mail::to($validated['customer_email'])->send(
+                    new \App\Mail\SystemMail($template->subject, $template->content, [
+                        'reservation_id' => $reservation->id,
+                        'customer_name' => $reservation->customer_name,
+                        'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                        'reservation_time' => $reservation->reservation_time->format('H:i'),
+                        'guest_count' => $reservation->party_size,
+                    ])
+                );
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to send reservation email: " . $e->getMessage());
             }
         }
-
-        // Dispatch real notification
-        NotificationController::dispatch(
-            'reservation',
-            'New Reservation',
-            $validated['customer_name'] . ' booked a table for ' . $validated['party_size'] . ' guests.',
-            'calendar',
-            $reservation->id
-        );
 
         return response()->json($reservation, 201);
     }

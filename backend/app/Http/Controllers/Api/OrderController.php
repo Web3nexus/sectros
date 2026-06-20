@@ -16,7 +16,11 @@ class OrderController extends Controller
      */
     public function index()
     {
-        return response()->json(Order::with('items.menuItem', 'table', 'staff')->orderBy('created_at', 'desc')->get());
+        return response()->json(
+            Order::with('items.menuItem', 'table', 'staff')
+                ->orderBy('created_at', 'desc')
+                ->paginate(50)
+        );
     }
 
     /**

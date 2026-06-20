@@ -53,25 +53,27 @@ class StaffMessageController extends Controller
             return response()->json(['error' => 'Specify a staff member or send to all'], 422);
         }
 
-        if ($validated['to_all'] ?? false) {
-            $profiles = StaffProfile::where('is_active', true)->get();
-            foreach ($profiles as $profile) {
+        $this->transaction(function () use ($user, $validated) {
+            if ($validated['to_all'] ?? false) {
+                $profiles = StaffProfile::where('is_active', true)->get();
+                foreach ($profiles as $profile) {
+                    StaffMessage::create([
+                        'sender_id' => $user->id,
+                        'staff_profile_id' => $profile->id,
+                        'to_all' => true,
+                        'subject' => $validated['subject'],
+                        'body' => $validated['body'],
+                    ]);
+                }
+            } else {
                 StaffMessage::create([
                     'sender_id' => $user->id,
-                    'staff_profile_id' => $profile->id,
-                    'to_all' => true,
+                    'staff_profile_id' => $validated['staff_profile_id'],
                     'subject' => $validated['subject'],
                     'body' => $validated['body'],
                 ]);
             }
-        } else {
-            StaffMessage::create([
-                'sender_id' => $user->id,
-                'staff_profile_id' => $validated['staff_profile_id'],
-                'subject' => $validated['subject'],
-                'body' => $validated['body'],
-            ]);
-        }
+        });
 
         return response()->json(['message' => 'Message sent'], 201);
     }

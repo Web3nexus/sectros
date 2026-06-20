@@ -13,7 +13,9 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        return response()->json(Expense::orderBy('expense_date', 'desc')->get());
+        return response()->json(
+            Expense::orderBy('expense_date', 'desc')->paginate(50)
+        );
     }
 
     /**

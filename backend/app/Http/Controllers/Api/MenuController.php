@@ -19,6 +19,20 @@ class MenuController extends Controller
         );
     }
 
+    public function items()
+    {
+        return response()->json(
+            MenuItem::with('category')->orderBy('name')->paginate(50)
+        );
+    }
+
+    public function addons()
+    {
+        return response()->json(
+            \App\Models\MenuItemAddon::orderBy('name')->paginate(50)
+        );
+    }
+
     /**
      * Store a newly created category.
      */
@@ -71,10 +85,12 @@ class MenuController extends Controller
 
     public function destroyCategory($id)
     {
-        $category = MenuCategory::findOrFail($id);
-        $category->items()->delete();
-        $category->delete();
-        return response()->json(['message' => 'Category deleted']);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $category = MenuCategory::findOrFail($id);
+            $category->items()->delete();
+            $category->delete();
+            return response()->json(['message' => 'Category deleted']);
+        });
     }
 
     public function updateItem(Request $request, $id)

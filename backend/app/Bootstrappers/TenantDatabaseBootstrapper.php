@@ -12,24 +12,11 @@ class TenantDatabaseBootstrapper extends DatabaseTenancyBootstrapper
         $tenant = tenant();
         if (!$tenant) return;
 
-        try {
-            $connectionName = TenantConnectionManager::bootForTenant($tenant);
-            TenantConnectionManager::setAsCurrent($connectionName);
-        } catch (\Exception $e) {
-            \Log::error('Failed to bootstrap tenant database', [
-                'tenant_id' => $tenant->getTenantKey(),
-                'error' => $e->getMessage(),
-            ]);
-            throw $e;
-        }
+        TenantConnectionManager::setAsCurrent('tenant');
     }
 
     public function end(): void
     {
-        $tenant = tenant();
-        if ($tenant) {
-            $connectionName = TenantConnectionManager::connectionName($tenant);
-            TenantConnectionManager::disconnect($connectionName);
-        }
+        // No-op: shared connection persists
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class SaaSSetting extends Model
 {
@@ -13,17 +14,31 @@ class SaaSSetting extends Model
     {
         $setting = self::where('key', $key)->first();
         if (!$setting) return $default;
-        
+
         $val = $setting->value;
-        // Basic JSON detect
         if (str_starts_with($val, '[') || str_starts_with($val, '{')) {
             return json_decode($val, true);
         }
 
-        // Cast boolean strings
-        if ($val === 'true') return true;
-        if ($val === 'false') return false;
-        
+        if ($val === 'true' || $val === '1') return true;
+        if ($val === 'false' || $val === '0') return false;
+
         return $val;
+    }
+
+    public static function forgetCache(): void
+    {
+        Cache::forget('saas:settings');
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function () {
+            static::forgetCache();
+        });
+
+        static::deleted(function () {
+            static::forgetCache();
+        });
     }
 }

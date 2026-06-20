@@ -10,7 +10,9 @@ class ReviewController extends Controller
 {
     public function index()
     {
-        return response()->json(TenantReview::orderBy('sort_order')->get());
+        return response()->json(
+            TenantReview::orderBy('sort_order')->paginate(50)
+        );
     }
 
     public function store(Request $request)

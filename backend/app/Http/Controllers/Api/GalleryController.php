@@ -10,7 +10,9 @@ class GalleryController extends Controller
 {
     public function index()
     {
-        return response()->json(TenantGallery::orderBy('sort_order')->get());
+        return response()->json(
+            TenantGallery::orderBy('sort_order')->paginate(50)
+        );
     }
 
     public function store(Request $request)

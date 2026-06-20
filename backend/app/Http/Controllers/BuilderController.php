@@ -11,7 +11,9 @@ class BuilderController extends Controller
     // List all pages
     public function index()
     {
-        return response()->json(BuilderPage::orderBy('created_at', 'asc')->get());
+        return response()->json(
+            BuilderPage::orderBy('created_at', 'asc')->paginate(50)
+        );
     }
 
     // Load a specific page by slug
@@ -75,7 +77,7 @@ class BuilderController extends Controller
         
         if ($page) {
             // HYDRATION: Replace placeholders with real brand data
-            $settings = TenantSetting::all()->pluck('value', 'key')->toArray();
+            $settings = $this->cacheTenantSettings();
             
             // Fallbacks
             $brand = [

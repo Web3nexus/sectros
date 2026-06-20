@@ -10,7 +10,9 @@ class BranchController extends Controller
 {
     public function index()
     {
-        return response()->json(Branch::all());
+        return response()->json(
+            Branch::orderBy('name')->paginate(50)
+        );
     }
 
     public function store(Request $request)
@@ -23,11 +25,14 @@ class BranchController extends Controller
             'is_main' => 'boolean'
         ]);
 
-        if ($validated['is_main'] ?? false) {
-            Branch::where('is_main', true)->update(['is_main' => false]);
-        }
+        $branch = $this->transaction(function () use ($validated) {
+            if ($validated['is_main'] ?? false) {
+                Branch::where('is_main', true)->update(['is_main' => false]);
+            }
 
-        $branch = Branch::create($validated);
+            return Branch::create($validated);
+        });
+
         return response()->json($branch, 201);
     }
 
@@ -42,11 +47,13 @@ class BranchController extends Controller
             'is_active' => 'boolean'
         ]);
 
-        if (($validated['is_main'] ?? false) && !$branch->is_main) {
-            Branch::where('is_main', true)->update(['is_main' => false]);
-        }
+        $this->transaction(function () use ($branch, $validated) {
+            if (($validated['is_main'] ?? false) && !$branch->is_main) {
+                Branch::where('is_main', true)->update(['is_main' => false]);
+            }
 
-        $branch->update($validated);
+            $branch->update($validated);
+        });
         return response()->json($branch);
     }
 

@@ -84,15 +84,15 @@ class AutomationController extends Controller
      */
     public function getSettings()
     {
-        $settings = TenantSetting::all()->pluck('value', 'key');
-        
+        $settings = $this->cacheTenantSettings();
+
         return response()->json([
             'ai_tone' => $settings['ai_tone'] ?? 'Professional',
             'custom_instructions' => $settings['custom_instructions'] ?? '',
-            'auto_reply_enabled' => (bool) ($settings['auto_reply_enabled'] ?? false),
-            'social_whatsapp' => (bool) ($settings['social_whatsapp'] ?? false),
-            'social_facebook' => (bool) ($settings['social_facebook'] ?? false),
-            'social_instagram' => (bool) ($settings['social_instagram'] ?? false),
+            'auto_reply_enabled' => filter_var($settings['auto_reply_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'social_whatsapp' => filter_var($settings['social_whatsapp'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'social_facebook' => filter_var($settings['social_facebook'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'social_instagram' => filter_var($settings['social_instagram'] ?? false, FILTER_VALIDATE_BOOLEAN),
             'whatsapp_id' => tenant('whatsapp_id') ?? '',
             'facebook_page_id' => tenant('facebook_page_id') ?? '',
             'instagram_id' => tenant('instagram_id') ?? '',
@@ -105,13 +105,17 @@ class AutomationController extends Controller
     public function updateSettings(Request $request)
     {
         $settings = $request->only(['ai_tone', 'custom_instructions', 'auto_reply_enabled', 'social_whatsapp', 'social_facebook', 'social_instagram']);
-        
-        foreach ($settings as $key => $value) {
-            TenantSetting::updateOrCreate(
-                ['key' => $key],
-                ['value' => is_bool($value) ? ($value ? '1' : '0') : $value]
-            );
-        }
+
+        $this->transaction(function () use ($settings) {
+            foreach ($settings as $key => $value) {
+                TenantSetting::updateOrCreate(
+                    ['key' => $key],
+                    ['value' => is_bool($value) ? ($value ? '1' : '0') : $value]
+                );
+            }
+        });
+
+        TenantSetting::forgetCache();
 
         return response()->json(['message' => 'Settings updated successfully']);
     }
@@ -241,8 +245,8 @@ class AutomationController extends Controller
         }
 
         // --- DISPATCH LOGIC ---
-        $tenantSettings = TenantSetting::all()->pluck('value', 'key');
-        $autoReplyEnabled = (bool) ($tenantSettings['auto_reply_enabled'] ?? false);
+        $tenantSettings = $this->cacheTenantSettings();
+        $autoReplyEnabled = filter_var($tenantSettings['auto_reply_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN);
 
         if ($autoReplyEnabled) {
             $messenger = new SocialMessengerService();
@@ -324,7 +328,7 @@ class AutomationController extends Controller
         $knowledgeBase = \App\Models\TenantKnowledge::where('is_active', true)->get()->map(fn($k) => (string)$k->title . ": " . (string)$k->content)->join("\n");
 
         // 3. Fetch Tenant Settings
-        $tenantSettings = \App\Models\TenantSetting::all()->pluck('value', 'key');
+        $tenantSettings = $this->cacheTenantSettings();
         $tone = $tenantSettings['ai_tone'] ?? 'Professional';
         $instructions = $tenantSettings['custom_instructions'] ?? '';
 

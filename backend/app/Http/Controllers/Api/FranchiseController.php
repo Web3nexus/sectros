@@ -10,7 +10,9 @@ class FranchiseController extends Controller
 {
     public function index()
     {
-        return response()->json(Franchise::withCount('branches')->get());
+        return response()->json(
+            Franchise::with('branches')->withCount('branches')->paginate(50)
+        );
     }
 
     public function store(Request $request)

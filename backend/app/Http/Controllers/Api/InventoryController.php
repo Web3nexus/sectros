@@ -10,7 +10,9 @@ class InventoryController extends Controller
 {
     public function index()
     {
-        return response()->json(InventoryItem::orderBy('name')->get());
+        return response()->json(
+            InventoryItem::orderBy('name')->paginate(50)
+        );
     }
 
     public function store(Request $request)

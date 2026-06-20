@@ -14,7 +14,7 @@ class AddonController extends Controller
 {
     public function index()
     {
-        $addons = Addon::where('is_active', true)->get();
+        $addons = Addon::where('is_active', true)->paginate(50);
         $tenant = tenant();
 
         $activeAddonIds = [];
@@ -25,12 +25,14 @@ class AddonController extends Controller
                 ->toArray();
         }
 
-        return response()->json($addons->map(function ($addon) use ($activeAddonIds) {
+        $addons->getCollection()->transform(function ($addon) use ($activeAddonIds) {
             $data = $addon->toArray();
             $data['is_purchased'] = in_array($addon->id, $activeAddonIds);
             $data['features'] = $addon->features ?? [];
             return $data;
-        }));
+        });
+
+        return response()->json($addons);
     }
 
     public function active()
@@ -43,7 +45,7 @@ class AddonController extends Controller
         $tenantAddons = TenantAddon::with('addon')
             ->where('tenant_id', $tenant->id)
             ->where('status', 'active')
-            ->get();
+            ->paginate(50);
 
         return response()->json($tenantAddons);
     }

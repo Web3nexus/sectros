@@ -185,32 +185,31 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:staff_profiles',
+            'email' => 'required|email|unique:staff_profiles|unique:users,email',
             'role' => 'required|in:manager,waiter,chef,cashier,accountant',
             'is_active' => 'boolean',
         ]);
 
-        // Create the profile record
-        $staff = StaffProfile::create($validated);
+        [$staff, $user, $plainPassword] = $this->transaction(function () use ($validated) {
+            $staff = StaffProfile::create($validated);
 
-        // Create a functional user account for login
-        $plainPassword = \Illuminate\Support\Str::random(12);
-        $user = \App\Models\User::firstOrCreate(
-            ['email' => $validated['email']],
-            [
+            $plainPassword = \Illuminate\Support\Str::random(12);
+            $user = \App\Models\User::create([
+                'email' => $validated['email'],
                 'name' => $validated['name'],
                 'password' => \Illuminate\Support\Facades\Hash::make($plainPassword),
-            ]
-        );
+            ]);
 
-        // Assign the role (Spatie) - Dynamically ensure it exists in the tenant DB first
-        $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
-        $user->syncRoles([$roleRecord]);
+            $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
+            $user->syncRoles([$roleRecord]);
+
+            return [$staff, $user, $plainPassword];
+        });
 
         // Send Staff Registration Email with credentials
         $template = \App\Models\EmailTemplate::where('slug', 'staff_registration')->first();
         if ($template) {
-            $platformName = \App\Models\SaaSSetting::get('platform_name', 'Sectros');
+            $platformName = $this->cacheSetting('platform_name', 'Sectros');
             $businessName = tenant('business_name') ?? 'Your Business';
             $loginUrl = 'https://' . (tenant('id') ? tenant('id') . '.' : '') . (config('tenancy.central_domains')[0] ?? 'sectros.com') . '/login';
 

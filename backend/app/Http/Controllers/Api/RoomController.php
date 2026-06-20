@@ -10,7 +10,9 @@ class RoomController extends Controller
 {
     public function index()
     {
-        return response()->json(TenantRoom::orderBy('sort_order')->get());
+        return response()->json(
+            TenantRoom::orderBy('sort_order')->paginate(50)
+        );
     }
 
     public function store(Request $request)

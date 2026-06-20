@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class TenantSetting extends Model
 {
@@ -20,17 +21,42 @@ class TenantSetting extends Model
     {
         $setting = self::where('key', $key)->first();
         if (!$setting) return $default;
-        
+
         $val = $setting->value;
-        // Basic JSON detect
         if ($val && (str_starts_with($val, '[') || str_starts_with($val, '{'))) {
             return json_decode($val, true);
         }
 
-        // Cast boolean strings
         if ($val === 'true' || $val === '1') return true;
         if ($val === 'false' || $val === '0') return false;
-        
+
         return $val;
+    }
+
+    public static function forgetCache(?string $tenantId = null): void
+    {
+        $tenantId ??= tenant()?->getTenantKey();
+        if ($tenantId) {
+            Cache::forget("tenant:{$tenantId}:settings");
+        }
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(function ($setting) {
+            $tid = $setting->tenant_id ?? tenant()?->getTenantKey();
+            if ($tid) {
+                Cache::forget("tenant:{$tid}:settings");
+                Cache::forget("tenant:{$tid}:setting:{$setting->key}");
+            }
+        });
+
+        static::deleted(function ($setting) {
+            $tid = $setting->tenant_id ?? tenant()?->getTenantKey();
+            if ($tid) {
+                Cache::forget("tenant:{$tid}:settings");
+                Cache::forget("tenant:{$tid}:setting:{$setting->key}");
+            }
+        });
     }
 }

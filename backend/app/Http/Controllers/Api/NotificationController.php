@@ -13,12 +13,18 @@ class NotificationController extends Controller
      */
     public function index()
     {
-        $notifications = TenantNotification::orderBy('created_at', 'desc')->limit(20)->get();
+        $notifications = TenantNotification::orderBy('created_at', 'desc')->paginate(50);
         $unreadCount   = TenantNotification::where('status', 'unread')->count();
 
         return response()->json([
-            'notifications' => $notifications,
+            'notifications' => $notifications->items(),
             'unread_count'  => $unreadCount,
+            'paginator' => [
+                'current_page' => $notifications->currentPage(),
+                'last_page' => $notifications->lastPage(),
+                'per_page' => $notifications->perPage(),
+                'total' => $notifications->total(),
+            ],
         ]);
     }
 

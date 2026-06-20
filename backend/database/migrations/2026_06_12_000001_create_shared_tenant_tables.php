@@ -440,6 +440,20 @@ return new class extends Migration
             $table->index('expense_id');
         });
 
+        Schema::connection('tenant')->create('staff_messages', function (Blueprint $table) {
+            $table->id();
+            $table->string('tenant_id');
+            $table->unsignedBigInteger('sender_id')->nullable();
+            $table->unsignedBigInteger('staff_profile_id')->nullable();
+            $table->boolean('to_all')->default(false);
+            $table->string('subject')->nullable();
+            $table->text('body')->nullable();
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+            $table->index('tenant_id');
+            $table->index(['tenant_id', 'staff_profile_id']);
+        });
+
         // ── 5. Tables with FK to staff_profiles ────────────────────────────
         Schema::connection('tenant')->create('shifts', function (Blueprint $table) {
             $table->id();
@@ -520,6 +534,7 @@ return new class extends Migration
         Schema::connection('tenant')->dropIfExists('payroll_records');
         Schema::connection('tenant')->dropIfExists('attendance_logs');
         Schema::connection('tenant')->dropIfExists('shifts');
+        Schema::connection('tenant')->dropIfExists('staff_messages');
         Schema::connection('tenant')->dropIfExists('expense_receipts');
         Schema::connection('tenant')->dropIfExists('reservations');
         Schema::connection('tenant')->dropIfExists('order_items');

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TenantNotification extends Model
 {
+    use \App\Traits\BelongsToTenant;
+
     protected $connection = 'tenant';
 
     protected $table = 'tenant_notifications';

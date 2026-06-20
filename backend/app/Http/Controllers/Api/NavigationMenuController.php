@@ -13,7 +13,9 @@ class NavigationMenuController extends Controller
      */
     public function index()
     {
-        return response()->json(NavigationMenu::all());
+        return response()->json(
+            NavigationMenu::orderBy('name')->paginate(50)
+        );
     }
 
     /**

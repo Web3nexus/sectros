@@ -10,10 +10,14 @@ class WaitlistController extends Controller
 {
     public function index()
     {
-        return response()->json(Waitlist::where('status', 'waiting')
-            ->orWhere('status', 'notified')
+        return response()->json(
+            Waitlist::where(function ($q) {
+                $q->where('status', 'waiting')
+                  ->orWhere('status', 'notified');
+            })
             ->orderBy('created_at', 'asc')
-            ->get());
+            ->paginate(50)
+        );
     }
 
     public function store(Request $request)

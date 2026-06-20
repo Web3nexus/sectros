@@ -12,7 +12,9 @@ class IntegrationController extends Controller
 {
     public function index()
     {
-        return response()->json(ApiKey::all());
+        return response()->json(
+            ApiKey::orderBy('name')->orderBy('created_at', 'desc')->paginate(50)
+        );
     }
 
     public function store(Request $request)
