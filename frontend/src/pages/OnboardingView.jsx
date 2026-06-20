@@ -2,6 +2,14 @@ import React, { useState } from 'react'
 import {Plus, Globe, Building2, Rocket, Loader2, CheckCircle, ArrowRight, ShieldCheck} from 'lucide-react'
 import api from '../services/api'
 
+const SYSTEM_DOMAIN = import.meta.env.VITE_SYSTEM_DOMAIN || (() => {
+  const hostname = window.location.hostname;
+  const parts = hostname.split('.');
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return 'sectrosweb.test';
+  if (parts.length >= 2) return parts.slice(1).join('.');
+  return hostname;
+})();
+
 export default function OnboardingView() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -33,7 +41,7 @@ export default function OnboardingView() {
          </div>
          <div className="max-w-md space-y-2">
             <h2 className="text-3xl font-black text-foreground tracking-tighter uppercase">Launch Sequence Complete</h2>
-            <p className="text-muted-foreground font-medium">Your dedicated instance is being provisioned. Access it shortly at <span className="text-primary font-bold">{formData.domain}.sectros.test</span></p>
+             <p className="text-muted-foreground font-medium">Your dedicated instance is being provisioned. Access it shortly at <span className="text-primary font-bold">{formData.domain}.{SYSTEM_DOMAIN}</span></p>
          </div>
          <button 
            onClick={() => setSuccess(false)}
@@ -87,8 +95,8 @@ export default function OnboardingView() {
                        setFormData({...formData, domain: val, id: val});
                     }}
                   />
-                  <div className="px-6 py-4 bg-slate-100 rounded-3xl font-black text-muted-foreground uppercase tracking-widest text-sm">
-                    .sectros.test
+                  <div className="px-6 py-4 bg-slate-100 rounded-3xl font-black text-muted-foreground uppercase tracking-widest text-sm break-all">
+                    .{SYSTEM_DOMAIN}
                   </div>
                </div>
                <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest ml-1 italic">Subdomain will serve as unique Tenant-ID</p>

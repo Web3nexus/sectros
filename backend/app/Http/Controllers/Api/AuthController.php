@@ -71,6 +71,15 @@ class AuthController extends Controller
             $user = $tenantUser;
             $tenant = $tenantRecord;
 
+            // Require email verification before login (legacy accounts without token are auto-verified)
+            if (!$user->email_verified_at) {
+                if (!$user->email_verification_token) {
+                    $user->update(['email_verified_at' => $user->created_at]);
+                } else {
+                    return response()->json(['message' => 'Please verify your email address before logging in. Check your inbox for the verification link.'], 403);
+                }
+            }
+
             $authData = [
                 'id' => $user->id,
                 'email' => $user->email,
@@ -145,6 +154,7 @@ class AuthController extends Controller
             'email' => 'required|email|max:255',
             'password' => 'required|string|min:8',
             'country' => 'required|string|size:2',
+            'plan_slug' => 'required|string|exists:subscription_plans,slug',
             'turnstile_token' => 'nullable|string'
         ]);
 
@@ -172,6 +182,11 @@ class AuthController extends Controller
             return response()->json(['message' => 'This email is already registered with a business.'], 422);
         }
 
+        $selectedPlan = SubscriptionPlan::where('slug', $validated['plan_slug'])->first();
+        if (!$selectedPlan) {
+            return response()->json(['message' => 'Invalid plan selected.'], 400);
+        }
+
         try {
             // Generate a unique tenant ID based on business name
             $tenantId = \Illuminate\Support\Str::slug($validated['business_name']);
@@ -179,18 +194,18 @@ class AuthController extends Controller
                 $tenantId = $tenantId . '-' . rand(1000, 9999);
             }
 
-            // Phase 1: Create Tenant
+            // Phase 1: Create Tenant with selected plan
             $trialDays = \App\Models\SaaSSetting::get('trial_days', 14);
             $tenant = Tenant::create([
                 'id' => $tenantId,
                 'business_name' => $validated['business_name'],
                 'business_type' => $validated['business_type'],
-                'plan' => 'free',
+                'plan' => $validated['plan_slug'],
                 'owner_email' => $validated['email'],
                 'owner_name' => $validated['name'],
                 'country' => $validated['country'],
                 'status' => 'active',
-                'trial_ends_at' => now()->addDays((int) $trialDays),
+                'trial_ends_at' => $validated['plan_slug'] !== 'free' ? now()->addDays((int) $trialDays) : null,
                 'data' => [
                     'status' => 'active',
                     'owner_name' => $validated['name'],
@@ -203,23 +218,17 @@ class AuthController extends Controller
             $centralDomain = config('tenancy.central_domains')[0] ?? 'localhost';
             $tenant->domains()->create(['domain' => $tenantId . '.' . $centralDomain]);
 
-            // At this point the synchronous TenantCreated pipeline has already:
-            // 1. Created the tenant database (tenant_{$tenantId})
-            // 2. Run tenant migrations (including users table)
-            // 3. Seeded default data (TenantSeeder created an owner user with placeholder password)
+            // Phase 3: Initialize tenancy and create the owner user with verification token
+            $verificationToken = \Illuminate\Support\Str::random(64);
 
-            // Phase 3: Initialize tenancy and create/update the owner user
-            // in the correct tenant database (not the central DB).
-            $authToken = null;
-            $userData = null;
-
-            $tenant->run(function () use ($validated, &$authToken, &$userData) {
+            $tenant->run(function () use ($validated, $verificationToken) {
                 $user = User::where('email', $validated['email'])->first();
 
                 if ($user) {
                     $user->update([
                         'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
                         'name' => $validated['name'],
+                        'email_verification_token' => $verificationToken,
                     ]);
                 } else {
                     $user = User::create([
@@ -227,42 +236,41 @@ class AuthController extends Controller
                         'email' => $validated['email'],
                         'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
                         'role' => 'owner',
+                        'email_verification_token' => $verificationToken,
                     ]);
                 }
-
-                $token = $user->createToken('auth-token')->plainTextToken;
-                $authToken = $token;
-                $userData = $user->toArray();
             });
 
-            // Phase 4: Welcome Email
-            try {
-                $template = \App\Models\EmailTemplate::on('platform')->where('slug', 'welcome_email')->first();
-            } catch (\Exception $e) {
-                // Non-fatal
-            }
-            $subject = $template ? $template->subject : 'Welcome to ' . config('app.name');
-            $content = $template ? $template->content : "Hello {name}, your account has been created successfully. Welcome to {platform_name}!";
-
+            // Phase 4: Send Verification Email
             $platformName = \App\Models\SaaSSetting::get('platform_name', config('app.name'));
+            $centralDomain = config('tenancy.central_domains')[0] ?? 'sectros.com';
+            $verifyUrl = "https://{$centralDomain}/verify-email?token={$verificationToken}&email=" . urlencode($validated['email']) . "&tenant={$tenantId}";
 
             try {
-                \Illuminate\Support\Facades\Mail::to($userData['email'])->send(new \App\Mail\SystemMail($subject, $content, [
-                    'name' => $userData['name'],
+                $template = \App\Models\EmailTemplate::on('platform')->where('slug', 'email_verification')->first();
+            } catch (\Exception $e) {
+                $template = null;
+            }
+
+            $subject = $template ? $template->subject : 'Verify Your Email - ' . $platformName;
+            $content = $template ? $template->content : "Hello {name},<br><br>Thank you for registering with {platform_name}. Please verify your email address by clicking the link below:<br><br><a href='{verify_url}'>{verify_url}</a><br><br>If you did not create this account, please ignore this email.";
+
+            try {
+                \Illuminate\Support\Facades\Mail::to($validated['email'])->send(new \App\Mail\SystemMail($subject, $content, [
+                    'name' => $validated['name'],
                     'platform_name' => $platformName,
-                    'business_name' => $validated['business_name']
+                    'business_name' => $validated['business_name'],
+                    'verify_url' => $verifyUrl,
                 ]));
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to send welcome email: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Failed to send verification email: " . $e->getMessage());
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Registration successful',
+                'message' => 'Registration successful. Please check your email to verify your account.',
                 'tenant_id' => $tenant->id,
                 'domain' => $tenant->domains()->first()->domain,
-                'token' => $authToken,
-                'user' => $userData
             ], 201);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Registration Error', [
@@ -279,6 +287,105 @@ class AuthController extends Controller
                 'message' => 'Registration failed due to an internal error.',
             ], 500);
         }
+    }
+
+    /**
+     * Verify email via token and send welcome email.
+     */
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'email' => 'required|email',
+            'tenant' => 'required|string',
+        ]);
+
+        $tenant = Tenant::on('platform')->where('id', $request->tenant)->first();
+        if (!$tenant) {
+            return response()->json(['message' => 'Invalid verification link.'], 404);
+        }
+
+        $verified = false;
+        $userData = null;
+        $authToken = null;
+
+        $tenant->run(function () use ($request, $tenant, &$verified, &$userData, &$authToken) {
+            $user = User::where('email', $request->email)
+                ->where('email_verification_token', $request->token)
+                ->first();
+
+            if (!$user) {
+                return;
+            }
+
+            $user->update([
+                'email_verified_at' => now(),
+                'email_verification_token' => null,
+            ]);
+
+            $verified = true;
+            $authToken = $user->createToken('auth-token')->plainTextToken;
+            $userData = $user->toArray();
+        });
+
+        if (!$verified) {
+            return response()->json(['message' => 'Invalid or expired verification link.'], 400);
+        }
+
+        // Send Welcome Email after verification
+        $platformName = \App\Models\SaaSSetting::get('platform_name', config('app.name'));
+        $supportEmail = \App\Models\SaaSSetting::get('support_email', 'support@sectros.com');
+
+        try {
+            $template = \App\Models\EmailTemplate::on('platform')->where('slug', 'email_verified')->first();
+        } catch (\Exception $e) {
+            $template = null;
+        }
+
+        $subject = $template ? $template->subject : 'Welcome to ' . $platformName . ' – Getting Started';
+        $content = $template ? $template->content : "
+            <h2>Welcome to {platform_name}, {name}!</h2>
+            <p>Your email has been verified successfully. Here's what to do next:</p>
+            <ul>
+                <li><strong>Log in</strong> to your dashboard and complete your business profile</li>
+                <li><strong>Set up your menu</strong> (if applicable to your business type)</li>
+                <li><strong>Configure your staff</strong> and assign roles</li>
+                <li><strong>Customize your website</strong> using the built-in builder</li>
+                <li><strong>Connect your domain</strong> for a professional online presence</li>
+            </ul>
+            <p>If you need any help, contact our support team at <a href='mailto:{support_email}'>{support_email}</a>.</p>
+            <p>Welcome aboard!</p>
+        ";
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($userData['email'])->send(new \App\Mail\SystemMail($subject, $content, [
+                'name' => $userData['name'],
+                'platform_name' => $platformName,
+                'business_name' => $tenant->business_name,
+                'support_email' => $supportEmail,
+            ]));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to send welcome email: " . $e->getMessage());
+        }
+
+        $plan = SubscriptionPlan::on('platform')->where('slug', $tenant->plan)->first();
+
+        return response()->json([
+            'message' => 'Email verified successfully. Welcome!',
+            'token' => $authToken,
+            'tenant_domain' => $tenant->domains()->first()?->domain,
+            'user' => [
+                'id' => $userData['id'],
+                'name' => $userData['name'],
+                'email' => $userData['email'],
+                'role' => 'owner',
+                'is_owner' => true,
+                'tenant_id' => $userData['tenant_id'] ?? $tenant->id,
+                'plan' => $tenant->plan ?? 'free',
+                'features' => array_values(array_keys(array_filter((array) ($tenant->features ?? ($plan?->features ?? []))))),
+                'business_type' => $tenant->business_type ?? 'restaurant',
+            ],
+        ]);
     }
 
     /**

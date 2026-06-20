@@ -71,8 +71,35 @@ class ReservationController extends Controller
             'resource_type' => 'nullable|string',
             'resource_id' => 'nullable|integer',
             'special_requests' => 'nullable|string',
-            'source' => 'nullable|string|max:50'
+            'source' => 'nullable|string|max:50',
         ]);
+
+        // Collect extra fields into dynamic_fields with whitelist validation
+        $knownKeys = ['customer_name', 'customer_email', 'customer_phone', 'reservation_time', 'end_time',
+                      'duration_minutes', 'party_size', 'restaurant_table_id', 'resource_type', 'resource_id',
+                      'special_requests', 'source', 'status', 'branch_id'];
+        $allowedDynamicFields = [
+            'dietary_requirements' => 'nullable|string|max:500',
+            'occasion' => 'nullable|string|max:100',
+            'seating_preference' => 'nullable|string|max:100',
+            'seating' => 'nullable|string|max:100',
+            'stylist' => 'nullable|string|max:100',
+            'room_type' => 'nullable|string|max:100',
+            'check_in' => 'nullable|date',
+            'check_out' => 'nullable|date',
+            'guests' => 'nullable|integer|min:1|max:100',
+            'notes' => 'nullable|string|max:2000',
+        ];
+        $dynamicData = [];
+        foreach ($allowedDynamicFields as $field => $rules) {
+            if ($request->has($field)) {
+                $validatedField = $request->validate([$field => $rules]);
+                $dynamicData[$field] = $validatedField[$field];
+            }
+        }
+        if (!empty($dynamicData)) {
+            $validated['dynamic_fields'] = $dynamicData;
+        }
 
         // Overlap Check (Simplified)
         if ($request->restaurant_table_id || $request->resource_id) {

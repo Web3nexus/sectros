@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import {ShoppingBag, Briefcase, ChevronRight, Clock, MapPin, Search, Plus, Minus, Loader2} from 'lucide-react'
+import {ShoppingBag, Briefcase, ChevronRight, Clock, MapPin, Search, Plus, Minus, Loader2, Building2} from 'lucide-react'
 import api from '../services/api'
+
+const AREA_LABELS = {
+  restaurant: 'Kitchen',
+  cafe: 'Kitchen',
+  salon: 'Studio',
+  hotel: 'Concierge',
+  hospitality: 'Lobby'
+};
 
 export function OrderPortal() {
   const [loading, setLoading] = useState(true);
@@ -11,10 +19,23 @@ export function OrderPortal() {
   const [showCart, setShowCart] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [branding, setBranding] = useState({ business_name: '', business_type: 'restaurant' });
 
   useEffect(() => {
     fetchMenu();
+    fetchBranding();
   }, []);
+
+  const fetchBranding = async () => {
+    try {
+      const res = await api.get('branding');
+      setBranding(res.data);
+    } catch (e) {
+      console.warn('Branding fetch failed, using defaults');
+    }
+  };
+
+  const areaLabel = AREA_LABELS[branding.business_type] || AREA_LABELS.restaurant;
 
   const fetchMenu = async () => {
     try {
@@ -94,11 +115,11 @@ export function OrderPortal() {
                <div className="bg-primary text-white p-2 rounded-xl shadow-lg shadow-blue-500/20">
                   <ShoppingBag size={22} />
                </div>
-               <span className="font-black tracking-tighter text-2xl uppercase italic">SECTROS <span className="text-primary">HUB</span></span>
-            </div>
-            <div className="flex items-center gap-6">
-               <div className="hidden lg:flex items-center gap-2 text-muted-foreground text-xs font-black uppercase tracking-widest">
-                  <MapPin size={16} className="text-primary" /> Kitchen: Downtown NY
+                <span className="font-black tracking-tighter text-2xl uppercase italic">{branding.business_name || 'SECTROS'} <span className="text-primary">HUB</span></span>
+             </div>
+             <div className="flex items-center gap-6">
+                <div className="hidden lg:flex items-center gap-2 text-muted-foreground text-xs font-black uppercase tracking-widest">
+                   <MapPin size={16} className="text-primary" /> {areaLabel}{(branding.business_address ? ': ' + branding.business_address.split(',')[0] : '')}
                </div>
                <button 
                 onClick={() => setShowCart(true)}
@@ -188,19 +209,25 @@ export function OrderPortal() {
          <div className="absolute -right-20 -top-20 h-64 w-64 bg-blue-50 rounded-full blur-3xl opacity-50"></div>
          <div className="max-w-5xl mx-auto relative z-10">
             <div className="flex items-center gap-3 mb-4">
-               <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Open Now</span>
+                <span className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">{branding.business_status || 'Open Now'}</span>
             </div>
-            <h1 className="text-5xl font-black tracking-tight mb-4 text-foreground">Bistrologix Kitchen</h1>
+            <h1 className="text-5xl font-black tracking-tight mb-4 text-foreground">{branding.business_name || 'Bistrologix'} {areaLabel}</h1>
             <div className="flex flex-wrap items-center gap-6 text-xs font-black uppercase tracking-widest text-muted-foreground">
-               <div className="flex items-center gap-2 text-amber-500">
-                  <Briefcase size={18} fill="currentColor" /> <span className="text-foreground">4.8 (500+)</span>
-               </div>
-               <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-primary" /> <span className="text-foreground">20-35 min</span>
-               </div>
-               <div className="text-primary">
-                  Priority Delivery
-               </div>
+                {branding.rating && (
+                <div className="flex items-center gap-2 text-amber-500">
+                   <Briefcase size={18} fill="currentColor" /> <span className="text-foreground">{branding.rating}</span>
+                </div>
+                )}
+                {branding.delivery_time && (
+                <div className="flex items-center gap-2">
+                   <Clock size={16} className="text-primary" /> <span className="text-foreground">{branding.delivery_time}</span>
+                </div>
+                )}
+                {branding.delivery_tagline && (
+                <div className="text-primary">
+                   {branding.delivery_tagline}
+                </div>
+                )}
             </div>
             
             <div className="mt-10 relative max-w-2xl group">

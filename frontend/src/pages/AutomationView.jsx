@@ -555,61 +555,61 @@ export default function AutomationView() {
       {/* AI Engine Tab */}
       {activeTab === 'engine' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in slide-in-from-right-4 duration-500">
-           <div className="lg:col-span-2 space-y-8">
-              <div className="bg-card p-10 rounded-[48px] shadow-2xl relative overflow-hidden">
-                 <div className="absolute -right-20 -top-20 opacity-5 pointer-events-none rotate-12">
-                    <Briefcase size={300} className="text-white" />
-                 </div>
-                 <div className="relative z-10">
-                    <div className="flex items-center gap-4 mb-8">
-                       <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><Bot size={24} className="text-white" /></div>
-                       <h3 className="font-black text-white text-xl uppercase tracking-tight">Neural Configuration</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                       <div>
-                          <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Core Tone</label>
-                          <select 
-                            value={aiSettings.ai_tone}
-                            onChange={(e) => setAiSettings({...aiSettings, ai_tone: e.target.value})}
-                            className="w-full bg-white/5 border border-white/10 text-white rounded-2xl py-4 px-6 focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-bold text-sm"
-                          >
-                             <option value="Professional">Professional & Precise</option>
-                             <option value="Friendly">Warm & Welcoming</option>
-                             <option value="Casual">Casual & Energetic</option>
-                             <option value="Humorous">Smart & Witty</option>
-                          </select>
-                       </div>
-                       <div className="flex items-center pt-8">
-                          <label className="flex items-center gap-4 cursor-pointer group">
-                             <div className="relative">
-                                <input type="checkbox" checked={aiSettings.auto_reply_enabled} onChange={(e) => setAiSettings({...aiSettings, auto_reply_enabled: e.target.checked})} className="sr-only" />
-                                <div className={`w-14 h-7 rounded-full transition-colors ${aiSettings.auto_reply_enabled ? 'bg-blue-500' : 'bg-white/10'}`}></div>
-                                <div className={`absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform ${aiSettings.auto_reply_enabled ? 'translate-x-7' : ''}`}></div>
-                             </div>
-                             <span className="text-xs font-black text-white uppercase tracking-widest">Autonomous Control</span>
-                          </label>
-                       </div>
-                    </div>
+            <div className="lg:col-span-2 space-y-8">
+               <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl relative overflow-hidden">
+                  <div className="absolute -right-20 -top-20 opacity-5 pointer-events-none rotate-12">
+                     <Briefcase size={300} className="text-white" />
+                  </div>
+                  <div className="relative z-10">
+                     <div className="flex items-center gap-4 mb-8">
+                        <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><Bot size={24} className="text-white" /></div>
+                        <h3 className="font-black text-white text-xl uppercase tracking-tight">Neural Configuration</h3>
+                     </div>
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div>
+                           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Core Tone</label>
+                           <select 
+                             value={aiSettings.ai_tone}
+                             onChange={(e) => setAiSettings({...aiSettings, ai_tone: e.target.value})}
+                             className="w-full bg-slate-800/80 border border-slate-700 text-white rounded-2xl py-4 px-6 focus:ring-2 focus:ring-blue-500 outline-none appearance-none font-bold text-sm"
+                           >
+                              <option value="Professional">Professional & Precise</option>
+                              <option value="Friendly">Warm & Welcoming</option>
+                              <option value="Casual">Casual & Energetic</option>
+                              <option value="Humorous">Smart & Witty</option>
+                           </select>
+                        </div>
+                        <div className="flex items-center pt-8">
+                           <label className="flex items-center gap-4 cursor-pointer group">
+                              <div className="relative">
+                                 <input type="checkbox" checked={aiSettings.auto_reply_enabled} onChange={(e) => setAiSettings({...aiSettings, auto_reply_enabled: e.target.checked})} className="sr-only" />
+                                 <div className={`w-14 h-7 rounded-full transition-colors ${aiSettings.auto_reply_enabled ? 'bg-blue-500' : 'bg-slate-700'}`}></div>
+                                 <div className={`absolute left-1 top-1 bg-white w-5 h-5 rounded-full transition-transform ${aiSettings.auto_reply_enabled ? 'translate-x-7' : ''}`}></div>
+                              </div>
+                              <span className="text-xs font-black text-white uppercase tracking-widest">Autonomous Control</span>
+                           </label>
+                        </div>
+                     </div>
 
-                    <div className="mb-10">
-                       <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3">Specific Guardrails & Rules</label>
-                       <textarea 
-                          value={aiSettings.custom_instructions}
-                          onChange={(e) => setAiSettings({...aiSettings, custom_instructions: e.target.value})}
-                          rows={6}
-                          placeholder={`e.g. 'Never offer discounts on weekends. Always mention our ${config.type === 'salon' ? 'expert stylists' : config.type === 'hotel' ? 'ocean view rooms' : 'signature cocktails'}. Be helpful but brief.'`}
-                          className="w-full bg-white/5 border border-white/10 text-white rounded-[32px] py-6 px-8 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-slate-600 font-medium text-sm leading-relaxed"
-                       />
-                    </div>
+                     <div className="mb-10">
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Specific Guardrails & Rules</label>
+                        <textarea 
+                           value={aiSettings.custom_instructions}
+                           onChange={(e) => setAiSettings({...aiSettings, custom_instructions: e.target.value})}
+                           rows={6}
+                           placeholder={`e.g. 'Never offer discounts on weekends. Always mention our ${config.type === 'salon' ? 'expert stylists' : config.type === 'hotel' ? 'ocean view rooms' : 'signature cocktails'}. Be helpful but brief.'`}
+                           className="w-full bg-slate-800/80 border border-slate-700 text-white rounded-[32px] py-6 px-8 focus:ring-2 focus:ring-blue-500 outline-none placeholder:text-slate-500 font-medium text-sm leading-relaxed"
+                        />
+                     </div>
 
-                    <button onClick={saveSettings} disabled={savingSettings} className="w-full bg-white text-foreground py-5 rounded-[24px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50">
-                       {savingSettings ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                       Sync Cloud Core
-                    </button>
-                 </div>
-              </div>
-           </div>
+                     <button onClick={saveSettings} disabled={savingSettings} className="w-full bg-white text-slate-900 py-5 rounded-[24px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all flex items-center justify-center gap-3 shadow-xl disabled:opacity-50">
+                        {savingSettings ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                        Sync Cloud Core
+                     </button>
+                  </div>
+               </div>
+            </div>
            
            <div className="space-y-6">
               <div className="bg-white p-8 rounded-[40px] border border-border shadow-sm">

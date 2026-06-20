@@ -64,6 +64,7 @@ import ReservationsPublicView from './pages/public/ReservationsPublicView'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import VerifyEmail from './pages/VerifyEmail'
 import NotFound from './pages/public/NotFound'
 
 import SolutionPage from './pages/public/SolutionPage'
@@ -119,6 +120,7 @@ function AppContent() {
       {/* Tenant Login / Register */}
       <Route path="/login" element={<TenantLogin />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 

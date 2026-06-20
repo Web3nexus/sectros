@@ -136,8 +136,10 @@ export default function RestrictedBuilderView() {
           console.log(`[EF ${id}] website-themes response:`, templateRes.data);
           if (templateRes.data && templateRes.data.sections_json) {
             console.log(`[EF ${id}] SETTING sections from website-themes`);
-            setSections(templateRes.data.sections_json);
-            setTheme(templateRes.data.theme_json || { primaryColor: '#000000', fontFamily: 'Inter' });
+            const parsed = typeof templateRes.data.sections_json === 'string' ? JSON.parse(templateRes.data.sections_json) : templateRes.data.sections_json;
+            setSections(Array.isArray(parsed) ? parsed : DEFAULT_SECTIONS);
+            const themeRaw = templateRes.data.theme_json;
+            setTheme(typeof themeRaw === 'string' ? JSON.parse(themeRaw) : (themeRaw || DEFAULT_THEME));
             return;
           }
           console.log(`[EF ${id}] sections_json missing, falling through`);

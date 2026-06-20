@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Plus, Edit2, Trash2, CheckCircle, X, Loader2, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, Save, Infinity, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Briefcase, Building2} from 'lucide-react';
+import {Plus, Edit2, Trash2, CheckCircle, X, Loader2, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, Save, Infinity, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Briefcase, Building2, Globe} from 'lucide-react';
 import api from '../../services/centralApi';
 
 // IMPORTANT: The 'key' values below MUST match exactly what DashboardLayout.jsx
@@ -30,6 +30,7 @@ const ALL_FEATURES = [
   { key: 'branch_management',  label: 'Multi-Branch',         description: 'Manage multiple physical locations', icon: Building2, alwaysOn: false },
   { key: 'waitlist_automation',label: 'Waitlist Pro',         description: 'Automated SMS & seating logic', icon: Plus, alwaysOn: false },
   { key: 'public_api',         label: 'Public API',           description: 'External integration access', icon: Settings, alwaysOn: false },
+  { key: 'custom_domain',      label: 'Custom Domain',        description: 'Connect your own domain name', icon: Globe, alwaysOn: false },
   { key: 'franchise_tools',    label: 'Franchise Tools',      description: 'Central management for groups', icon: Users, alwaysOn: false },
 ];
 

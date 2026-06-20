@@ -133,6 +133,14 @@ export function FinancialsView() {
           <p className="text-muted-foreground text-sm">Balance, revenue, and expense tracking.</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowScanner(true)}
+            className="bg-primary text-white px-4 py-1.5 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all flex items-center gap-2 text-xs"
+          >
+            <Scan size={16} />
+            AI Add Expense
+          </button>
+          <div className="w-px h-6 bg-border mx-1"></div>
           {PERIODS.map(p => (
             <button
               key={p.key}
@@ -434,16 +442,6 @@ export function FinancialsView() {
         </div>
       )}
 
-      {/* Action bar */}
-      <div className="flex items-center justify-end gap-3 pb-8">
-        <button
-          onClick={() => setShowScanner(true)}
-          className="bg-primary text-white px-5 py-2.5 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all flex items-center gap-2 text-sm"
-        >
-          <Scan size={18} />
-          AI Add Expense
-        </button>
-      </div>
     </div>
   )
 }

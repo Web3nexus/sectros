@@ -21,16 +21,24 @@ return Application::configure(basePath: dirname(__DIR__))
                     
                     // Global Webhooks & Public Auth
                     require base_path('routes/api.php');
+
+                    // Public tenant-lookup routes
+                    require base_path('routes/public.php');
                 });
 
             // Tenant API — accessible under both prefixes for transition
-            Route::middleware('api')
+            Route::middleware(['api', 'tenancy.header'])
                 ->prefix('tenant-api')
                 ->name('tenant.')
                 ->group(function () {
                     require base_path('routes/tenant.php');
                 });
+
+            // Public tenant-lookup routes also under tenant-api (frontend on subdomains calls this)
             Route::middleware('api')
+                ->prefix('tenant-api')
+                ->group(base_path('routes/public.php'));
+            Route::middleware(['api', 'tenancy.header'])
                 ->prefix('central-api')
                 ->name('central.')
                 ->group(function () {

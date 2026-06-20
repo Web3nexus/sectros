@@ -29,6 +29,7 @@ class Reservation extends Model
         'stripe_payment_id',
         'payment_method',
         'special_requests',
+        'dynamic_fields',
         'source',
         'branch_id'
     ];
@@ -37,6 +38,7 @@ class Reservation extends Model
         'reservation_time' => 'datetime',
         'end_time' => 'datetime',
         'deposit_amount' => 'decimal:2',
+        'dynamic_fields' => 'json',
         'tenant_id' => 'string',
     ];
 

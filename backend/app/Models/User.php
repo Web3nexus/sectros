@@ -35,6 +35,7 @@ class User extends Authenticatable
         'login_pin',
         'two_factor_code',
         'two_factor_expires_at',
+        'email_verification_token',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'two_factor_secret',
+        'email_verification_token',
         'login_pin',
         'two_factor_code',
     ];

@@ -1,18 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {Briefcase, ArrowRight, ArrowLeft, Building2, Mail, Lock, User, Globe, Loader2, CheckCircle2} from 'lucide-react';
+import {Briefcase, ArrowRight, ArrowLeft, Building2, Mail, Lock, User, Globe, Loader2, CheckCircle2, Zap, Crown, Sparkles} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useBranding } from '../hooks/useBranding';
 import api from '../services/api';
+import centralApi from '../services/centralApi';
 import { COUNTRIES } from '../utils/countries';
 import { Turnstile } from '@marsidev/react-turnstile';
+
+const PLAN_ICONS = { free: Zap, pro: Sparkles, enterprise: Crown };
 
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const settings = useBranding();
   const [trialSettings, setTrialSettings] = useState({});
+  const [plans, setPlans] = useState([]);
+  const [plansError, setPlansError] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState('');
+  const [isResending, setIsResending] = useState(false);
+
+  const fetchPlans = () => {
+    setPlansError(false);
+    centralApi.get('saas/plans').then(res => {
+      if (res.data?.plans) setPlans(res.data.plans);
+    }).catch(() => setPlansError(true));
+  };
 
   useEffect(() => {
     import('../services/centralApi').then(mod => {
@@ -20,12 +34,25 @@ export default function Register() {
         if (res.data) setTrialSettings(res.data);
       }).catch(() => {});
     });
+    fetchPlans();
   }, []);
-  // Forced update to clear potential Vite build cache
+
+  const handleResendVerification = async () => {
+    setIsResending(true);
+    try {
+      await api.post('auth/resend-verification', { email: registeredEmail });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to resend verification email.');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentStep, setCurrentStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
   const [isCountryOpen, setIsCountryOpen] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [accountType, setAccountType] = useState('owner');
@@ -45,7 +72,7 @@ export default function Register() {
   };
 
   const nextStep = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+    if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
@@ -57,28 +84,24 @@ export default function Register() {
     setIsLoading(true);
     setError('');
 
+    if (!selectedPlan) {
+      setError('Please select a plan to continue.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await api.post('auth/register', { 
         ...formData, 
+        plan_slug: selectedPlan,
         turnstile_token: turnstileToken 
       });
       if (response.data.success) {
+        setRegisteredEmail(formData.email);
         setIsSuccess(true);
-        // Auto-login: store token and user from registration response
-        if (response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('auth_user', JSON.stringify(response.data.user));
-          localStorage.setItem('tenant_domain', response.data.domain);
-        }
-        // Redirect directly to dashboard after a brief success animation
-        setTimeout(() => {
-          const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
-          window.location.href = `${protocol}//${response.data.domain}/dashboard`;
-        }, 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Registration failed. Please check your details and try again.');
-      // If error occurs, stay on step 3 or move back to error-relevant step if needed
     } finally {
       setIsLoading(false);
     }
@@ -106,13 +129,11 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col justify-center relative overflow-hidden font-sans selection:bg-blue-500/30 selection:text-blue-200">
-      {/* Background Orbs */}
       <div className="absolute top-0 -left-20 w-96 h-96 bg-primary/10 rounded-full blur-[120px] animate-pulse"></div>
       <div className="absolute bottom-0 -right-20 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]"></div>
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10 w-full py-12">
         
-        {/* Left Side: Branding & Info */}
         <motion.div 
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
@@ -155,7 +176,6 @@ export default function Register() {
           </div>
         </motion.div>
 
-        {/* Right Side: Form Wizard */}
         <div className="w-full max-w-md mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -163,26 +183,24 @@ export default function Register() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="bg-card/40 backdrop-blur-2xl border border-border/50 rounded-[40px] p-8 md:p-12 shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden group"
           >
-            {/* Top accent light */}
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent"></div>
             
             <AnimatePresence mode="wait">
               {!isSuccess ? (
                 <motion.div key="wizard-content" exit={{ opacity: 0, scale: 0.95 }} transition={{ duration: 0.3 }}>
-                  {/* Progress Header */}
                   <div className="mb-10 text-center">
                     <div className="flex justify-center items-center gap-3 mb-6">
-                      {[1, 2, 3].map((s) => (
+                      {[1, 2, 3, 4].map((s) => (
                         <div key={s} className="flex items-center">
                           <div className={`w-3 h-3 rounded-full transition-all duration-500 ${currentStep >= s ? 'bg-primary shadow-[0_0_10px_#3b82f6]' : 'bg-muted'}`}></div>
-                          {s < 3 && <div className={`w-8 h-[2px] rounded-full transition-all duration-700 ${currentStep > s ? 'bg-primary' : 'bg-muted'}`}></div>}
+                          {s < 4 && <div className={`w-8 h-[2px] rounded-full transition-all duration-700 ${currentStep > s ? 'bg-primary' : 'bg-muted'}`}></div>}
                         </div>
                       ))}
                     </div>
                     <h3 className="text-2xl font-black text-foreground mb-2">
-                      {currentStep === 1 ? t('register.step_title_1') : currentStep === 2 ? t('register.step_title_2') : t('register.step_title_3')}
+                      {currentStep === 1 ? t('register.step_title_1') : currentStep === 2 ? t('register.step_title_2') : currentStep === 3 ? t('register.step_title_3') : 'Choose Your Plan'}
                     </h3>
-                    <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{t('common.step')} {currentStep} {t('common.of')} 3</p>
+                    <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest">{t('common.step')} {currentStep} {t('common.of')} 4</p>
                   </div>
 
                   {error && (
@@ -367,6 +385,68 @@ export default function Register() {
                                 ))}
                               </div>
                             </div>
+                          </div>
+                        )}
+
+                        {currentStep === 4 && (
+                          <div className="space-y-5">
+                            <label className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] ml-1">Choose Your Plan</label>
+                            <div className="space-y-3">
+                              {plans.filter(p => p.is_active !== false).map((plan) => {
+                                const PlanIcon = PLAN_ICONS[plan.slug] || Zap;
+                                const isFree = plan.slug === 'free' || plan.monthly_price === 0;
+                                const isSelected = selectedPlan === plan.slug;
+                                const price = plan.monthly_price || 0;
+                                return (
+                                  <button
+                                    key={plan.slug}
+                                    type="button"
+                                    onClick={() => setSelectedPlan(plan.slug)}
+                                    className={`w-full text-left p-4 rounded-2xl border transition-all ${
+                                      isSelected
+                                        ? 'bg-blue-500/10 border-blue-500/50 ring-4 ring-blue-500/10'
+                                        : 'bg-background/50 border-border/80 hover:border-blue-500/30'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                                          plan.slug === 'enterprise' ? 'bg-amber-500/10 text-amber-400' :
+                                          plan.slug === 'pro' ? 'bg-blue-500/10 text-blue-400' :
+                                          'bg-slate-500/10 text-slate-400'
+                                        }`}>
+                                          <PlanIcon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                          <span className="text-sm font-black text-foreground uppercase tracking-tight">{plan.name || plan.slug}</span>
+                                          <div className="text-[10px] text-muted-foreground font-medium">
+                                            {isFree ? 'Free' : `$${price}/mo`}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      {isSelected && <CheckCircle2 className="w-5 h-5 text-blue-400" />}
+                                    </div>
+                                    {!isFree && (
+                                      <p className="text-[10px] text-muted-foreground mt-2 font-medium">
+                                        Start your free trial — no credit card required
+                                      </p>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                              {plans.length === 0 && (
+                                <div className="p-4 bg-background/50 rounded-2xl border border-border/80 text-center">
+                                  {plansError ? (
+                                    <>
+                                      <p className="text-xs text-red-400 font-medium mb-2">Failed to load plans</p>
+                                      <button type="button" onClick={fetchPlans} className="text-xs text-blue-400 font-bold">Retry</button>
+                                    </>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground font-medium">Loading plans...</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
 
                             {hasTurnstileKey && (
                               <div className="flex justify-center mt-6">
@@ -382,7 +462,6 @@ export default function Register() {
                       </motion.div>
                     </AnimatePresence>
 
-                    {/* Navigation Buttons */}
                     <div className="flex items-center gap-4 mt-12">
                       {currentStep > 1 && (
                         <button 
@@ -395,11 +474,11 @@ export default function Register() {
                         </button>
                       )}
                       
-                      {currentStep < 3 ? (
+                      {currentStep < 4 ? (
                         <button 
                           type="button" 
                           onClick={nextStep}
-                          disabled={currentStep === 1 ? (accountType === 'staff' || !formData.name || !formData.email) : (!formData.business_name)}
+                          disabled={currentStep === 1 ? (accountType === 'staff' || !formData.name || !formData.email) : currentStep === 2 ? (!formData.business_name) : (!formData.password)}
                           className="flex-[2] bg-primary hover:bg-primary/90 disabled:opacity-30 text-primary-foreground font-bold py-4 rounded-2xl transition-all shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 group active:scale-95"
                         >
                           {t('common.continue', 'Continue')}
@@ -408,7 +487,7 @@ export default function Register() {
                       ) : (
                         <button 
                           type="submit"
-                          disabled={isLoading || !formData.password || (hasTurnstileKey && !turnstileToken)}
+                          disabled={isLoading || !selectedPlan || (hasTurnstileKey && !turnstileToken)}
                           className="flex-[2] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-30 text-primary-foreground font-black py-4 rounded-2xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-3 active:scale-95"
                         >
                           {isLoading ? (
@@ -424,7 +503,7 @@ export default function Register() {
                     </div>
                   </form>
 
-                  {!trialSettings.require_card_for_trial && (
+                  {!trialSettings.require_card_for_trial && selectedPlan !== 'free' && (
                     <div className="mt-6 text-center">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[9px] font-bold uppercase tracking-wider leading-none">
                         <CheckCircle2 className="w-3 h-3" />
@@ -447,17 +526,30 @@ export default function Register() {
                   className="text-center py-12"
                 >
                   <div className="w-24 h-24 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-10 shadow-[0_0_50px_rgba(59,130,246,0.2)]">
-                    <CheckCircle2 className="w-12 h-12" />
+                    <Mail className="w-12 h-12" />
                   </div>
-                   <h3 className="text-4xl font-black text-foreground mb-6 tracking-tighter uppercase italic">{t('register.success_title')}</h3>
-                   <p className="text-muted-foreground leading-relaxed mb-10 font-medium">
-                     {t('register.success_body')}
-                   </p>
-                  <div className="flex items-center justify-center gap-3">
+                  <h3 className="text-3xl font-black text-foreground mb-6 tracking-tighter uppercase italic">Check Your Email</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-4 font-medium text-sm">
+                    We sent a verification link to <strong className="text-foreground">{registeredEmail}</strong>
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed mb-10 font-medium text-xs">
+                    Click the link in the email to verify your account and get started.
+                  </p>
+                  <div className="flex items-center justify-center gap-3 mb-8">
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0s]"></div>
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
                   </div>
+                  <p className="text-[10px] text-muted-foreground font-medium">
+                    Didn't receive the email? Check your spam folder or{' '}
+                    <button
+                      onClick={handleResendVerification}
+                      disabled={isResending}
+                      className="text-foreground font-bold hover:text-blue-400 transition-colors disabled:opacity-50"
+                    >
+                      {isResending ? 'sending...' : 'resend'}
+                    </button>
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -469,8 +561,7 @@ export default function Register() {
         </div>
       </div>
 
-      {/* Footer Branding Overlay */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-800 font-black text-[10vw] select-none pointer-events-none opacity-[0.02] uppercase tracking-tighter italic">
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-slate-800 font-black text-[10vw] select-none pointer-events-none uppercase tracking-tighter italic">
         {settings.platform_name || 'Sectros'} Engineering
       </div>
     </div>

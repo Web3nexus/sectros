@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import {Save, Upload, Palette, Globe, Shield, Loader2, Check, RefreshCw, Settings, Bell, Truck, Percent, BookOpen, ShoppingBag, Clock, Calendar, Users, DollarSign, XCircle, Award, BedDouble, Brush, Wrench, Table, Utensils, Package} from 'lucide-react'
+import {Save, Upload, Palette, Globe, Shield, Loader2, Check, RefreshCw, Settings, Bell, Truck, Percent, BookOpen, ShoppingBag, Clock, Calendar, Users, DollarSign, XCircle, Award, BedDouble, Brush, Wrench, Table, Utensils, Package, FormInput, Plus, Trash2, GripVertical, ToggleLeft, ToggleRight} from 'lucide-react'
 import api from '../services/api'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
 
@@ -24,9 +24,12 @@ export default function SettingsView() {
     notification_email: '',
     auto_responder: true,
   })
+  const [bookingForm, setBookingForm] = useState(null)
+  const [bookingFormSaving, setBookingFormSaving] = useState(false)
+  const [newField, setNewField] = useState({ name: '', label: '', type: 'text', required: false, enabled: true })
 
   useEffect(() => {
-    Promise.all([fetchSettings(), fetchSchema()])
+    Promise.all([fetchSettings(), fetchSchema(), fetchBookingForm()])
   }, [])
 
   const fetchSettings = async () => {
@@ -66,9 +69,79 @@ export default function SettingsView() {
     setSettings(prev => ({ ...prev, [key]: value }))
   }
 
+  const fetchBookingForm = async () => {
+    try {
+      const res = await api.get('configuration/booking-form')
+      setBookingForm(res.data)
+    } catch (e) {
+      console.warn('Booking form fetch failed:', e)
+    }
+  }
+
+  const toggleField = (idx) => {
+    setBookingForm(prev => {
+      const fields = [...prev.fields]
+      fields[idx] = { ...fields[idx], enabled: !fields[idx].enabled }
+      return { ...prev, fields }
+    })
+  }
+
+  const updateField = (idx, key, value) => {
+    setBookingForm(prev => {
+      const fields = [...prev.fields]
+      fields[idx] = { ...fields[idx], [key]: value }
+      return { ...prev, fields }
+    })
+  }
+
+  const removeField = (idx) => {
+    setBookingForm(prev => ({
+      ...prev,
+      fields: prev.fields.filter((_, i) => i !== idx)
+    }))
+  }
+
+  const addField = () => {
+    if (!newField.label.trim()) return
+    setBookingForm(prev => ({
+      ...prev,
+      fields: [...prev.fields, {
+        name: newField.name || newField.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
+        label: newField.label,
+        type: newField.type,
+        required: newField.required,
+        enabled: true,
+      }]
+    }))
+    setNewField({ name: '', label: '', type: 'text', required: false, enabled: true })
+  }
+
+  const moveField = (idx, dir) => {
+    setBookingForm(prev => {
+      const fields = [...prev.fields]
+      const target = idx + dir
+      if (target < 0 || target >= fields.length) return prev
+      ;[fields[idx], fields[target]] = [fields[target], fields[idx]]
+      return { ...prev, fields }
+    })
+  }
+
+  const saveBookingForm = async () => {
+    setBookingFormSaving(true)
+    try {
+      await api.post('configuration/booking-form', bookingForm)
+    } catch (e) {
+      console.error('Save booking form failed:', e)
+      alert('Failed to save booking form')
+    } finally {
+      setBookingFormSaving(false)
+    }
+  }
+
   const tabs = [
     { key: 'general', label: 'General', icon: Globe },
     { key: 'branding', label: 'Branding', icon: Palette },
+    { key: 'booking', label: 'Booking Form', icon: BookOpen },
     { key: 'business', label: 'Business Settings', icon: Settings, badge: Object.keys(schema).length },
     { key: 'engine', label: 'Engine', icon: Shield },
   ]
@@ -190,6 +263,124 @@ export default function SettingsView() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Booking Form Tab */}
+      {activeTab === 'booking' && (
+        <div className="bg-white rounded-[32px] border border-border shadow-sm p-8 space-y-8">
+          <div className="flex items-center justify-between">
+            <h3 className="font-black text-slate-800 uppercase tracking-tight text-sm flex items-center gap-2">
+              <FormInput size={18} className="text-primary" /> Booking Form Fields
+            </h3>
+            <button onClick={saveBookingForm} disabled={bookingFormSaving || !bookingForm}
+              className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50">
+              {bookingFormSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              Save Form
+            </button>
+          </div>
+
+          {bookingForm ? (
+            <>
+              {/* Title & Subtitle */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6 bg-slate-50 rounded-3xl border border-border">
+                <div>
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block mb-2">Form Title</label>
+                  <input type="text" value={bookingForm.title || ''}
+                    onChange={e => setBookingForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full bg-white border-2 border-border rounded-2xl px-5 py-3 font-bold text-slate-700 focus:border-blue-600 transition-all"
+                    placeholder="Reserve Your Table" />
+                </div>
+                <div>
+                  <label className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block mb-2">Form Subtitle</label>
+                  <input type="text" value={bookingForm.subtitle || ''}
+                    onChange={e => setBookingForm(prev => ({ ...prev, subtitle: e.target.value }))}
+                    className="w-full bg-white border-2 border-border rounded-2xl px-5 py-3 font-bold text-slate-700 focus:border-blue-600 transition-all"
+                    placeholder="Experience our seasonal menu..." />
+                </div>
+              </div>
+
+              {/* Fields List */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Form Fields ({bookingForm.fields?.length || 0})</span>
+                  <span className="text-[9px] text-muted-foreground italic">Drag to reorder via arrows</span>
+                </div>
+
+                {bookingForm.fields?.map((field, idx) => (
+                  <div key={field.name} className={`flex items-center gap-3 p-4 rounded-2xl border transition-all ${field.enabled ? 'bg-white border-border' : 'bg-slate-50 border-dashed border-slate-200 opacity-60'}`}>
+                    <div className="flex flex-col gap-0.5">
+                      <button onClick={() => moveField(idx, -1)} disabled={idx === 0} className="p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20"><span className="text-[8px]">▲</span></button>
+                      <button onClick={() => moveField(idx, 1)} disabled={idx === bookingForm.fields.length - 1} className="p-0.5 text-slate-300 hover:text-slate-600 disabled:opacity-20"><span className="text-[8px]">▼</span></button>
+                    </div>
+                    <button onClick={() => toggleField(idx)} className="text-slate-400 hover:text-blue-600 transition-colors">
+                      {field.enabled ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
+                    </button>
+                    <div className="flex-1 grid grid-cols-3 gap-3">
+                      <input type="text" value={field.label}
+                        onChange={e => updateField(idx, 'label', e.target.value)}
+                        className="bg-slate-50 border border-border rounded-xl px-3 py-2 text-xs font-bold focus:border-blue-600 transition-all outline-none"
+                        placeholder="Label" />
+                      <input type="text" value={field.name}
+                        onChange={e => updateField(idx, 'name', e.target.value)}
+                        className="bg-slate-50 border border-border rounded-xl px-3 py-2 text-xs font-mono focus:border-blue-600 transition-all outline-none"
+                        placeholder="field_name" />
+                      <select value={field.type}
+                        onChange={e => updateField(idx, 'type', e.target.value)}
+                        className="bg-slate-50 border border-border rounded-xl px-3 py-2 text-xs font-bold focus:border-blue-600 transition-all outline-none">
+                        <option value="text">Text</option>
+                        <option value="email">Email</option>
+                        <option value="tel">Phone</option>
+                        <option value="number">Number</option>
+                        <option value="date">Date</option>
+                        <option value="time">Time</option>
+                        <option value="select">Select</option>
+                        <option value="textarea">Textarea</option>
+                      </select>
+                    </div>
+                    <label className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground cursor-pointer">
+                      <input type="checkbox" checked={field.required} onChange={e => updateField(idx, 'required', e.target.checked)} className="rounded" />
+                      Req
+                    </label>
+                    <button onClick={() => removeField(idx)} className="p-1.5 text-slate-300 hover:text-red-500 transition-colors">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Field */}
+              <div className="p-6 bg-blue-50/50 rounded-3xl border border-blue-100 space-y-4">
+                <span className="text-[9px] font-black text-blue-700 uppercase tracking-widest">Add Custom Field</span>
+                <div className="flex items-center gap-3">
+                  <input type="text" placeholder="Field Label (e.g. Wedding Date)" value={newField.label}
+                    onChange={e => setNewField(prev => ({ ...prev, label: e.target.value, name: prev.name || e.target.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') }))}
+                    className="flex-1 bg-white border border-blue-200 rounded-2xl px-5 py-3 text-sm font-bold focus:border-blue-600 transition-all outline-none" />
+                  <select value={newField.type} onChange={e => setNewField(prev => ({ ...prev, type: e.target.value }))}
+                    className="bg-white border border-blue-200 rounded-2xl px-4 py-3 text-xs font-bold focus:border-blue-600 transition-all outline-none">
+                    <option value="text">Text</option>
+                    <option value="number">Number</option>
+                    <option value="date">Date</option>
+                    <option value="time">Time</option>
+                    <option value="textarea">Textarea</option>
+                    <option value="select">Select</option>
+                  </select>
+                  <label className="flex items-center gap-1.5 text-[9px] font-bold text-slate-500 cursor-pointer whitespace-nowrap">
+                    <input type="checkbox" checked={newField.required} onChange={e => setNewField(prev => ({ ...prev, required: e.target.checked }))} className="rounded" />
+                    Required
+                  </label>
+                  <button onClick={addField} className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all active:scale-95">
+                    <Plus size={14} /> Add
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-16 text-muted-foreground font-bold uppercase tracking-widest text-xs italic">
+              <Loader2 size={24} className="animate-spin mx-auto mb-4" />
+              Loading form configuration...
+            </div>
+          )}
         </div>
       )}
 

@@ -314,6 +314,8 @@ Route::middleware(['api'])->group(function () {
             Route::get('/configuration', [\App\Http\Controllers\Api\ConfigurationController::class, 'index']);
             Route::post('/configuration', [\App\Http\Controllers\Api\ConfigurationController::class, 'update']);
             Route::get('/configuration/schema', [\App\Http\Controllers\Api\ConfigurationController::class, 'schema']);
+            Route::get('/configuration/booking-form', [\App\Http\Controllers\Api\ConfigurationController::class, 'bookingForm']);
+            Route::post('/configuration/booking-form', [\App\Http\Controllers\Api\ConfigurationController::class, 'saveBookingForm']);
 
             Route::apiResource('/orders', OrderController::class);
             Route::apiResource('/reservations', ReservationController::class);

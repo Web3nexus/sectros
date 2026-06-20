@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {CheckCircle, XCircle, Copy, ExternalLink, Globe, Loader2, RefreshCw} from 'lucide-react';
+import {CheckCircle, XCircle, Copy, ExternalLink, Globe, Loader2, RefreshCw, Lock} from 'lucide-react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 export default function DomainSetupView() {
+  const { user } = useAuth();
   const [customDomain, setCustomDomain] = useState('');
   const [domains, setDomains] = useState([]);
   const [dnsInstructions, setDnsInstructions] = useState(null);
@@ -13,6 +15,12 @@ export default function DomainSetupView() {
   const [verifyResult, setVerifyResult] = useState(null);
 
   const platformName = localStorage.getItem('platform_name') || 'System';
+  const hasDomainFeature = (() => {
+    const features = user?.features || {};
+    if (Array.isArray(features)) return features.includes('custom_domain');
+    if (typeof features === 'object' && features !== null) return !!features.custom_domain;
+    return false;
+  })();
 
   const fetchStatus = async () => {
     try {
@@ -73,6 +81,21 @@ export default function DomainSetupView() {
           <XCircle size={12} /> Pending
         </span>
   );
+
+  if (!hasDomainFeature) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-stone-50 border border-stone-200 rounded-2xl p-12 text-center space-y-4">
+          <Lock className="w-12 h-12 mx-auto text-stone-400" />
+          <h1 className="text-2xl font-bold text-stone-900">Custom Domain</h1>
+          <p className="text-stone-600 max-w-md mx-auto">
+            Custom domains are available on Pro and Enterprise plans.
+            <br />Upgrade your subscription to connect your own domain.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">

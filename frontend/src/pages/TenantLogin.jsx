@@ -113,6 +113,7 @@ export default function TenantLogin() {
         setTwoFactorMethod(result.method || 'email');
         setIsLoading(false);
       } else {
+        localStorage.setItem('tenant_domain', result.tenant_domain || window.location.hostname);
         if (result.tenant_domain && result.tenant_domain !== window.location.host && /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i.test(result.tenant_domain)) {
             window.location.href = `${window.location.protocol}//${result.tenant_domain}/login`;
             return;
@@ -132,6 +133,7 @@ export default function TenantLogin() {
 
     const result = await verify2FA(email, twoFactorCode, twoFactorMethod, 'tenant');
     if (result.success) {
+      localStorage.setItem('tenant_domain', result.tenant_domain || window.location.hostname);
       if (result.tenant_domain && result.tenant_domain !== window.location.host && /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/i.test(result.tenant_domain)) {
           window.location.href = `${window.location.protocol}//${result.tenant_domain}/login`;
           return;

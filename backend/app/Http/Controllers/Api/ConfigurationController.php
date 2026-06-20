@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\TenantSetting;
+use App\Services\BookingFormDefaults;
 use Illuminate\Http\Request;
 
 class ConfigurationController extends Controller
@@ -48,6 +49,56 @@ class ConfigurationController extends Controller
         TenantSetting::forgetCache();
 
         return response()->json(['message' => 'Settings saved successfully.']);
+    }
+
+    public function bookingForm()
+    {
+        $type = tenant('business_type') ?? 'restaurant';
+        $saved = TenantSetting::where('key', 'booking_form_config')->value('value');
+        $savedConfig = null;
+        if ($saved) {
+            try {
+                $savedConfig = json_decode($saved, true, 512, JSON_THROW_ON_ERROR);
+            } catch (\JsonException $e) {
+                \Log::warning('Corrupted booking_form_config detected', ['error' => $e->getMessage()]);
+            }
+        }
+
+        $defaults = BookingFormDefaults::get($type);
+
+        if ($savedConfig) {
+            $merged = array_merge($defaults, $savedConfig);
+            $merged['fields'] = $savedConfig['fields'] ?? $defaults['fields'];
+            return response()->json($merged);
+        }
+
+        return response()->json($defaults);
+    }
+
+    public function saveBookingForm(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'nullable|string|max:255',
+            'subtitle' => 'nullable|string|max:1000',
+            'fields' => 'nullable|array',
+            'fields.*.name' => 'required|string',
+            'fields.*.label' => 'required|string',
+            'fields.*.type' => 'required|string|in:text,email,tel,select,textarea,number,date,time,datetime',
+            'fields.*.required' => 'boolean',
+            'fields.*.enabled' => 'boolean',
+            'fields.*.options' => 'nullable|array',
+        ]);
+
+        $this->transaction(function () use ($validated) {
+            TenantSetting::updateOrCreate(
+                ['key' => 'booking_form_config'],
+                ['value' => json_encode($validated)]
+            );
+        });
+
+        TenantSetting::forgetCache();
+
+        return response()->json(['message' => 'Booking form saved successfully.']);
     }
 
     public function schema()

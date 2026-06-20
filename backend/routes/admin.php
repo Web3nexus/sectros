@@ -9,10 +9,6 @@ use App\Http\Controllers\Api\SuperAdmin\TranslationController;
 use App\Http\Controllers\Api\TenantController;
 use App\Http\Controllers\Api\ProvisioningController;
 
-// Public Branding & Tenant Lookup
-Route::get('/public/branding', [SaaSController::class, 'getPublicBranding']);
-Route::get('/public/tenant-by-domain/{domain}', [SaaSController::class, 'getTenantByDomain']);
-Route::get('/public/theme', [SaaSController::class, 'getPublicTheme']);
 
 // Public Auth
 Route::prefix('saas')->group(function () {

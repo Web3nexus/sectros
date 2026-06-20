@@ -46,7 +46,6 @@ export function DashboardLayout() {
   
   const hasFeature = (feat) => {
     if (!feat) return true;
-    if (user?.role === 'admin' || user?.role === 'owner' || user?.is_owner || isImpersonating) return true;
     
     const features = user?.features || {};
     if (Array.isArray(features)) return features.includes(feat);
@@ -127,10 +126,7 @@ export function DashboardLayout() {
                 </div>
               )}
               {!isSidebarCollapsed && (
-                <>
-                  <h2 className="text-base font-black text-foreground tracking-tighter truncate text-center">{settings.platform_name}</h2>
-                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{businessType || config?.type || ''}</span>
-                </>
+                <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">{businessType || config?.type || ''}</span>
               )}
             </div>
             <button className="lg:hidden text-muted-foreground hover:text-foreground" onClick={() => setIsMobileSidebarOpen(false)}>
@@ -459,9 +455,6 @@ function SidebarItem({ to, icon: Icon, label, feature, alwaysOn, roleCheck = tru
   const hasFeature = (feat) => {
     if (!feat) return true;
     if (alwaysOn) return true;
-    
-    // We keep owner/admin bypass for PERMISSION checks, but VISIBILITY is handled by SidebarItem mapping
-    if (user?.role === 'admin' || user?.role === 'owner' || user?.is_owner || isImpersonating) return true;
     
     const features = user?.features || {};
     if (Array.isArray(features)) return features.includes(feat);

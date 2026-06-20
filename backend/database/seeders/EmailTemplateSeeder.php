@@ -80,6 +80,18 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['name', 'platform_name', 'trial_days', 'days_remaining'],
             ],
             [
+                'slug'      => 'email_verification',
+                'subject'   => 'Verify Your Email – {platform_name}',
+                'content'   => "<h2>Welcome to {platform_name}, {name}!</h2><p>Thank you for registering with {platform_name}. Please verify your email address by clicking the button below:</p><p style='text-align:center'><a href='{verify_url}' style='display:inline-block;padding:12px 24px;background:#3b82f6;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold'>Verify Email Address</a></p><p>Or copy and paste this link in your browser:<br>{verify_url}</p><p>If you did not create this account, please ignore this email.</p>",
+                'variables' => ['name', 'platform_name', 'verify_url'],
+            ],
+            [
+                'slug'      => 'email_verified',
+                'subject'   => 'Welcome to {platform_name} – Getting Started Guide',
+                'content'   => "<h2>Welcome to {platform_name}, {name}!</h2><p>Your email has been verified successfully. Here's what to do next:</p><ul><li><strong>Log in</strong> to your dashboard and complete your business profile</li><li><strong>Set up your menu</strong> (if applicable to your business type)</li><li><strong>Configure your staff</strong> and assign roles</li><li><strong>Customize your website</strong> using the built-in builder</li><li><strong>Connect your domain</strong> for a professional online presence</li></ul><p>If you need any help, contact our support team at <a href='mailto:{support_email}'>{support_email}</a>.</p><p>Welcome aboard!</p>",
+                'variables' => ['name', 'platform_name', 'support_email'],
+            ],
+            [
                 'slug'      => 'trial_ending',
                 'subject'   => 'Last Day of Your {platform_name} Trial – Don\'t Miss Out!',
                 'content'   => "Hi {name},\n\nThis is your last day to try {platform_name} for free! Your trial ends today ({trial_end_date}).\n\nDon't lose access to your venue's data and settings. Upgrade now to keep everything running smoothly.\n\nHere's what you get with a paid plan:\n• Unlimited reservations\n• Staff management\n• Advanced analytics and reporting\n• Priority support\n\n👉 Subscribe now: {pricing_url}\n\nIf you have any questions or need help choosing a plan, just reply to this email.\n\nThank you for trying {platform_name}!\n\nThe {platform_name} Team",

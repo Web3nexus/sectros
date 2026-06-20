@@ -6,6 +6,7 @@ import TemplateGallery from '../components/builder/TemplateGallery';
 import DomainSetupView from './DomainSetupView';
 import { exportToHtml, exportToCss } from '../utils/builderExport';
 import { useBusinessConfig } from '../hooks/useBusinessConfig';
+import { FALLBACK_BLUEPRINTS } from '../components/builder/BlueprintData';
 
 export default function WebsiteDashboardView() {
   const config = useBusinessConfig();
@@ -88,6 +89,13 @@ export default function WebsiteDashboardView() {
                .replace(/\[\[BUSINESS_PHONE\]\]/g, branding.business_phone || '+1 (555) 012-3456');
   };
 
+  const SYSTEM_DOMAIN = import.meta.env.VITE_SYSTEM_DOMAIN || (() => {
+    const h = window.location.hostname;
+    if (h === 'localhost' || h === '127.0.0.1') return 'sectrosweb.test';
+    const parts = h.split('.');
+    return parts.length >= 2 ? parts.slice(1).join('.') : h;
+  })();
+
   const getPublicUrl = (path = '') => {
       const protocol = window.location.protocol;
       const hostname = window.location.hostname;
@@ -108,13 +116,13 @@ export default function WebsiteDashboardView() {
 
       if (storedDomain && storedDomain !== 'no-domain' && storedDomain !== 'localhost') {
           if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return `http://${tenantId}.Sectros.test${path}`;
+              return `http://${tenantId}.${SYSTEM_DOMAIN}${path}`;
           }
           return `${protocol}//${storedDomain}${path}`;
       }
       
       if (hostname === 'localhost' || hostname === '127.0.0.1') {
-          return `http://${tenantId}.Sectros.test${path}`;
+          return `http://${tenantId}.${SYSTEM_DOMAIN}${path}`;
       }
 
       return `${protocol}//${hostname}${path}`;
@@ -230,15 +238,26 @@ export default function WebsiteDashboardView() {
                 <div id="template-grid">
                    <TemplateGallery 
                       onSelect={(template) => setConfirmTemplate(template)}
-                      onPreview={async (template) => {
-                        setPreviewTemplate(template);
-                        try {
-                          const res = await api.get(`website-themes/${template.id}`);
-                          setPreviewContent(res.data);
-                        } catch (e) {
-                           // For fallbacks, content is handled in processPreviewContent
-                        }
-                      }}
+                       onPreview={async (template) => {
+                         setPreviewTemplate(template);
+                         setPreviewContent(null);
+                         try {
+                           const blueprint = FALLBACK_BLUEPRINTS.find(b => b.id === template.id || `blueprint-${b.id}` === template.id);
+                           if (blueprint) {
+                             setPreviewContent({
+                               sections_json: blueprint.sections,
+                               theme_json: blueprint.theme,
+                               html_content: ''
+                             });
+                             return;
+                           }
+                           const res = await api.get(`website-themes/${template.id}`);
+                           setPreviewContent(res.data);
+                         } catch (e) {
+                            console.warn('Preview fetch failed, showing generic preview');
+                            setPreviewContent({ html_content: '' });
+                         }
+                       }}
                    />
                 </div>
              </div>
