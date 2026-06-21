@@ -176,11 +176,13 @@ export default function TenantLogin() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            {settings.platform_logo_url ? (
-               <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-10 w-auto object-contain mx-auto" />
-            ) : (
-               businessName ? <Store className="w-10 h-10 mx-auto text-primary" /> : <Briefcase className="w-10 h-10 mx-auto text-primary" />
-            )}
+            <Link to="/" className="inline-block">
+              {settings.platform_logo_url ? (
+                 <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-10 w-auto object-contain mx-auto" />
+              ) : (
+                 businessName ? <Store className="w-10 h-10 mx-auto text-primary" /> : <Briefcase className="w-10 h-10 mx-auto text-primary" />
+              )}
+            </Link>
           </motion.div>
         </div>
 

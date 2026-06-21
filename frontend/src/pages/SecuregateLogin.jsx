@@ -71,13 +71,15 @@ export default function SecuregateLogin() {
       <div className="max-w-md w-full">
         {/* Branding */}
         <div className="text-center mb-10 flex flex-col items-center">
-          {settings.platform_logo_url ? (
-             <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-16 w-auto object-contain mb-6" />
-          ) : (
-            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20 ring-4 ring-muted">
-              <Shield className="w-8 h-8 text-primary-foreground" />
-            </div>
-          )}
+          <Link to="/" className="inline-block">
+            {settings.platform_logo_url ? (
+               <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-16 w-auto object-contain mb-6" />
+            ) : (
+              <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/20 ring-4 ring-muted">
+                <Shield className="w-8 h-8 text-primary-foreground" />
+              </div>
+            )}
+          </Link>
           <h1 className="text-3xl font-bold text-foreground tracking-tight">{t('auth.adminLogin.title')}</h1>
           <p className="text-muted-foreground mt-2">{t('auth.adminLogin.subtitle')}</p>
         </div>
