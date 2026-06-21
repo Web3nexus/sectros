@@ -1246,10 +1246,12 @@ class SaaSController extends Controller
                         'inventory_tracking' => false,
                     ],
                     'is_active' => true,
+                    'is_popular' => false,
                 ],
                 [
                     'name' => 'Pro',
                     'slug' => 'pro',
+                    'is_popular' => true,
                     'monthly_price' => 49,
                     'yearly_price' => 470,
                     'reservation_limit' => 500,
@@ -1273,9 +1275,11 @@ class SaaSController extends Controller
                         'inventory_tracking' => false,
                     ],
                     'is_active' => true,
+                    'is_popular' => false,
                 ],
                 [
                     'name' => 'Enterprise',
+                    'is_popular' => false,
                     'slug' => 'enterprise',
                     'monthly_price' => 149,
                     'yearly_price' => 1430,
@@ -1330,10 +1334,12 @@ class SaaSController extends Controller
             'ai_credits_limit'   => 'nullable|integer|min:0',
             'sms_credits_limit'  => 'nullable|integer|min:0',
             'is_active'          => 'boolean',
+            'is_popular'         => 'boolean',
         ]);
 
         $data = array_merge($validated, [
             'is_active'         => $request->boolean('is_active', true),
+            'is_popular'        => $request->boolean('is_popular', false),
             'reservation_limit' => $request->filled('reservation_limit') ? (int) $request->reservation_limit : null,
             'max_staff'         => $request->filled('max_staff') ? (int) $request->max_staff : null,
             'ai_credits_limit'  => $request->filled('ai_credits_limit') ? (int) $request->ai_credits_limit : null,

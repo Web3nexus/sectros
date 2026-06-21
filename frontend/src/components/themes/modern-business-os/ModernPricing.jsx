@@ -118,7 +118,7 @@ export default function ModernPricing() {
             monthly: p.monthly_price ?? 0,
             yearly: p.yearly_price ?? null,
             description: p.description || '',
-            popular: !!p.popular,
+            popular: !!p.is_popular,
             features: mappedFeatures.length > 0 ? mappedFeatures : getDefaultFeatures(p.name),
           };
         }));

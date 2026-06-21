@@ -47,6 +47,7 @@ const defaultPlan = {
   ai_credits_limit: '',
   features: { ...defaultFeatures },
   is_active: true,
+  is_popular: false,
 };
 
 export default function PlanManagementView() {
@@ -154,9 +155,14 @@ export default function PlanManagementView() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {(plans.length === 0 ? [] : plans).map(plan => (
             <div key={plan.id} className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4 hover:border-primary/30 transition-all shadow-sm">
-              <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between">
                 <div>
-                  <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${planColor(plan.slug)}`}>{plan.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg border ${planColor(plan.slug)}`}>{plan.name}</span>
+                    {plan.is_popular && (
+                      <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500">Popular</span>
+                    )}
+                  </div>
                   <div className="mt-3">
                     <span className="text-3xl font-black text-foreground">${plan.monthly_price}</span>
                     <span className="text-muted-foreground text-sm ml-1">/mo</span>
@@ -336,6 +342,15 @@ export default function PlanManagementView() {
                     <div className="w-11 h-6 bg-muted border border-border rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary peer-checked:border-primary" />
                   </label>
                   <span className="text-sm font-semibold text-foreground">Plan is Active (visible to new subscribers)</span>
+                </div>
+
+                {/* Popular Badge Toggle */}
+                <div className="flex items-center gap-3">
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" className="sr-only peer" checked={editingPlan.is_popular} onChange={e => setEditingPlan(p => ({ ...p, is_popular: e.target.checked }))} />
+                    <div className="w-11 h-6 bg-muted border border-border rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 peer-checked:border-amber-500" />
+                  </label>
+                  <span className="text-sm font-semibold text-foreground">Mark as <span className="text-amber-500">Popular</span> (shows badge on pricing cards)</span>
                 </div>
               </div>
 

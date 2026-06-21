@@ -292,7 +292,7 @@ export default function BillingView() {
             <div key={plan.id} className={`bg-white border-2 rounded-3xl p-8 flex flex-col transition-all group relative shadow-sm ${
               status?.plan_slug === plan.slug ? 'border-blue-500 bg-blue-50/50 shadow-md' : 'border-border hover:border-slate-300'
             }`}>
-              {plan.slug === 'pro' && (
+              {plan.is_popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg">
                   Most Popular
                 </div>

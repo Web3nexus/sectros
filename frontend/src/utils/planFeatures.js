@@ -24,19 +24,19 @@ export const FEATURE_LABELS = {
 
 export const defaultPlans = [
   {
-    name: 'Starter', monthly: 0, yearly: 0, description: 'For new venues getting started.', popular: false,
+    name: 'Starter', monthly: 0, yearly: 0, description: 'For new venues getting started.', is_popular: false,
     features: ['Online booking page', 'Basic reservation management', 'Guest list', 'Email confirmations', 'Up to 50 bookings/mo'],
   },
   {
-    name: 'Growth', monthly: 29, yearly: 290, description: 'For growing restaurants.', popular: false,
+    name: 'Growth', monthly: 29, yearly: 290, description: 'For growing restaurants.', is_popular: false,
     features: ['Everything in Starter', 'Floor plan management', 'Guest CRM', 'Automated reminders', 'Deposits & payments', 'Analytics dashboard', 'Up to 500 bookings/mo'],
   },
   {
-    name: 'Professional', monthly: 79, yearly: 790, description: 'For established hospitality businesses.', popular: true,
+    name: 'Professional', monthly: 79, yearly: 790, description: 'For established hospitality businesses.', is_popular: true,
     features: ['Everything in Growth', 'Advanced automation', 'Multi-channel messaging', 'Advanced analytics', 'Team roles (up to 10)', 'Priority support', 'Unlimited bookings'],
   },
   {
-    name: 'Enterprise', monthly: null, yearly: null, description: 'For multi-location groups.', popular: false,
+    name: 'Enterprise', monthly: null, yearly: null, description: 'For multi-location groups.', is_popular: false,
     features: ['Everything in Professional', 'Multi-location management', 'Custom integrations', 'Dedicated onboarding', 'Enterprise reporting', 'Custom contract', 'SLA guarantee'],
   },
 ];
