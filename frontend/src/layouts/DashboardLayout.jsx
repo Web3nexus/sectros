@@ -120,7 +120,7 @@ export function DashboardLayout() {
       {/* Sidebar */}
       <aside className={`bg-card text-foreground flex flex-col justify-between shadow-2xl z-50 border-r border-border transition-all duration-300 fixed lg:relative h-full ${
         isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-      } ${isSidebarCollapsed ? 'w-20' : 'w-72'}`}>
+      } ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
         <div className="p-4 overflow-y-auto overflow-x-hidden no-scrollbar">
           <div className="flex items-center justify-between lg:justify-center mb-10 px-2 pt-4">
             <div className={`flex flex-col items-center ${isSidebarCollapsed ? '' : 'w-full'}`}>
@@ -140,7 +140,7 @@ export function DashboardLayout() {
             </button>
           </div>
           <nav className="space-y-1">
-            {SIDEBAR_DEFINITIONS.filter(def => isAllowed(def.key)).map(def => (
+            {SIDEBAR_DEFINITIONS.filter(def => isAllowed(def.key) && (def.alwaysOn || hasFeature(def.feature))).map(def => (
                def.children ? (
                  <SidebarGroup 
                    key={def.key}
