@@ -788,7 +788,7 @@ class SaaSController extends Controller
                 $domain = $newDomain;
             }
 
-            $user = User::on('tenant')->where('tenant_id', $tenant->id)->where('email', $ownerEmail)->first();
+            $user = User::on('tenant')->withoutGlobalScope(\App\Scopes\StrictTenantScope::class)->where('tenant_id', $tenant->id)->where('email', $ownerEmail)->first();
             if (!$user) {
                 Log::info("Owner missing during impersonation. Creating...", ['email' => $ownerEmail]);
                 $user = User::on('tenant')->create([
