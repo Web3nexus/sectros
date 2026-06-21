@@ -405,6 +405,7 @@ class AuthController extends Controller
 
             if ($tenant) {
                 \App\Services\TenantResolver::set($tenant);
+                tenancy()->initialize($tenant);
             }
         }
 
@@ -447,7 +448,7 @@ class AuthController extends Controller
 
         $userId    = $tokenRow->tokenable_id;
         $userClass = $tokenRow->tokenable_type;
-        $user      = $userClass::find($userId);
+        $user      = $userClass::withoutGlobalScope(\App\Scopes\StrictTenantScope::class)->find($userId);
 
         if (!$user) {
             return response()->json(['message' => 'User not found.'], 404);
