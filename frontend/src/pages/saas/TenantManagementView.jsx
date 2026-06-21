@@ -386,7 +386,7 @@ export default function TenantManagementView() {
 
   const handleImpersonate = async (tenant) => {
     try {
-      const response = await api.get(`/saas/tenants/${tenant.id}/impersonate`);
+      const response = await api.post(`/saas/tenants/${tenant.id}/impersonate`);
       const { token, domain, redirect_url } = response.data;
       
       if (redirect_url) {
