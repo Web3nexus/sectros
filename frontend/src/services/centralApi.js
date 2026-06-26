@@ -44,12 +44,14 @@ centralApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('admin_token');
-      localStorage.removeItem('admin_user');
-      localStorage.removeItem('auth_type');
-      // Only redirect if we are already in an admin path
-      if (window.location.pathname.startsWith('/securegate')) {
-          window.location.href = '/securegate';
+      const isLoginRequest = error.config?.url?.includes('/login');
+      if (!isLoginRequest) {
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_user');
+        localStorage.removeItem('auth_type');
+        if (window.location.pathname.startsWith('/securegate')) {
+            window.location.href = '/securegate';
+        }
       }
     }
     return Promise.reject(error);

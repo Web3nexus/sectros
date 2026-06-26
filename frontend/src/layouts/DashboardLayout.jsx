@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, LogOut, User, Shield, Bell, CheckCircle, CircleX as XCircle, ShoppingBag, Menu, X, Package, BookOpen, Coffee, Scissors, Briefcase, BedDouble, Hotel, Map, Image, ChevronDown} from 'lucide-react';
+import {LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, LogOut, User, Shield, Bell, CheckCircle, CircleX as XCircle, ShoppingBag, Menu, X, Package, BookOpen, Coffee, Scissors, Briefcase, BedDouble, Hotel, Map, Image, ChevronDown, Phone, Radio} from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useAuth } from '../context/AuthContext';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
@@ -11,7 +11,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 import ThemeToggle from '../components/ThemeToggle';
 
 const ICON_MAP = {
-  LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, ShoppingBag, Package, BookOpen, Coffee, Scissors, Briefcase, BedDouble, Hotel, Map, Image
+  LayoutDashboard, Calendar, MessageSquare, Component, Utensils, Globe, Table, Users, DollarSign, CreditCard, Bot, Settings, Plus, ShoppingBag, Package, BookOpen, Coffee, Scissors, Briefcase, BedDouble, Hotel, Map, Image, Phone, Radio
 };
 
 export function DashboardLayout() {
@@ -71,37 +71,78 @@ export function DashboardLayout() {
     return ICON_MAP[iconName] || fallback;
   };
 
-  const SIDEBAR_DEFINITIONS = [
-    { key: 'insights', path: '/dashboard', label: b.insights || 'Insights', alwaysOn: true, roleCheck: false, feature: null },
-    { key: 'calendar', path: '/dashboard/calendar', label: b.calendar || 'Calendar', alwaysOn: false, roleCheck: false, feature: null },
-    { key: 'reservations', path: '/dashboard/reservations', label: b.reservations || 'Reservations', alwaysOn: false, roleCheck: false, feature: 'reservations' },
-    { key: 'messages', path: '/dashboard/messages', label: t('dashboard.unifiedChat'), alwaysOn: false, roleCheck: true, feature: 'social_integration' },
-    { key: 'pos', path: '/dashboard/pos', label: b.pos || t('dashboard.posTerminal'), alwaysOn: false, roleCheck: true, feature: 'pos_terminal' },
-    { key: 'menu', path: '/dashboard/menu', label: b.menu || 'Menu Builder', alwaysOn: false, roleCheck: false, feature: 'menu_builder' },
-      { key: 'website', path: '/dashboard/website', label: t('dashboard.websiteBuilder') || 'Website Builder', alwaysOn: false, roleCheck: true, feature: 'white_label_website', children: [
-            { key: 'reviews', path: '/dashboard/reviews', label: 'Reviews' },
-            { key: 'gallery', path: '/dashboard/gallery', label: 'Gallery' },
-            { key: 'services', path: '/dashboard/services', label: 'Services' },
-            { key: 'blog', path: '/dashboard/blog', label: 'Blog' },
-            { key: 'team', path: '/dashboard/team', label: 'Team' },
-          ]},
-    { key: 'tables', path: '/dashboard/tables', label: b.floorPlan || 'Floor Plan', alwaysOn: false, roleCheck: false, feature: 'floor_plan' },
-    { key: 'franchises', path: '/dashboard/franchises', label: 'Franchise Tools', alwaysOn: false, roleCheck: true, feature: 'franchise_tools' },
-    { key: 'waitlist', path: '/dashboard/waitlist', label: 'Waitlist Pro', alwaysOn: false, roleCheck: true, feature: 'waitlist_automation' },
-    { key: 'integrations', path: '/dashboard/integrations', label: 'Public API', alwaysOn: false, roleCheck: true, feature: 'public_api' },
-    { key: 'branches', path: '/dashboard/branches', label: 'Branches', alwaysOn: false, roleCheck: true, feature: 'branch_management' },
-    { key: 'staff', path: '/dashboard/staff', label: b.staff || 'Staff Profiles', alwaysOn: false, roleCheck: true, feature: 'staff_management' },
-    { key: 'financials', path: '/dashboard/financials', label: b.financials || 'Financials', alwaysOn: false, roleCheck: true, feature: 'financial_reports' },
-    { key: 'billing', path: '/dashboard/billing', label: t('dashboard.billingPlan') || 'Billing & Plan', alwaysOn: true, roleCheck: true, feature: null },
-    { key: 'automation', path: '/dashboard/automation', label: t('dashboard.aiCommand') || 'AI Command', alwaysOn: false, roleCheck: true, feature: 'ai_automation' },
-    { key: 'online_ordering', path: '/dashboard/online-ordering', label: b.onlineOrdering || t('dashboard.onlineOrdering'), alwaysOn: false, roleCheck: true, feature: 'online_ordering' },
-    { key: 'inventory', path: '/dashboard/inventory', label: b.inventory || t('dashboard.inventoryTracking'), alwaysOn: false, roleCheck: true, feature: 'inventory_tracking' },
-    { key: 'settings', path: '/dashboard/settings', label: b.configuration || 'Configuration', alwaysOn: true, roleCheck: true, feature: null },
+  const SIDEBAR_GROUPS = [
+    {
+      label: 'Operations',
+      emoji: '\u{1F4CA}',
+      items: [
+        { key: 'insights', path: '/dashboard', label: b.insights || 'Insights', alwaysOn: true, roleCheck: false, feature: null },
+        { key: 'calendar', path: '/dashboard/calendar', label: b.calendar || 'Calendar', alwaysOn: false, roleCheck: false, feature: null },
+        { key: 'reservations', path: '/dashboard/reservations', label: b.reservations || 'Reservations', alwaysOn: false, roleCheck: false, feature: 'reservations' },
+        { key: 'tables', path: '/dashboard/tables', label: b.floorPlan || 'Floor Plan', alwaysOn: false, roleCheck: false, feature: 'floor_plan' },
+        { key: 'waitlist', path: '/dashboard/waitlist', label: 'Waitlist Pro', alwaysOn: false, roleCheck: true, feature: 'waitlist_automation' },
+        { key: 'menu', path: '/dashboard/menu', label: b.menu || 'Menu Builder', alwaysOn: false, roleCheck: false, feature: 'menu_builder' },
+        { key: 'online_ordering', path: '/dashboard/online-ordering', label: b.onlineOrdering || t('dashboard.onlineOrdering'), alwaysOn: false, roleCheck: true, feature: 'online_ordering' },
+        { key: 'pos', path: '/dashboard/pos', label: b.pos || t('dashboard.posTerminal'), alwaysOn: false, roleCheck: true, feature: 'pos_terminal' },
+        { key: 'inventory', path: '/dashboard/inventory', label: b.inventory || t('dashboard.inventoryTracking'), alwaysOn: false, roleCheck: true, feature: 'inventory_tracking' },
+      ],
+    },
+    {
+      label: 'AI & Communication',
+      emoji: '\u{1F916}',
+      items: [
+        { key: 'voice_agent', path: '/dashboard/voice-agent', label: 'AI Voice Agent', alwaysOn: false, roleCheck: true, feature: 'ai_voice_agent', children: [
+          { key: 'voice_overview', path: '/dashboard/voice-agent', label: 'Overview' },
+          { key: 'voice_setup', path: '/dashboard/voice-agent/setup', label: 'Setup' },
+          { key: 'voice_phone', path: '/dashboard/voice-agent/phone-number', label: 'Phone Number' },
+          { key: 'voice_knowledge', path: '/dashboard/voice-agent/knowledge-base', label: 'Knowledge Base' },
+          { key: 'voice_calls', path: '/dashboard/voice-agent/calls', label: 'Call Logs' },
+          { key: 'voice_usage', path: '/dashboard/voice-agent/usage', label: 'Usage & Billing' },
+          { key: 'voice_settings', path: '/dashboard/voice-agent/settings', label: 'Settings' },
+        ]},
+        { key: 'automation', path: '/dashboard/automation', label: t('dashboard.aiCommand') || 'AI Command', alwaysOn: false, roleCheck: true, feature: 'ai_automation' },
+        { key: 'messages', path: '/dashboard/messages', label: t('dashboard.unifiedChat'), alwaysOn: false, roleCheck: true, feature: 'social_integration' },
+      ],
+    },
+    {
+      label: 'Online Presence',
+      emoji: '\u{1F310}',
+      items: [
+        { key: 'website', path: '/dashboard/website', label: t('dashboard.websiteBuilder') || 'Website Builder', alwaysOn: false, roleCheck: true, feature: 'white_label_website', children: [
+          { key: 'reviews', path: '/dashboard/reviews', label: 'Reviews' },
+          { key: 'gallery', path: '/dashboard/gallery', label: 'Gallery' },
+          { key: 'services', path: '/dashboard/services', label: 'Services' },
+          { key: 'blog', path: '/dashboard/blog', label: 'Blog' },
+          { key: 'team', path: '/dashboard/team', label: 'Team' },
+        ]},
+        { key: 'branches', path: '/dashboard/branches', label: 'Branches', alwaysOn: false, roleCheck: true, feature: 'branch_management' },
+        { key: 'franchises', path: '/dashboard/franchises', label: 'Franchise Tools', alwaysOn: false, roleCheck: true, feature: 'franchise_tools' },
+      ],
+    },
+    {
+      label: 'People & Operations',
+      emoji: '\u{1F465}',
+      items: [
+        { key: 'staff', path: '/dashboard/staff', label: b.staff || 'Staff Profiles', alwaysOn: false, roleCheck: true, feature: 'staff_management' },
+        { key: 'financials', path: '/dashboard/financials', label: b.financials || 'Financials', alwaysOn: false, roleCheck: true, feature: 'financial_reports' },
+      ],
+    },
+    {
+      label: 'Administration',
+      emoji: '\u2699\uFE0F',
+      items: [
+        { key: 'billing', path: '/dashboard/billing', label: t('dashboard.billingPlan') || 'Billing & Plan', alwaysOn: true, roleCheck: true, feature: null },
+        { key: 'integrations', path: '/dashboard/integrations', label: 'Public API', alwaysOn: false, roleCheck: true, feature: 'public_api' },
+        { key: 'settings', path: '/dashboard/settings', label: b.configuration || 'Configuration', alwaysOn: true, roleCheck: true, feature: null },
+      ],
+    },
   ];
+
+  const flatSidebarDefs = SIDEBAR_GROUPS.flatMap(g => g.items);
 
   // Route protection logic: Redirect if current path is not allowed for this business type
   useEffect(() => {
-    const currentKey = SIDEBAR_DEFINITIONS.find(def => location.pathname === def.path)?.key;
+    const currentKey = flatSidebarDefs.find(def => location.pathname === def.path)?.key;
     if (currentKey && !isAllowed(currentKey)) {
         navigate('/dashboard', { replace: true });
     }
@@ -140,27 +181,23 @@ export function DashboardLayout() {
             </button>
           </div>
           <nav className="space-y-1">
-            {SIDEBAR_DEFINITIONS.filter(def => isAllowed(def.key) && (def.alwaysOn || hasFeature(def.feature))).map(def => (
-               def.children ? (
-                 <SidebarGroup 
-                   key={def.key}
-                   def={def}
-                   icon={getIcon(def.key, Settings)}
-                   isCollapsed={isSidebarCollapsed}
-                 />
-               ) : (
-                 <SidebarItem 
-                   key={def.key}
-                   to={def.path} 
-                   icon={getIcon(def.key, Settings)} 
-                   label={def.label} 
-                   alwaysOn={def.alwaysOn} 
-                   roleCheck={def.roleCheck} 
-                   feature={def.feature}
-                   isCollapsed={isSidebarCollapsed} 
-                 />
-               )
-            ))}
+            {isSidebarCollapsed ? (
+              flatSidebarDefs.filter(def => isAllowed(def.key) && (def.alwaysOn || hasFeature(def.feature))).map(def => (
+                def.children ? (
+                  <SidebarGroup key={def.key} def={def} icon={getIcon(def.key, Settings)} isCollapsed />
+                ) : (
+                  <SidebarItem key={def.key} to={def.path} icon={getIcon(def.key, Settings)} label={def.label} alwaysOn={def.alwaysOn} roleCheck={def.roleCheck} feature={def.feature} isCollapsed />
+                )
+              ))
+            ) : (
+              flatSidebarDefs.filter(def => isAllowed(def.key) && (def.alwaysOn || hasFeature(def.feature))).map(def => (
+                def.children ? (
+                  <SidebarGroup key={def.key} def={def} icon={getIcon(def.key, Settings)} isCollapsed={false} />
+                ) : (
+                  <SidebarItem key={def.key} to={def.path} icon={getIcon(def.key, Settings)} label={def.label} alwaysOn={def.alwaysOn} roleCheck={def.roleCheck} feature={def.feature} isCollapsed={false} />
+                )
+              ))
+            )}
           </nav>
         </div>
         <div className={`p-6 border-t border-border flex ${isSidebarCollapsed ? 'justify-center' : 'justify-start'}`}>

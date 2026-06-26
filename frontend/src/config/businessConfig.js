@@ -51,11 +51,12 @@ export const businessConfig = {
       reviews: "Briefcase",
       gallery: "Image",
       blog: "BookOpen",
-      team: "Users"
+      team: "Users",
+      voice_agent: "Phone"
     },
     features: [
       'reservations', 'menu', 'floor_plan', 'pos', 'online_ordering', 
-      'inventory', 'kds', 'delivery', 'loyalty', 'reviews', 'orders', 'table_management'
+      'inventory', 'kds', 'delivery', 'loyalty', 'reviews', 'orders', 'table_management', 'ai_voice_agent'
     ],
     bookingForm: {
       title: "Table Reservation",
@@ -86,7 +87,7 @@ export const businessConfig = {
       'table_settings', 'menu_settings', 'reservation_rules', 'order_settings', 'delivery_settings', 'pickup_settings', 'tax_and_service_charge', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'tables', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'tables', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Total Revenue', icon: 'DollarSign' },
@@ -147,7 +148,8 @@ export const businessConfig = {
       reviews: "Briefcase",
       gallery: "Image",
       blog: "BookOpen",
-      team: "Users"
+      team: "Users",
+      voice_agent: "Phone"
     },
     features: [
       'reservations', 'menu', 'pos', 'online_ordering', 
@@ -182,7 +184,7 @@ export const businessConfig = {
       'menu_settings', 'pickup_settings', 'reservation_settings', 'loyalty_settings', 'stock_settings', 'tax_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Total Sales', icon: 'DollarSign' },
@@ -243,7 +245,8 @@ export const businessConfig = {
       gallery: "Image",
       blog: "BookOpen",
       team: "Users",
-      services: "Scissors"
+      services: "Scissors",
+      voice_agent: "Phone"
     },
     features: [
       'appointments', 'services', 'pos', 'inventory', 'client_profiles', 
@@ -279,7 +282,7 @@ export const businessConfig = {
       'appointment_settings', 'staff_availability', 'service_duration', 'service_pricing', 'booking_rules', 'cancellation_rules', 'client_reminder_settings', 'product_sales_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'inventory', 'services', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'inventory', 'services', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Service Revenue', icon: 'DollarSign' },
@@ -341,7 +344,8 @@ export const businessConfig = {
       gallery: "Image",
       blog: "BookOpen",
       team: "Users",
-      rooms: "BedDouble"
+      rooms: "BedDouble",
+      voice_agent: "Phone"
     },
     features: [
       'bookings', 'rooms', 'housekeeping', 'maintenance', 'guests', 
@@ -379,7 +383,7 @@ export const businessConfig = {
       'room_settings', 'booking_rules', 'check_in_out_time', 'cancellation_policy', 'room_pricing', 'tax_and_fees', 'housekeeping_settings', 'maintenance_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'branches', 'franchises', 'waitlist', 'integrations', 'menu', 'website', 'tables', 'staff', 'financials', 'billing', 'automation', 'inventory', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'branches', 'franchises', 'waitlist', 'integrations', 'menu', 'website', 'tables', 'staff', 'financials', 'billing', 'automation', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Booking Revenue', icon: 'DollarSign' },

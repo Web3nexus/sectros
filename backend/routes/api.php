@@ -36,6 +36,19 @@ Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookContr
 Route::post('/webhooks/flutterwave', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleFlutterwave']);
 Route::post('/webhooks/dodo', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleDodo']);
 
+// AI Voice Agent Webhooks
+Route::middleware('throttle:60,1')->group(function () {
+    Route::post('/webhooks/voice/{providerKey}', [\App\Http\Controllers\Api\VoiceAgentWebhookController::class, 'handle']);
+});
+
+// AI Voice Agent Tool Endpoints (called by ElevenLabs during calls — authenticated via agent_token)
+Route::prefix('voice-agent/tools')->group(function () {
+    Route::post('/check-availability', [\App\Http\Controllers\Api\VoiceAgentToolController::class, 'checkAvailability']);
+    Route::post('/create-reservation', [\App\Http\Controllers\Api\VoiceAgentToolController::class, 'createReservation']);
+    Route::post('/cancel-reservation', [\App\Http\Controllers\Api\VoiceAgentToolController::class, 'cancelReservation']);
+    Route::post('/transfer-to-human', [\App\Http\Controllers\Api\VoiceAgentToolController::class, 'transferToHuman']);
+});
+
 Route::get('/debug-config', function() {
     if (!config('app.debug')) {
         return response()->json(['message' => 'Not available when APP_DEBUG is false'], 403);
@@ -81,5 +94,26 @@ Route::group(['prefix' => 'public'], function () {
 
     // Contact Leads
     Route::post('/contact-leads', [\App\Http\Controllers\Api\ContactLeadController::class, 'store'])->middleware('throttle:10,1');
+});
+
+// SEO Data Endpoints
+Route::get('/seo-data', [\App\Http\Controllers\Api\SEOController::class, 'seoData']);
+Route::get('/seo/schema', [\App\Http\Controllers\Api\SEOController::class, 'jsonLdSchema']);
+
+// Voice Booking NLP Parser (public — distinct path from tenant-api to avoid collision)
+Route::middleware('throttle:30,1')->prefix('public/voice-booking')->group(function () {
+    Route::post('/parse', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseTranscript']);
+    Route::post('/validate', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseAndValidate']);
+});
+
+// Webhook Test Endpoint (receives our outgoing webhooks for verification)
+Route::post('/webhooks/test', function (\Illuminate\Http\Request $request) {
+    return response()->json([
+        'received' => true,
+        'event' => $request->header('X-Sectros-Event'),
+        'signature' => $request->header('X-Sectros-Signature'),
+        'timestamp' => $request->header('X-Sectros-Timestamp'),
+        'body' => $request->all(),
+    ]);
 });
 

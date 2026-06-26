@@ -15,6 +15,8 @@ use App\Models\SupportTicket;
 use App\Models\SubscriptionPlan;
 use App\Models\EmailTemplate;
 use App\Models\AuditLog;
+use App\Models\VoiceAgentPhoneNumber;
+use App\Models\SaaSSetting;
 use Illuminate\Support\Facades\Http;
 
 use App\Traits\AuditsOperation;
@@ -137,6 +139,8 @@ class SaaSController extends Controller
                         'series' => $planPerformanceTrend
                     ],
                     'domain_stats' => $this->getDomainStats(),
+                    'voice_stats' => $this->getVoiceStats(),
+                    'phone_stats' => $this->getPhoneStats(),
                 ],
                 'recent_tenants' => Tenant::latest()->take(5)->get(),
                 'active_tickets_count' => SupportTicket::where('status', '!=', 'resolved')->count()
@@ -1040,6 +1044,10 @@ class SaaSController extends Controller
             'dodo_webhook_secret' => $this->maskSecret($settings['dodo_webhook_secret'] ?? ''),
             'default_currency' => $settings['default_currency'] ?? 'USD',
             'sales_email' => $settings['sales_email'] ?? '',
+            // Twilio SMS
+            'twilio_sid' => $settings['twilio_sid'] ?? '',
+            'twilio_auth_token' => $this->maskSecret($settings['twilio_auth_token'] ?? ''),
+            'twilio_from_number' => $settings['twilio_from_number'] ?? '',
             'server_ip' => $settings['server_ip'] ?? gethostbyname(gethostname()),
             // NameSilo Domain Registration
             'namesilo_enabled' => filter_var($settings['namesilo_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
@@ -1056,6 +1064,19 @@ class SaaSController extends Controller
             'namesilo_domain_price' => (float) ($settings['namesilo_domain_price'] ?? 15),
             'namesilo_cost_price' => (float) ($settings['namesilo_cost_price'] ?? 11.05),
             'namesilo_charge_tenant' => filter_var($settings['namesilo_charge_tenant'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            // AI Voice Credits
+            'voice_credit_price' => (float) ($settings['voice_credit_price'] ?? 0.10),
+            'voice_credit_cost' => (float) ($settings['voice_credit_cost'] ?? 0.05),
+            // Phone Number Renewal
+            'phone_number_monthly_fee' => (float) ($settings['phone_number_monthly_fee'] ?? 5),
+            'phone_number_monthly_cost' => (float) ($settings['phone_number_monthly_cost'] ?? 2),
+            // Business type default voice prompts
+            'voice_prompt_restaurant' => $settings['voice_prompt_restaurant'] ?? '',
+            'voice_prompt_salon' => $settings['voice_prompt_salon'] ?? '',
+            'voice_prompt_spa' => $settings['voice_prompt_spa'] ?? '',
+            'voice_prompt_hotel' => $settings['voice_prompt_hotel'] ?? '',
+            'voice_prompt_cafe' => $settings['voice_prompt_cafe'] ?? '',
+            'voice_prompt_fitness' => $settings['voice_prompt_fitness'] ?? '',
             'disabled_features' => $this->normalizeDisabledFeatures($settings['disabled_features'] ?? []),
         ]);
     }
@@ -1132,6 +1153,11 @@ class SaaSController extends Controller
             'namesilo_registrant_phone',
             'namesilo_domain_price', 'namesilo_cost_price', 'namesilo_charge_tenant',
             'disabled_features',
+            'twilio_sid', 'twilio_auth_token', 'twilio_from_number',
+            'voice_credit_price', 'voice_credit_cost',
+            'phone_number_monthly_fee', 'phone_number_monthly_cost',
+            'voice_prompt_restaurant', 'voice_prompt_salon', 'voice_prompt_spa',
+            'voice_prompt_hotel', 'voice_prompt_cafe', 'voice_prompt_fitness',
         ];
         
         $settings = $request->only($allowedKeys);
@@ -1141,7 +1167,7 @@ class SaaSController extends Controller
         }
         
         foreach ($settings as $key => $value) {
-            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key']) && !empty($value) && str_contains($value, '*')) {
+            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
                 continue;
             }
 
@@ -1333,17 +1359,19 @@ class SaaSController extends Controller
             'max_staff'          => 'nullable|integer|min:0',
             'ai_credits_limit'   => 'nullable|integer|min:0',
             'sms_credits_limit'  => 'nullable|integer|min:0',
+            'voice_credits_limit' => 'nullable|integer|min:0',
             'is_active'          => 'boolean',
             'is_popular'         => 'boolean',
         ]);
 
         $data = array_merge($validated, [
-            'is_active'         => $request->boolean('is_active', true),
-            'is_popular'        => $request->boolean('is_popular', false),
-            'reservation_limit' => $request->filled('reservation_limit') ? (int) $request->reservation_limit : null,
-            'max_staff'         => $request->filled('max_staff') ? (int) $request->max_staff : null,
-            'ai_credits_limit'  => $request->filled('ai_credits_limit') ? (int) $request->ai_credits_limit : null,
-            'sms_credits_limit' => $request->filled('sms_credits_limit') ? (int) $request->sms_credits_limit : null,
+            'is_active'          => $request->boolean('is_active', true),
+            'is_popular'         => $request->boolean('is_popular', false),
+            'reservation_limit'  => $request->filled('reservation_limit') ? (int) $request->reservation_limit : null,
+            'max_staff'          => $request->filled('max_staff') ? (int) $request->max_staff : null,
+            'ai_credits_limit'   => $request->filled('ai_credits_limit') ? (int) $request->ai_credits_limit : null,
+            'sms_credits_limit'  => $request->filled('sms_credits_limit') ? (int) $request->sms_credits_limit : null,
+            'voice_credits_limit' => $request->filled('voice_credits_limit') ? (int) $request->voice_credits_limit : null,
         ]);
 
         if ($id) {
@@ -1869,6 +1897,80 @@ class SaaSController extends Controller
     /**
      * Get domain registration stats for dashboard widget.
      */
+    protected function getVoiceStats(): array
+    {
+        try {
+            $topupTotal = \App\Models\Tenant::sum('voice_credits_topup');
+            $usedTotal = \App\Models\Tenant::sum('voice_credits_used');
+
+            $creditPrice = (float) \App\Models\SaaSSetting::get('voice_credit_price', 0.10);
+            $creditCost = (float) \App\Models\SaaSSetting::get('voice_credit_cost', 0.05);
+
+            $totalRevenue = round($topupTotal * $creditPrice, 2);
+            $totalCost = round($usedTotal * $creditCost, 2);
+            $totalProfit = round($totalRevenue - $totalCost, 2);
+            $profitMargin = $totalRevenue > 0 ? round(($totalProfit / $totalRevenue) * 100, 1) : 0;
+
+            return [
+                'total_credits_purchased' => (int) $topupTotal,
+                'total_credits_used' => (int) $usedTotal,
+                'total_revenue' => $totalRevenue,
+                'total_cost' => $totalCost,
+                'total_profit' => $totalProfit,
+                'profit_margin' => $profitMargin,
+                'credit_price' => $creditPrice,
+                'credit_cost' => $creditCost,
+                'profit_per_credit' => round($creditPrice - $creditCost, 4),
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to fetch voice stats", ['error' => $e->getMessage()]);
+            return [
+                'total_credits_purchased' => 0, 'total_credits_used' => 0,
+                'total_revenue' => 0, 'total_cost' => 0,
+                'total_profit' => 0, 'profit_margin' => 0,
+                'credit_price' => 0.10, 'credit_cost' => 0.05,
+                'profit_per_credit' => 0.05,
+            ];
+        }
+    }
+
+    protected function getPhoneStats(): array
+    {
+        try {
+            $totalNumbers = \App\Models\VoiceAgentPhoneNumber::count();
+            $assignedNumbers = \App\Models\VoiceAgentPhoneNumber::whereNotNull('tenant_id')->count();
+            $availableNumbers = \App\Models\VoiceAgentPhoneNumber::whereNull('tenant_id')->
+                where('status', 'available')->count();
+
+            $monthlyFee = (float) \App\Models\SaaSSetting::get('phone_number_monthly_fee', 5);
+            $monthlyCost = (float) \App\Models\SaaSSetting::get('phone_number_monthly_cost', 2);
+
+            $monthlyRevenue = round($assignedNumbers * $monthlyFee, 2);
+            $monthlyCostTotal = round($assignedNumbers * $monthlyCost, 2);
+            $monthlyProfit = round($monthlyRevenue - $monthlyCostTotal, 2);
+
+            return [
+                'total_numbers' => $totalNumbers,
+                'assigned_numbers' => $assignedNumbers,
+                'available_numbers' => $availableNumbers,
+                'monthly_fee' => $monthlyFee,
+                'monthly_cost' => $monthlyCost,
+                'monthly_revenue' => $monthlyRevenue,
+                'monthly_cost_total' => $monthlyCostTotal,
+                'monthly_profit' => $monthlyProfit,
+                'profit_per_number' => round($monthlyFee - $monthlyCost, 2),
+            ];
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to fetch phone stats", ['error' => $e->getMessage()]);
+            return [
+                'total_numbers' => 0, 'assigned_numbers' => 0, 'available_numbers' => 0,
+                'monthly_fee' => 5, 'monthly_cost' => 2,
+                'monthly_revenue' => 0, 'monthly_cost_total' => 0,
+                'monthly_profit' => 0, 'profit_per_number' => 3,
+            ];
+        }
+    }
+
     protected function getDomainStats(): array
     {
         try {

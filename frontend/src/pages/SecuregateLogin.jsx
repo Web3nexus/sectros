@@ -15,14 +15,14 @@ export default function SecuregateLogin() {
   const [requires2FA, setRequires2FA] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [pendingRedirect, setPendingRedirect] = useState(false);
   const navigate = useNavigate();
-  const { login, verify2FA } = useAuth();
+  const { login, verify2FA, user } = useAuth();
   const settings = useBranding();
 
-  // Clear any stale admin session on mount so old broken tokens
+  // Clear any stale session data on mount so old broken tokens
   // don't interfere with a fresh login attempt
   useEffect(() => {
-    // Only clear if there's no valid active session already (i.e. they navigated here manually)
     const adminToken = localStorage.getItem('admin_token');
     const adminUser = localStorage.getItem('admin_user');
     if (adminToken && !adminUser) {
@@ -30,6 +30,13 @@ export default function SecuregateLogin() {
       localStorage.removeItem('auth_type');
     }
   }, []);
+
+  // Navigate only after React has committed the user state update from login
+  useEffect(() => {
+    if (pendingRedirect && user && user.role === 'admin') {
+      navigate('/securegate/dashboard', { replace: true });
+    }
+  }, [pendingRedirect, user, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -44,7 +51,7 @@ export default function SecuregateLogin() {
         setTwoFactorMethod(result.method || 'email');
         setIsLoading(false);
       } else {
-        navigate('/securegate/dashboard');
+        setPendingRedirect(true);
       }
     } else {
       setError(result.error || t('auth.error'));
@@ -59,7 +66,7 @@ export default function SecuregateLogin() {
 
     const result = await verify2FA(email, twoFactorCode, twoFactorMethod, 'admin');
     if (result.success) {
-      navigate('/securegate/dashboard');
+      setPendingRedirect(true);
     } else {
       setError(result.error || t('auth.error'));
       setIsLoading(false);

@@ -8,18 +8,21 @@ import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 import { WebsiteThemeProvider } from './context/WebsiteThemeContext'
+import { HelmetProvider } from 'react-helmet-async'
 import ErrorBoundary from './components/ErrorBoundary'
 
 createRoot(document.getElementById('root')).render(
   <BrowserRouter>
-    <ErrorBoundary>
-      <ThemeProvider>
-        <WebsiteThemeProvider>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </WebsiteThemeProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <HelmetProvider>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <WebsiteThemeProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </WebsiteThemeProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
+    </HelmetProvider>
   </BrowserRouter>
 )

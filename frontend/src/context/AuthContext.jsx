@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
         // In a same-origin dev environment, we use the URL to decide which user context to load
         if (isSaaSPath && adminUser) {
             setUser(JSON.parse(adminUser));
-        } else if (savedUser) {
+        } else if (!isSaaSPath && savedUser) {
             setUser(JSON.parse(savedUser));
         }
 
@@ -79,6 +79,10 @@ export function AuthProvider({ children }) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(userData));
           localStorage.setItem('auth_type', 'admin');
+          localStorage.removeItem('token');
+          localStorage.removeItem('auth_user');
+          localStorage.removeItem('tenant_domain');
+          localStorage.removeItem('business_type');
         } else {
           localStorage.setItem('token', data.token);
           localStorage.setItem('auth_user', JSON.stringify(userData));
@@ -118,6 +122,10 @@ export function AuthProvider({ children }) {
           localStorage.setItem('admin_token', data.token);
           localStorage.setItem('admin_user', JSON.stringify(userData));
           localStorage.setItem('auth_type', 'admin');
+          localStorage.removeItem('token');
+          localStorage.removeItem('auth_user');
+          localStorage.removeItem('tenant_domain');
+          localStorage.removeItem('business_type');
         } else {
           localStorage.setItem('token', data.token);
           localStorage.setItem('auth_user', JSON.stringify(userData));

@@ -321,6 +321,13 @@ Route::middleware(['api'])->group(function () {
             Route::apiResource('/reservations', ReservationController::class);
             Route::patch('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus']);
 
+            // Voice Booking NLP Parser (authenticated tenant)
+            Route::prefix('voice-booking')->group(function () {
+                Route::post('/parse', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseTranscript']);
+                Route::post('/validate', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseAndValidate']);
+                Route::post('/quick-book', [\App\Http\Controllers\Api\VoiceBookingController::class, 'quickBook']);
+            });
+
             Route::get('/expenses', [ExpenseController::class, 'index']);
             Route::post('/expenses', [ExpenseController::class, 'store']);
 
@@ -386,6 +393,38 @@ Route::middleware(['api'])->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\PublicThemeController::class, 'index']);
                 Route::get('/{id}', [\App\Http\Controllers\Api\PublicThemeController::class, 'show']);
                 Route::post('/{id}/purchase', [\App\Http\Controllers\Api\PublicThemeController::class, 'purchase']);
+            });
+
+            // AI Voice Agent
+            Route::prefix('voice-agent')->group(function () {
+                Route::get('/overview', [\App\Http\Controllers\Api\VoiceAgentController::class, 'overview']);
+                Route::get('/settings', [\App\Http\Controllers\Api\VoiceAgentController::class, 'getSettings']);
+                Route::post('/settings', [\App\Http\Controllers\Api\VoiceAgentController::class, 'updateSettings']);
+                Route::post('/activate', [\App\Http\Controllers\Api\VoiceAgentController::class, 'activateAgent']);
+                Route::post('/deactivate', [\App\Http\Controllers\Api\VoiceAgentController::class, 'deactivateAgent']);
+                Route::post('/toggle', [\App\Http\Controllers\Api\VoiceAgentController::class, 'toggleActive']);
+                Route::post('/sync', [\App\Http\Controllers\Api\VoiceAgentController::class, 'syncAgent']);
+                Route::post('/test-call', [\App\Http\Controllers\Api\VoiceAgentController::class, 'testCall']);
+                Route::post('/purchase-credits', [\App\Http\Controllers\Api\VoiceAgentController::class, 'purchaseCredits']);
+                Route::get('/phone-number', [\App\Http\Controllers\Api\VoiceAgentController::class, 'getPhoneNumber']);
+                Route::get('/voices', [\App\Http\Controllers\Api\VoiceAgentController::class, 'getVoices']);
+
+                Route::get('/knowledge-base', [\App\Http\Controllers\Api\VoiceAgentKnowledgeBaseController::class, 'index']);
+                Route::post('/knowledge-base', [\App\Http\Controllers\Api\VoiceAgentKnowledgeBaseController::class, 'store']);
+                Route::get('/knowledge-base/{id}', [\App\Http\Controllers\Api\VoiceAgentKnowledgeBaseController::class, 'show']);
+                Route::put('/knowledge-base/{id}', [\App\Http\Controllers\Api\VoiceAgentKnowledgeBaseController::class, 'update']);
+                Route::delete('/knowledge-base/{id}', [\App\Http\Controllers\Api\VoiceAgentKnowledgeBaseController::class, 'destroy']);
+
+                Route::get('/calls', [\App\Http\Controllers\Api\VoiceAgentCallController::class, 'index']);
+                Route::get('/calls/{id}', [\App\Http\Controllers\Api\VoiceAgentCallController::class, 'show']);
+
+                Route::get('/usage', [\App\Http\Controllers\Api\VoiceAgentUsageController::class, 'index']);
+                Route::get('/usage/current', [\App\Http\Controllers\Api\VoiceAgentUsageController::class, 'current']);
+
+                Route::get('/subscription', [\App\Http\Controllers\Api\VoiceAgentSubscriptionController::class, 'current']);
+                Route::post('/subscribe', [\App\Http\Controllers\Api\VoiceAgentSubscriptionController::class, 'subscribe']);
+                Route::post('/cancel', [\App\Http\Controllers\Api\VoiceAgentSubscriptionController::class, 'cancel']);
+                Route::get('/plans', [\App\Http\Controllers\Api\VoiceAgentSubscriptionController::class, 'plans']);
             });
 
             Route::get('/notifications', [NotificationController::class, 'index']);

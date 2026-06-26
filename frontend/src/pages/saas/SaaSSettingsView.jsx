@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer, Eye, EyeOff} from 'lucide-react';
+import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer, Eye, EyeOff, Headphones} from 'lucide-react';
 import axios from 'axios';
 import api from '../../services/centralApi';
 import StatusModal from '../../components/common/StatusModal';
@@ -54,6 +54,13 @@ export default function SaaSSettingsView() {
     dodo_secret_key: '',
     dodo_webhook_secret: '',
     default_currency: 'USD',
+    twilio_sid: '',
+    twilio_auth_token: '',
+    twilio_from_number: '',
+    voice_credit_price: 0.10,
+    voice_credit_cost: 0.05,
+    phone_number_monthly_fee: 5,
+    phone_number_monthly_cost: 2,
     platform_logo_url: '',
     platform_favicon_url: '',
     email_logo_url: '',
@@ -72,7 +79,7 @@ export default function SaaSSettingsView() {
   const secretKeys = ['social_verify_token', 'mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
     'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key',
-    'namesilo_api_key'];
+    'namesilo_api_key', 'twilio_auth_token'];
 
   const displayValue = (key, val) => {
     if (!secretKeys.includes(key)) return val;
@@ -138,6 +145,7 @@ export default function SaaSSettingsView() {
             { id: 'database', label: 'Database Routing', icon: Database },
             { id: 'domains', label: 'Domains', icon: Globe },
             { id: 'payments', label: 'Payments', icon: CreditCard },
+            { id: 'sms', label: 'SMS (Twilio)', icon: MessageSquare },
             { id: 'features', label: 'Features', icon: Settings },
             { id: 'website_theme', label: 'Website Theme', icon: Briefcase },
             { id: 'cms', label: 'Content CMS', icon: PenSquare },
@@ -800,11 +808,68 @@ export default function SaaSSettingsView() {
                             <Bot className="w-4 h-4" />
                             Verify {settings.ai_provider === 'anthropic' || settings.ai_provider === 'claude' ? 'Claude' : (settings.ai_provider === 'gemini' ? 'Gemini' : 'OpenAI')} Connection
                         </button>
-                    </div>
-                 </div>
-              </div>
-            )}
+                     </div>
 
+                     {/* AI Voice & Phone Pricing */}
+                     <div className="pt-6 border-t border-border/50 space-y-4">
+                        <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                           <Headphones className="w-4 h-4 text-blue-500" /> AI Voice & Phone Pricing
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                           <div>
+                              <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Credit Price ($)</label>
+                              <input type="number" step="0.01" min="0" value={settings.voice_credit_price ?? 0.10}
+                                 onChange={e => setSettings({...settings, voice_credit_price: parseFloat(e.target.value) || 0})}
+                                 className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all" />
+                              <p className="text-[10px] text-muted-foreground/60 mt-1">What tenants pay per credit</p>
+                           </div>
+                           <div>
+                              <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Credit Cost ($)</label>
+                              <input type="number" step="0.01" min="0" value={settings.voice_credit_cost ?? 0.05}
+                                 onChange={e => setSettings({...settings, voice_credit_cost: parseFloat(e.target.value) || 0})}
+                                 className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all" />
+                              <p className="text-[10px] text-muted-foreground/60 mt-1">Our cost per credit</p>
+                           </div>
+                           <div>
+                              <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Phone Monthly Fee ($)</label>
+                              <input type="number" step="0.01" min="0" value={settings.phone_number_monthly_fee ?? 5}
+                                 onChange={e => setSettings({...settings, phone_number_monthly_fee: parseFloat(e.target.value) || 0})}
+                                 className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all" />
+                              <p className="text-[10px] text-muted-foreground/60 mt-1">Charge per assigned number/month</p>
+                           </div>
+                           <div>
+                              <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Phone Monthly Cost ($)</label>
+                              <input type="number" step="0.01" min="0" value={settings.phone_number_monthly_cost ?? 2}
+                                 onChange={e => setSettings({...settings, phone_number_monthly_cost: parseFloat(e.target.value) || 0})}
+                                 className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all" />
+                              <p className="text-[10px] text-muted-foreground/60 mt-1">Our cost per number/month</p>
+                           </div>
+                         </div>
+                      </div>
+
+                      {/* Business Type AI Prompt Templates */}
+                      <div className="pt-6 border-t border-border/50 space-y-4">
+                         <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                            <Headphones className="w-4 h-4 text-purple-500" /> Agent Default Prompts
+                         </h4>
+                         <p className="text-xs text-muted-foreground/60">Default system prompts applied when tenants create a voice agent for each business type.</p>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {['restaurant', 'salon', 'spa', 'hotel', 'cafe', 'fitness'].map(type => (
+                               <div key={type}>
+                                  <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2 capitalize">{type}</label>
+                                  <textarea rows={4}
+                                     value={settings[`voice_prompt_${type}`] || ''}
+                                     onChange={e => setSettings({...settings, [`voice_prompt_${type}`]: e.target.value})}
+                                     className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-xs font-mono focus:ring-2 focus:ring-primary outline-none transition-all resize-y"
+                                     placeholder={`Default prompt for ${type} voice agent...`} />
+                               </div>
+                            ))}
+                         </div>
+                      </div>
+                   </div>
+                </div>
+              )}
+ 
             {activeTab === 'content' && (
               <div className="space-y-6">
                  <h3 className="text-lg font-medium text-foreground mb-4">Landing Page CMS</h3>
@@ -1511,6 +1576,52 @@ export default function SaaSSettingsView() {
             )}
             {activeTab === 'features' && (
               <FeatureManagement settings={settings} onSettingsChange={setSettings} />
+            )}
+
+            {activeTab === 'sms' && (
+              <div className="space-y-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <MessageSquare className="w-6 h-6 text-red-400" />
+                  <h3 className="text-lg font-medium text-foreground">SMS (Twilio)</h3>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">Configure Twilio for sending SMS notifications (reservation confirmations, waitlist alerts, etc.).</p>
+
+                <div className="bg-card/50 border border-border/50 rounded-2xl p-6 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                      <MessageSquare className="w-5 h-5 text-red-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-foreground font-bold">Twilio</h4>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">SMS Gateway</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border">
+                    <div>
+                      <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Account SID</label>
+                      <input type="text" value={settings.twilio_sid}
+                        onChange={e => setSettings({...settings, twilio_sid: e.target.value})}
+                        placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none font-mono" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Auth Token</label>
+                      <input type="password" value={settings.twilio_auth_token}
+                        onChange={e => setSettings({...settings, twilio_auth_token: e.target.value})}
+                        placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                        className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none font-mono" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">From Number</label>
+                      <input type="text" value={settings.twilio_from_number}
+                        onChange={e => setSettings({...settings, twilio_from_number: e.target.value})}
+                        placeholder="+12345678900"
+                        className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none font-mono" />
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">Twilio phone number with country code (E.164 format)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {activeTab === 'cms' && (

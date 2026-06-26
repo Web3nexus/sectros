@@ -71,8 +71,8 @@ return [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                 \PDO::ATTR_EMULATE_PREPARES => false,
-                \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-                \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET SESSION wait_timeout = ' . (int) env('DB_WAIT_TIMEOUT', 15) . ', SESSION interactive_timeout = ' . (int) env('DB_INTERACTIVE_TIMEOUT', 15) . ', SESSION max_execution_time = ' . (int) env('DB_MAX_EXECUTION_TIME', 3000) . ', SESSION net_read_timeout = ' . (int) env('DB_NET_READ_TIMEOUT', 10) . ', SESSION net_write_timeout = ' . (int) env('DB_NET_WRITE_TIMEOUT', 10),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_USE_BUFFERED_QUERY : PDO::MYSQL_ATTR_USE_BUFFERED_QUERY) => true,
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_INIT_COMMAND : PDO::MYSQL_ATTR_INIT_COMMAND) => 'SET SESSION wait_timeout = ' . (int) env('DB_WAIT_TIMEOUT', 15) . ', SESSION interactive_timeout = ' . (int) env('DB_INTERACTIVE_TIMEOUT', 15) . ', SESSION max_execution_time = ' . (int) env('DB_MAX_EXECUTION_TIME', 3000) . ', SESSION net_read_timeout = ' . (int) env('DB_NET_READ_TIMEOUT', 10) . ', SESSION net_write_timeout = ' . (int) env('DB_NET_WRITE_TIMEOUT', 10),
             ]) : [],
         ],
 
@@ -103,8 +103,8 @@ return [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                 \PDO::ATTR_EMULATE_PREPARES => false,
-                \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-                \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET SESSION wait_timeout = ' . (int) env('DB_WAIT_TIMEOUT', 15) . ', SESSION interactive_timeout = ' . (int) env('DB_INTERACTIVE_TIMEOUT', 15) . ', SESSION max_execution_time = ' . (int) env('DB_MAX_EXECUTION_TIME', 3000) . ', SESSION net_read_timeout = ' . (int) env('DB_NET_READ_TIMEOUT', 10) . ', SESSION net_write_timeout = ' . (int) env('DB_NET_WRITE_TIMEOUT', 10),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_USE_BUFFERED_QUERY : PDO::MYSQL_ATTR_USE_BUFFERED_QUERY) => true,
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_INIT_COMMAND : PDO::MYSQL_ATTR_INIT_COMMAND) => 'SET SESSION wait_timeout = ' . (int) env('DB_WAIT_TIMEOUT', 15) . ', SESSION interactive_timeout = ' . (int) env('DB_INTERACTIVE_TIMEOUT', 15) . ', SESSION max_execution_time = ' . (int) env('DB_MAX_EXECUTION_TIME', 3000) . ', SESSION net_read_timeout = ' . (int) env('DB_NET_READ_TIMEOUT', 10) . ', SESSION net_write_timeout = ' . (int) env('DB_NET_WRITE_TIMEOUT', 10),
             ]) : [],
         ],
 
@@ -129,8 +129,8 @@ return [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                 \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
                 \PDO::ATTR_EMULATE_PREPARES => false,
-                \PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-                \PDO::MYSQL_ATTR_INIT_COMMAND => 'SET SESSION wait_timeout = ' . (int) env('DB_WAIT_TIMEOUT', 15) . ', SESSION interactive_timeout = ' . (int) env('DB_INTERACTIVE_TIMEOUT', 15) . ', SESSION max_execution_time = ' . (int) env('DB_MAX_EXECUTION_TIME', 3000) . ', SESSION net_read_timeout = ' . (int) env('DB_NET_READ_TIMEOUT', 10) . ', SESSION net_write_timeout = ' . (int) env('DB_NET_WRITE_TIMEOUT', 10),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_USE_BUFFERED_QUERY : PDO::MYSQL_ATTR_USE_BUFFERED_QUERY) => true,
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_INIT_COMMAND : PDO::MYSQL_ATTR_INIT_COMMAND) => 'SET SESSION wait_timeout = ' . (int) env('DB_WAIT_TIMEOUT', 15) . ', SESSION interactive_timeout = ' . (int) env('DB_INTERACTIVE_TIMEOUT', 15) . ', SESSION max_execution_time = ' . (int) env('DB_MAX_EXECUTION_TIME', 3000) . ', SESSION net_read_timeout = ' . (int) env('DB_NET_READ_TIMEOUT', 10) . ', SESSION net_write_timeout = ' . (int) env('DB_NET_WRITE_TIMEOUT', 10),
             ]) : [],
         ],
 

@@ -16,6 +16,7 @@ import { ReservationsView } from './pages/ReservationsView'
 import { CalendarView } from './pages/CalendarView'
 import { FinancialsView } from './pages/FinancialsView'
 import ErrorBoundary from './components/ErrorBoundary'
+import { SEOHead } from './components/SEOHead'
 import { OrderPortal } from './pages/OrderPortal'
 import AutomationView from './pages/AutomationView'
 import MessagesView from './pages/MessagesView'
@@ -40,6 +41,16 @@ import TranslationManagementView from './pages/saas/TranslationManagementView'
 import PlanManagementView from './pages/saas/PlanManagementView'
 import SaaSThemeAdminView from './pages/saas/SaaSThemeAdminView'
 import IntegrationsAdminView from './pages/saas/IntegrationsAdminView'
+import VoiceProviderListView from './pages/saas/VoiceProviderListView'
+import VoiceAgentPlanListView from './pages/saas/VoiceAgentPlanListView'
+import VoicePhoneNumberPool from './pages/saas/VoicePhoneNumberPool'
+import VoiceAgentOverview from './pages/voice-agent/VoiceAgentOverview'
+import VoiceAgentSetupForm from './pages/voice-agent/VoiceAgentSetupForm'
+import VoiceAgentKnowledgeBase from './pages/voice-agent/VoiceAgentKnowledgeBase'
+import VoiceAgentCallLogs from './pages/voice-agent/VoiceAgentCallLogs'
+import VoiceAgentUsageBilling from './pages/voice-agent/VoiceAgentUsageBilling'
+import VoiceAgentSettings from './pages/voice-agent/VoiceAgentSettings'
+import VoiceAgentPhoneNumber from './pages/voice-agent/VoiceAgentPhoneNumber'
 import ComingSoonView from './pages/ComingSoonView'
 import { ContentManager } from './pages/ContentManager'
 import InventoryView from './pages/InventoryView'
@@ -85,6 +96,15 @@ function ThemedPage({ classic, modern }) {
   return isModernBusinessOS ? (modern || classic) : classic;
 }
 
+function SEO({ title, description, path, children }) {
+  return (
+    <>
+      <SEOHead title={title} description={description} path={path} />
+      {children}
+    </>
+  );
+}
+
 function ThemeAwarePublicLayout() {
   const { isModernBusinessOS } = useWebsiteTheme();
   return isModernBusinessOS ? <ModernPublicLayout /> : <PublicLayout />;
@@ -95,25 +115,25 @@ function AppContent() {
     <Routes>
       {/* Public Website */}
       <Route element={<ThemeAwarePublicLayout />}>
-        <Route path="/" element={<ThemedPage classic={<LandingPage />} modern={<ModernHome />} />} />
-        <Route path="/pricing" element={<ThemedPage classic={<PricingPage />} modern={<ModernPricing />} />} />
-        <Route path="/features" element={<ThemedPage classic={<FeaturesPage />} modern={<ModernFeatures />} />} />
-        <Route path="/blog" element={<ThemedPage classic={<BlogPage />} modern={<ModernBlog />} />} />
-        <Route path="/blog/:slug" element={<BlogDetailPage />} />
-        <Route path="/customers" element={<CustomerStoriesPage />} />
-        <Route path="/customers/:slug" element={<CustomerStoryDetailPage />} />
-        <Route path="/docs" element={<DocumentationPage />} />
-        <Route path="/help" element={<HelpCenterPage />} />
-        <Route path="/about" element={<ThemedPage classic={<AboutUsPage />} modern={<ModernAbout />} />} />
-        <Route path="/community" element={<CommunityPage />} />
-        <Route path="/privacy" element={<DynamicPrivacyPolicy />} />
-        <Route path="/book" element={<ReservationsPublicView />} />
-        <Route path="/solutions" element={<ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} />} />
-        <Route path="/solutions/:slug" element={<ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} />} />
-        <Route path="/integrations" element={<ThemedPage classic={<IntegrationsPage />} modern={<ModernIntegrations />} />} />
-        <Route path="/directory" element={<DirectoryPage />} />
-        <Route path="/directory/:slug" element={<DirectoryDetailPage />} />
-        <Route path="/contact" element={<ThemedPage classic={null} modern={<ModernContact />} />} />
+        <Route path="/" element={<SEO path="/"><ThemedPage classic={<LandingPage />} modern={<ModernHome />} /></SEO>} />
+        <Route path="/pricing" element={<SEO title="Pricing" path="/pricing"><ThemedPage classic={<PricingPage />} modern={<ModernPricing />} /></SEO>} />
+        <Route path="/features" element={<SEO title="Features" path="/features"><ThemedPage classic={<FeaturesPage />} modern={<ModernFeatures />} /></SEO>} />
+        <Route path="/blog" element={<SEO title="Blog" path="/blog"><ThemedPage classic={<BlogPage />} modern={<ModernBlog />} /></SEO>} />
+        <Route path="/blog/:slug" element={<SEO title="Blog" path="/blog"><BlogDetailPage /></SEO>} />
+        <Route path="/customers" element={<SEO title="Customer Stories" path="/customers"><CustomerStoriesPage /></SEO>} />
+        <Route path="/customers/:slug" element={<SEO title="Customer Stories" path="/customers"><CustomerStoryDetailPage /></SEO>} />
+        <Route path="/docs" element={<SEO title="Documentation" path="/docs"><DocumentationPage /></SEO>} />
+        <Route path="/help" element={<SEO title="Help Center" path="/help"><HelpCenterPage /></SEO>} />
+        <Route path="/about" element={<SEO title="About Us" path="/about"><ThemedPage classic={<AboutUsPage />} modern={<ModernAbout />} /></SEO>} />
+        <Route path="/community" element={<SEO title="Community" path="/community"><CommunityPage /></SEO>} />
+        <Route path="/privacy" element={<SEO title="Privacy Policy" path="/privacy"><DynamicPrivacyPolicy /></SEO>} />
+        <Route path="/book" element={<SEO title="Reservations" path="/book"><ReservationsPublicView /></SEO>} />
+        <Route path="/solutions" element={<SEO title="Solutions" path="/solutions"><ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} /></SEO>} />
+        <Route path="/solutions/:slug" element={<SEO title="Solutions" path="/solutions"><ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} /></SEO>} />
+        <Route path="/integrations" element={<SEO title="Integrations" path="/integrations"><ThemedPage classic={<IntegrationsPage />} modern={<ModernIntegrations />} /></SEO>} />
+        <Route path="/directory" element={<SEO title="Business Directory" path="/directory"><DirectoryPage /></SEO>} />
+        <Route path="/directory/:slug" element={<SEO title="Business Directory" path="/directory"><DirectoryDetailPage /></SEO>} />
+        <Route path="/contact" element={<SEO title="Contact Us" path="/contact"><ThemedPage classic={null} modern={<ModernContact />} /></SEO>} />
       </Route>
 
       {/* Tenant Login / Register */}
@@ -138,6 +158,9 @@ function AppContent() {
           <Route path="cms" element={<SaaSCMSView />} />
           <Route path="website-themes" element={<SaaSThemeAdminView />} />
           <Route path="integrations" element={<IntegrationsAdminView />} />
+          <Route path="voice-providers" element={<VoiceProviderListView />} />
+          <Route path="voice-phone-numbers" element={<VoicePhoneNumberPool />} />
+          <Route path="voice-agent-plans" element={<VoiceAgentPlanListView />} />
           <Route path="translations" element={<TranslationManagementView />} />
           <Route path="settings" element={<SaaSSettingsView />} />
           <Route path="account" element={<AccountSettingsView />} />
@@ -183,6 +206,14 @@ function AppContent() {
               <Route path="services" element={<ContentManager contentType="services" />} />
               <Route path="blog" element={<ContentManager contentType="blog" />} />
               <Route path="team" element={<ContentManager contentType="team" />} />
+              {/* AI Voice Agent */}
+              <Route path="voice-agent" element={<VoiceAgentOverview />} />
+              <Route path="voice-agent/setup" element={<VoiceAgentSetupForm />} />
+              <Route path="voice-agent/knowledge-base" element={<VoiceAgentKnowledgeBase />} />
+              <Route path="voice-agent/calls" element={<VoiceAgentCallLogs />} />
+              <Route path="voice-agent/usage" element={<VoiceAgentUsageBilling />} />
+              <Route path="voice-agent/settings" element={<VoiceAgentSettings />} />
+              <Route path="voice-agent/phone-number" element={<VoiceAgentPhoneNumber />} />
            </Route>
         </Route>
         <Route path="/access-denied" element={<AccessDenied />} />

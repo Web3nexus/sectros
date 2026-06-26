@@ -3,6 +3,11 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Response;
 
+// ── SEO & Discovery Routes (root-level, not in SPA catch-all) ──
+Route::get('/robots.txt', [\App\Http\Controllers\Api\SEOController::class, 'robots']);
+Route::get('/sitemap.xml', [\App\Http\Controllers\Api\SEOController::class, 'sitemap']);
+Route::get('/schema.json', [\App\Http\Controllers\Api\SEOController::class, 'jsonLdSchema']);
+
 foreach (config('tenancy.central_domains') as $domain) {
     // Match exact central domain (e.g. sectros.com)
     Route::domain($domain)->group(function () {

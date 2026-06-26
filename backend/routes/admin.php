@@ -125,6 +125,34 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
             Route::delete('/themes/{id}', [\App\Http\Controllers\Api\SuperAdmin\SaaSThemeAdminController::class, 'destroy']);
         });
 
+    // Voice Provider Management
+    Route::get('/voice-providers', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceProviderController::class, 'index']);
+    Route::post('/voice-providers', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceProviderController::class, 'store']);
+    Route::get('/voice-providers/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceProviderController::class, 'show']);
+    Route::put('/voice-providers/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceProviderController::class, 'update']);
+    Route::post('/voice-providers/{id}/test', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceProviderController::class, 'testConnection']);
+    Route::delete('/voice-providers/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceProviderController::class, 'destroy']);
+
+    // Voice Agent Plans Management
+    Route::get('/voice-agent-plans', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceAgentPlanController::class, 'index']);
+    Route::post('/voice-agent-plans', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceAgentPlanController::class, 'store']);
+    Route::get('/voice-agent-plans/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceAgentPlanController::class, 'show']);
+    Route::put('/voice-agent-plans/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceAgentPlanController::class, 'update']);
+    Route::delete('/voice-agent-plans/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoiceAgentPlanController::class, 'destroy']);
+
+    // Voice Agent Phone Number Pool Management
+    Route::prefix('voice-phone-numbers')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'index']);
+        Route::post('/', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'store']);
+        Route::put('/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'update']);
+        Route::delete('/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'destroy']);
+        Route::post('/{id}/assign', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'assign']);
+        Route::post('/{id}/release', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'release']);
+        Route::get('/tenants', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'tenants']);
+        Route::get('/search-twilio', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'searchTwilio']);
+        Route::post('/purchase-twilio', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'purchaseFromTwilio']);
+    });
+
     // Translation Management
     Route::get('/translations', [TranslationController::class, 'index']);
     Route::post('/translations', [TranslationController::class, 'store']);
@@ -136,6 +164,20 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
     Route::patch('/contact-leads/{lead}', [\App\Http\Controllers\Api\ContactLeadController::class, 'update']);
 
 # Move out of prefix group
+});
+
+// ── Webhook Management ──
+Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('webhooks')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\WebhookManagementController::class, 'index']);
+    Route::post('/', [\App\Http\Controllers\Api\WebhookManagementController::class, 'store']);
+    Route::get('/events', [\App\Http\Controllers\Api\WebhookManagementController::class, 'events']);
+    Route::get('/usage', [\App\Http\Controllers\Api\WebhookManagementController::class, 'usage']);
+    Route::get('/stats', [\App\Http\Controllers\Api\WebhookManagementController::class, 'stats']);
+    Route::get('/failed', [\App\Http\Controllers\Api\WebhookManagementController::class, 'failedEvents']);
+    Route::get('/{id}', [\App\Http\Controllers\Api\WebhookManagementController::class, 'show']);
+    Route::put('/{id}', [\App\Http\Controllers\Api\WebhookManagementController::class, 'update']);
+    Route::delete('/{id}', [\App\Http\Controllers\Api\WebhookManagementController::class, 'destroy']);
+    Route::post('/{id}/test', [\App\Http\Controllers\Api\WebhookManagementController::class, 'test']);
 });
 
 // Aliased route for Website Builder consistency (matches tenant-api path)

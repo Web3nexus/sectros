@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, BookOpen, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap} from 'lucide-react';
+import {LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap, Phone, Radio, Smartphone, ChevronDown, Headphones} from 'lucide-react';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
 import { useBranding } from '../hooks/useBranding';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -17,6 +17,7 @@ export function SaaSAdminLayout() {
   const [unresolvedTickets, setUnresolvedTickets] = useState(0);
   const [adminNotifications, setAdminNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [expandedGroups, setExpandedGroups] = useState(['ai-voice']);
   const intervalRef = useRef(null);
   const settings = useBranding();
 
@@ -63,36 +64,49 @@ export function SaaSAdminLayout() {
     } catch (e) { /* silent */ }
   }, [fetchUnresolved]);
 
-  // Register inactivity logout monitoring
   useInactivityLogout();
 
-  const navItems = [
-    { name: t('admin.overview'), path: '/securegate/dashboard', icon: LayoutDashboard },
-    { name: t('admin.tenants'), path: '/securegate/tenants', icon: Building2 },
-    { name: t('admin.subscriptions'), path: '/securegate/subscriptions', icon: CreditCard },
-    { name: 'Plan Management', path: '/securegate/plans', icon: PackageOpen },
-    { name: t('admin.support'), path: '/securegate/tickets', icon: MessageSquare },
-    { name: t('admin.emailHub'), path: '/securegate/email-templates', icon: Mail },
-    { name: 'Admin Management', path: '/securegate/admins', icon: Shield },
-    { name: t('admin.contentLandingPage'), path: '/securegate/cms', icon: LayoutGrid },
-    { name: 'Integrations', path: '/securegate/integrations', icon: PlugZap },
+  const toggleGroup = (group) => {
+    setExpandedGroups(prev => prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]);
+  };
+
+  const itemsBeforeVoice = [
+    { name: 'Overview', path: '/securegate/dashboard', icon: LayoutDashboard },
+    { name: 'Tenants', path: '/securegate/tenants', icon: Building2 },
+    { name: 'Subscriptions', path: '/securegate/subscriptions', icon: CreditCard },
+    { name: 'Support', path: '/securegate/tickets', icon: MessageSquare },
+    { name: 'Email Hub', path: '/securegate/email-templates', icon: Mail },
+  ];
+
+  const itemsAfterVoice = [
+    { name: 'Content & Theme Store', path: '/securegate/cms', icon: LayoutGrid },
     { name: 'Website Templates', path: '/securegate/website-themes', icon: Palette },
     { name: 'Translations', path: '/securegate/translations', icon: Globe },
-    { name: t('admin.systemSettings'), path: '/securegate/settings', icon: Settings },
-    { name: t('admin.myAccount'), path: '/securegate/account', icon: Users },
+    { name: 'Plan Management', path: '/securegate/plans', icon: PackageOpen },
+    { name: 'Integrations', path: '/securegate/integrations', icon: PlugZap },
+    { name: 'Admin Management', path: '/securegate/admins', icon: Shield },
+    { name: 'System Settings', path: '/securegate/settings', icon: Settings },
+    { name: 'My Account', path: '/securegate/account', icon: Users },
   ];
+
+  const aiVoiceChildren = [
+    { name: 'AI Voice Providers', path: '/securegate/voice-providers', icon: Phone },
+    { name: 'AI Phone Numbers', path: '/securegate/voice-phone-numbers', icon: Smartphone },
+    { name: 'Voice Agent Plans', path: '/securegate/voice-agent-plans', icon: Radio },
+  ];
+
+  const isVoiceActive = aiVoiceChildren.some(c => location.pathname === c.path);
+  const allNavItems = [...itemsBeforeVoice, ...itemsAfterVoice, ...aiVoiceChildren];
 
   return (
     <div className="min-h-screen bg-background flex text-muted-foreground">
-      {/* Mobile Sidebar Overlay */}
       {isMobileSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-card/50 z-40 lg:hidden" 
-          onClick={() => setIsMobileSidebarOpen(false)} 
+        <div
+          className="fixed inset-0 bg-card/50 z-40 lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside className={`bg-card border-r border-border flex flex-col h-screen fixed lg:sticky top-0 z-50 transition-all duration-300 ${
         isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       } ${isSidebarCollapsed ? 'w-20' : 'w-64'}`}>
@@ -115,39 +129,97 @@ export function SaaSAdminLayout() {
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto no-scrollbar">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setIsMobileSidebarOpen(false)}
-                title={item.name}
-                className={`flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-3'} rounded-xl transition-all duration-200 overflow-hidden active:scale-[0.97] group ${
-                  isActive 
-                    ? 'bg-primary/10 text-primary font-bold' 
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <div className="relative">
-                  <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
-                  {item.name === t('admin.support') && unresolvedTickets > 0 && (
-                    <span className="absolute -top-1.5 -right-2 bg-amber-500 text-white text-[8px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse">
-                      {unresolvedTickets > 99 ? '99+' : unresolvedTickets}
-                    </span>
-                  )}
-                </div>
-                {!isSidebarCollapsed && <span className="truncate">{item.name}</span>}
+          {isSidebarCollapsed ? (
+            <>
+              {[...itemsBeforeVoice, ...itemsAfterVoice].map(item => {
+                const isActive = location.pathname === item.path;
+                const Icon = item.icon;
+                return (
+                  <Link key={item.path} to={item.path} onClick={() => setIsMobileSidebarOpen(false)}
+                    className={`flex items-center justify-center p-2.5 rounded-xl transition-all duration-200 group ${
+                      isActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}>
+                    <Icon className="w-5 h-5 shrink-0" />
+                  </Link>
+                );
+              })}
+              <Link to="/securegate/voice-providers" onClick={() => setIsMobileSidebarOpen(false)}
+                className={`flex items-center justify-center p-2.5 rounded-xl transition-all duration-200 group ${
+                  isVoiceActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}>
+                <Headphones className="w-5 h-5 shrink-0" />
               </Link>
-            );
-          })}
+            </>
+          ) : (
+            <>
+              {itemsBeforeVoice.map(item => {
+                const isActive = location.pathname === item.path;
+                const Icon = item.icon;
+                return (
+                  <Link key={item.path} to={item.path} onClick={() => setIsMobileSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-200 overflow-hidden active:scale-[0.97] group ${
+                      isActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}>
+                    <div className="relative">
+                      <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                      {item.name === 'Support' && unresolvedTickets > 0 && (
+                        <span className="absolute -top-1.5 -right-2 bg-amber-500 text-white text-[8px] font-black min-w-[16px] h-4 px-1 rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse">
+                          {unresolvedTickets > 99 ? '99+' : unresolvedTickets}
+                        </span>
+                      )}
+                    </div>
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                );
+              })}
+              <button onClick={() => toggleGroup('ai-voice')}
+                className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-200 group ${
+                  isVoiceActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                }`}>
+                <Headphones className={`w-5 h-5 shrink-0 ${isVoiceActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                <span className="flex-1 text-left truncate">AI Voice</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${expandedGroups.includes('ai-voice') ? 'rotate-0' : '-rotate-90'}`} />
+              </button>
+              {expandedGroups.includes('ai-voice') && (
+                <div className="ml-4 pl-3 border-l-2 border-border space-y-0.5">
+                  {aiVoiceChildren.map(child => {
+                    const isChildActive = location.pathname === child.path;
+                    const ChildIcon = child.icon;
+                    return (
+                      <Link key={child.path} to={child.path} onClick={() => setIsMobileSidebarOpen(false)}
+                        className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group ${
+                          isChildActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}>
+                        <ChildIcon className={`w-4 h-4 shrink-0 ${isChildActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'}`} />
+                        <span className="truncate text-sm">{child.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+              {itemsAfterVoice.map(item => {
+                const isActive = location.pathname === item.path;
+                const Icon = item.icon;
+                return (
+                  <Link key={item.path} to={item.path} onClick={() => setIsMobileSidebarOpen(false)}
+                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-200 overflow-hidden active:scale-[0.97] group ${
+                      isActive ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}>
+                    <div className="relative">
+                      <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary transition-colors'}`} />
+                    </div>
+                    <span className="truncate">{item.name}</span>
+                  </Link>
+                );
+              })}
+            </>
+          )}
         </nav>
 
         <div className={`p-4 border-t border-border flex ${isSidebarCollapsed ? 'justify-center' : 'justify-start'}`}>
-          <Link 
-            to="/securegate" 
-            className={`flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-3'} rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all text-muted-foreground w-full active:scale-[0.97] group`} 
+          <Link
+            to="/securegate"
+            className={`flex items-center ${isSidebarCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3.5 py-3'} rounded-xl hover:bg-red-500/10 hover:text-red-400 transition-all text-muted-foreground w-full active:scale-[0.97] group`}
             title={t('auth.logout')}
           >
             <LogOut className="w-5 h-5 shrink-0 group-hover:rotate-12 transition-transform" />
@@ -156,7 +228,6 @@ export function SaaSAdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
         <div className="bg-card shrink-0">
           <header className="h-16 border-b border-border/50 bg-card flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 mt-4 md:mt-6">
@@ -169,7 +240,7 @@ export function SaaSAdminLayout() {
                 </button>
                 <div className="flex flex-col">
                     <h2 className="text-lg font-semibold text-foreground leading-none">
-                       {navItems.find(i => i.path === location.pathname)?.name || 'Control Panel'}
+                       {allNavItems.find(i => i.path === location.pathname)?.name || 'Control Panel'}
                     </h2>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="text-[8px] font-black bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded uppercase tracking-widest border border-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.2)]">System Infrastructure</span>
@@ -180,7 +251,7 @@ export function SaaSAdminLayout() {
                 <LanguageSwitcher />
                 <ThemeToggle />
                 <div className="relative">
-                    <button 
+                    <button
                         onClick={() => setShowNotifications(!showNotifications)}
                         className={`p-2 rounded-xl border transition-all ${showNotifications ? 'bg-primary/10 border-primary/50 text-primary' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted'}`}
                     >
@@ -203,8 +274,8 @@ export function SaaSAdminLayout() {
                                             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Hub Clear</p>
                                         </div>
                                     ) : (Array.isArray(adminNotifications) ? adminNotifications : []).map(n => (
-                                        <button 
-                                            key={n.id} 
+                                        <button
+                                            key={n.id}
                                             onClick={() => { markRead(n.id); }}
                                             className={`w-full text-left p-3 rounded-xl border transition-all ${n.status === 'unread' ? 'bg-amber-500/10 border-amber-500/30' : 'bg-background border-border hover:bg-muted'}`}
                                         >
@@ -221,8 +292,8 @@ export function SaaSAdminLayout() {
                                     ))}
                                 </div>
                                 {adminNotifications.length > 0 && (
-                                    <button 
-                                        onClick={markAllRead} 
+                                    <button
+                                        onClick={markAllRead}
                                         className="w-full mt-4 py-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest hover:text-amber-400 transition-colors border-t border-border pt-3"
                                     >
                                         Dismiss All
@@ -240,7 +311,7 @@ export function SaaSAdminLayout() {
             </div>
         </header>
         </div>
-        
+
         <div className="flex-1 overflow-auto p-4 md:p-8 relative">
             <Outlet />
         </div>

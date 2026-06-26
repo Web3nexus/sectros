@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Building2, TrendingUp, Cpu, Activity, ArrowUpRight, CreditCard, Globe, DollarSign} from 'lucide-react';
+import {Building2, TrendingUp, Cpu, Activity, ArrowUpRight, CreditCard, Globe, DollarSign, Phone, Headphones} from 'lucide-react';
 import api from '../../services/centralApi';
 
 export default function SaaSDashboard() {
@@ -15,6 +15,17 @@ export default function SaaSDashboard() {
       total_domains: 0, total_revenue: 0, total_cost: 0,
       total_profit: 0, profit_margin: 0,
       cost_per_domain: 11.05, sell_per_domain: 15, profit_per_domain: 3.95
+    },
+    voice_stats: {
+      total_credits_purchased: 0, total_credits_used: 0,
+      total_revenue: 0, total_cost: 0, total_profit: 0,
+      profit_margin: 0, credit_price: 0.10, credit_cost: 0.05, profit_per_credit: 0.05
+    },
+    phone_stats: {
+      total_numbers: 0, assigned_numbers: 0, available_numbers: 0,
+      monthly_fee: 5, monthly_cost: 2,
+      monthly_revenue: 0, monthly_cost_total: 0,
+      monthly_profit: 0, profit_per_number: 3
     }
   });
   const [recentTenants, setRecentTenants] = useState([]);
@@ -45,6 +56,17 @@ export default function SaaSDashboard() {
               total_domains: 0, total_revenue: 0, total_cost: 0,
               total_profit: 0, profit_margin: 0,
               cost_per_domain: 11.05, sell_per_domain: 15, profit_per_domain: 3.95
+            },
+            voice_stats: statsRes.data.stats.voice_stats ?? {
+              total_credits_purchased: 0, total_credits_used: 0,
+              total_revenue: 0, total_cost: 0, total_profit: 0,
+              profit_margin: 0, credit_price: 0.10, credit_cost: 0.05, profit_per_credit: 0.05
+            },
+            phone_stats: statsRes.data.stats.phone_stats ?? {
+              total_numbers: 0, assigned_numbers: 0, available_numbers: 0,
+              monthly_fee: 5, monthly_cost: 2,
+              monthly_revenue: 0, monthly_cost_total: 0,
+              monthly_profit: 0, profit_per_number: 3
             }
           });
         }
@@ -189,7 +211,104 @@ export default function SaaSDashboard() {
         </div>
       </div>
       )}
-      
+
+      {/* AI Voice Credits Revenue Widget */}
+      {stats.voice_stats && (
+      <div className="rounded-2xl bg-card border border-blue-500/20 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+              <Headphones className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">AI Voice Credits Revenue</h3>
+              <p className="text-muted-foreground text-xs">Credit purchases & usage — profit tracking</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border/50">
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Credits Purchased</p>
+            <p className="text-2xl font-bold text-foreground">{stats.voice_stats.total_credits_purchased.toLocaleString()}</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Revenue</p>
+            <p className="text-2xl font-bold text-emerald-500">${stats.voice_stats.total_revenue.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">@ ${stats.voice_stats.credit_price}/credit</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Cost</p>
+            <p className="text-2xl font-bold text-red-500">${stats.voice_stats.total_cost.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">@ ${stats.voice_stats.credit_cost}/credit</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Profit</p>
+            <p className="text-2xl font-bold text-foreground">${stats.voice_stats.total_profit.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">${stats.voice_stats.profit_per_credit}/credit margin</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Profit Margin</p>
+            <p className={`text-2xl font-bold ${stats.voice_stats.profit_margin >= 20 ? 'text-emerald-500' : stats.voice_stats.profit_margin > 0 ? 'text-amber-500' : 'text-red-500'}`}>
+              {stats.voice_stats.profit_margin}%
+            </p>
+            <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className={`h-full rounded-full transition-all duration-500 ${stats.voice_stats.profit_margin >= 20 ? 'bg-emerald-500' : stats.voice_stats.profit_margin > 0 ? 'bg-amber-500' : 'bg-red-500'}`}
+                style={{ width: `${Math.min(stats.voice_stats.profit_margin, 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+
+      {/* Phone Number Renewal Revenue Widget */}
+      {stats.phone_stats && (
+      <div className="rounded-2xl bg-card border border-purple-500/20 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+              <Phone className="w-5 h-5 text-purple-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Phone Number Renewal Revenue</h3>
+              <p className="text-muted-foreground text-xs">Monthly recurring — assigned number profit tracking</p>
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border/50">
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Assigned</p>
+            <p className="text-2xl font-bold text-foreground">{stats.phone_stats.assigned_numbers}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">{stats.phone_stats.available_numbers} available</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Monthly Revenue</p>
+            <p className="text-2xl font-bold text-emerald-500">${stats.phone_stats.monthly_revenue.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">@ ${stats.phone_stats.monthly_fee}/number</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Monthly Cost</p>
+            <p className="text-2xl font-bold text-red-500">${stats.phone_stats.monthly_cost_total.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">@ ${stats.phone_stats.monthly_cost}/number</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Monthly Profit</p>
+            <p className="text-2xl font-bold text-foreground">${stats.phone_stats.monthly_profit.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">${stats.phone_stats.profit_per_number}/number margin</p>
+          </div>
+          <div className="bg-card p-5">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Total Numbers</p>
+            <p className="text-2xl font-bold text-foreground">{stats.phone_stats.total_numbers}</p>
+            <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="h-full rounded-full bg-purple-500 transition-all duration-500"
+                style={{ width: `${stats.phone_stats.total_numbers > 0 ? (stats.phone_stats.assigned_numbers / stats.phone_stats.total_numbers) * 100 : 0}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      )}
+
       {/* Chart and Recent activity Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 p-8 rounded-2xl bg-card border border-border shadow-sm flex flex-col min-h-[450px]">

@@ -17,6 +17,7 @@ class SubscriptionPlan extends Model
         'max_staff',
         'ai_credits_limit',
         'sms_credits_limit',
+        'voice_credits_limit',
         'is_active',
         'is_popular',
     ];
@@ -29,5 +30,6 @@ class SubscriptionPlan extends Model
         'max_staff'          => 'integer',
         'ai_credits_limit'   => 'integer',
         'sms_credits_limit'  => 'integer',
+        'voice_credits_limit'  => 'integer',
     ];
 }
