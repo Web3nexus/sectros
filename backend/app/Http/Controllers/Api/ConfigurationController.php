@@ -11,7 +11,11 @@ class ConfigurationController extends Controller
 {
     public function index()
     {
-        $settings = $this->cacheTenantSettings();
+        try {
+            $settings = $this->cacheTenantSettings();
+        } catch (\RuntimeException $e) {
+            $settings = [];
+        }
         $tenant = tenant();
 
         $defaults = [

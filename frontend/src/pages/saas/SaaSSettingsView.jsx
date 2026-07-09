@@ -16,13 +16,18 @@ export default function SaaSSettingsView() {
     platform_site_domain: '',
     require_2fa: false,
     disable_public_signups: false,
-    mail_mailer: 'resend',
+    mail_mailer: 'smtp',
     mail_host: '',
     mail_port: '',
     mail_username: '',
     mail_password: '',
     mail_encryption: 'tls',
+    resend_api_key: '',
+    mailgun_secret: '',
+    mailgun_domain: '',
+    postmark_token: '',
     from_address: '',
+    from_name: '',
     openai_api_key: '',
     claude_api_key: '',
     gemini_api_key: '',
@@ -76,10 +81,12 @@ export default function SaaSSettingsView() {
   const [showSecrets, setShowSecrets] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'success' });
 
-  const secretKeys = ['social_verify_token', 'mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
+  const secretKeys = ['social_verify_token', 'mail_password', 'resend_api_key', 'mailgun_secret', 'postmark_token',
+    'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
     'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key',
     'namesilo_api_key', 'twilio_auth_token'];
+
 
   const displayValue = (key, val) => {
     if (!secretKeys.includes(key)) return val;
@@ -531,7 +538,7 @@ export default function SaaSSettingsView() {
                  <h3 className="text-lg font-medium text-foreground mb-4">System Email Delivery</h3>
                  <p className="text-sm text-muted-foreground mb-6">Configure the primary driver for SaaS welcome emails and password resets.</p>
                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl">
                       <div>
                         <label className="block text-sm font-medium text-muted-foreground mb-2 font-semibold">Mail Mailer</label>
                         <select 
@@ -539,9 +546,10 @@ export default function SaaSSettingsView() {
                           onChange={e => setSettings({...settings, mail_mailer: e.target.value})}
                           className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm"
                         >
+                            <option value="smtp">SMTP</option>
                             <option value="resend">Resend</option>
                             <option value="mailgun">Mailgun</option>
-                            <option value="smtp">SMTP</option>
+                            <option value="postmark">Postmark</option>
                         </select>
                       </div>
                       <div>
@@ -550,10 +558,22 @@ export default function SaaSSettingsView() {
                           type="email" 
                           value={settings.from_address} 
                           onChange={e => setSettings({...settings, from_address: e.target.value})}
+                          placeholder="noreply@yourdomain.com"
                           className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm" 
                         />
                       </div>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-muted-foreground mb-2 font-semibold">From Name</label>
+                        <input 
+                          type="text" 
+                          value={settings.from_name} 
+                          onChange={e => setSettings({...settings, from_name: e.target.value})}
+                          placeholder="Your Platform Name"
+                          className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 focus:ring-2 focus:ring-primary outline-none transition-all shadow-sm max-w-sm" 
+                        />
+                      </div>
 
+                      {/* SMTP-specific fields */}
                       {settings.mail_mailer === 'smtp' && (
                         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 p-6 bg-muted rounded-2xl border border-border mt-2">
                             <div className="md:col-span-2">
@@ -572,7 +592,7 @@ export default function SaaSSettingsView() {
                                 type="text" 
                                 value={settings.mail_port} 
                                 onChange={e => setSettings({...settings, mail_port: e.target.value})}
-                                placeholder="2525"
+                                placeholder="587"
                                 className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
                               />
                             </div>
@@ -608,7 +628,64 @@ export default function SaaSSettingsView() {
                             </div>
                         </div>
                       )}
+
+                      {/* Resend API key */}
+                      {settings.mail_mailer === 'resend' && (
+                        <div className="md:col-span-2 p-6 bg-muted rounded-2xl border border-border mt-2">
+                          <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Resend API Key</label>
+                          <input 
+                            type="password" 
+                            value={settings.resend_api_key} 
+                            onChange={e => setSettings({...settings, resend_api_key: e.target.value})}
+                            placeholder="re_••••••••••••••••••••••"
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                          <p className="text-xs text-muted-foreground mt-2">Get your API key from <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">resend.com/api-keys</a>. Make sure your sending domain is verified.</p>
+                        </div>
+                      )}
+
+                      {/* Mailgun fields */}
+                      {settings.mail_mailer === 'mailgun' && (
+                        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 p-6 bg-muted rounded-2xl border border-border mt-2">
+                          <div>
+                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Mailgun Domain</label>
+                            <input 
+                              type="text" 
+                              value={settings.mailgun_domain} 
+                              onChange={e => setSettings({...settings, mailgun_domain: e.target.value})}
+                              placeholder="mg.yourdomain.com"
+                              className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Mailgun API Secret</label>
+                            <input 
+                              type="password" 
+                              value={settings.mailgun_secret} 
+                              onChange={e => setSettings({...settings, mailgun_secret: e.target.value})}
+                              placeholder="key-••••••••••••••••••••••"
+                              className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Postmark token */}
+                      {settings.mail_mailer === 'postmark' && (
+                        <div className="md:col-span-2 p-6 bg-muted rounded-2xl border border-border mt-2">
+                          <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Postmark Server Token</label>
+                          <input 
+                            type="password" 
+                            value={settings.postmark_token} 
+                            onChange={e => setSettings({...settings, postmark_token: e.target.value})}
+                            placeholder="••••••••-••••-••••-••••-••••••••••••"
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                          <p className="text-xs text-muted-foreground mt-2">Find your server token in the Postmark dashboard under Server → API Tokens.</p>
+                        </div>
+                      )}
                   </div>
+
                   
                   <div className="pt-6 border-t border-border/50 space-y-4">
                       <div className="flex flex-col md:flex-row md:items-end gap-4">

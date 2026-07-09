@@ -622,7 +622,14 @@ class AuthController extends Controller
                 'platform_name' => \App\Models\SaaSSetting::get('platform_name', config('app.name'))
             ]));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to send password reset email: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Failed to send password reset email: " . $e->getMessage(), [
+                'email' => $user->email,
+                'mailer' => config('mail.default'),
+            ]);
+            return response()->json([
+                'message' => 'Failed to send reset email. Please contact support or try again later.',
+                'debug'   => app()->environment('local') ? $e->getMessage() : null,
+            ], 500);
         }
 
         return response()->json(['message' => 'If your email is in our system, you will receive a reset link shortly.']);

@@ -35,19 +35,40 @@ class AppServiceProvider extends ServiceProvider
                 $mailer = strtolower($settings['mail_mailer'] ?? '');
                 if ($mailer) {
                     config(['mail.default' => $mailer]);
-                    
+
                     if ($mailer === 'smtp') {
                         config([
-                            'mail.mailers.smtp.host' => !empty($settings['mail_host']) ? $settings['mail_host'] : config('mail.mailers.smtp.host'),
-                            'mail.mailers.smtp.port' => !empty($settings['mail_port']) ? $settings['mail_port'] : config('mail.mailers.smtp.port'),
-                            'mail.mailers.smtp.username' => !empty($settings['mail_username']) ? $settings['mail_username'] : config('mail.mailers.smtp.username'),
-                            'mail.mailers.smtp.password' => !empty($settings['mail_password']) ? $settings['mail_password'] : config('mail.mailers.smtp.password'),
-                            'mail.mailers.smtp.encryption' => ($settings['mail_encryption'] === 'null' ? null : (!empty($settings['mail_encryption']) ? $settings['mail_encryption'] : config('mail.mailers.smtp.encryption'))),
+                            'mail.mailers.smtp.host'       => !empty($settings['mail_host'])       ? $settings['mail_host']       : config('mail.mailers.smtp.host'),
+                            'mail.mailers.smtp.port'       => !empty($settings['mail_port'])       ? $settings['mail_port']       : config('mail.mailers.smtp.port'),
+                            'mail.mailers.smtp.username'   => !empty($settings['mail_username'])   ? $settings['mail_username']   : config('mail.mailers.smtp.username'),
+                            'mail.mailers.smtp.password'   => !empty($settings['mail_password'])   ? $settings['mail_password']   : config('mail.mailers.smtp.password'),
+                            'mail.mailers.smtp.encryption' => ($settings['mail_encryption'] ?? '') === 'null'
+                                ? null
+                                : (!empty($settings['mail_encryption']) ? $settings['mail_encryption'] : config('mail.mailers.smtp.encryption')),
                         ]);
+                    } elseif ($mailer === 'resend') {
+                        // Resend API transport — needs services.resend.key
+                        if (!empty($settings['resend_api_key'])) {
+                            config(['services.resend.key' => $settings['resend_api_key']]);
+                        }
+                    } elseif ($mailer === 'mailgun') {
+                        if (!empty($settings['mailgun_secret'])) {
+                            config(['services.mailgun.secret' => $settings['mailgun_secret']]);
+                        }
+                        if (!empty($settings['mailgun_domain'])) {
+                            config(['services.mailgun.domain' => $settings['mailgun_domain']]);
+                        }
+                    } elseif ($mailer === 'postmark') {
+                        if (!empty($settings['postmark_token'])) {
+                            config(['services.postmark.key' => $settings['postmark_token']]);
+                        }
                     }
-                    
+
                     if (!empty($settings['from_address'])) {
                         config(['mail.from.address' => $settings['from_address']]);
+                    }
+                    if (!empty($settings['from_name'])) {
+                        config(['mail.from.name' => $settings['from_name']]);
                     }
                 }
             }

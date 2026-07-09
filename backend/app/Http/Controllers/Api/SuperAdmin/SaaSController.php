@@ -972,13 +972,18 @@ class SaaSController extends Controller
             'platform_site_domain' => $settings['platform_site_domain'] ?? '',
             'require_2fa' => filter_var($settings['require_2fa'] ?? true, FILTER_VALIDATE_BOOLEAN),
             'disable_public_signups' => filter_var($settings['disable_public_signups'] ?? false, FILTER_VALIDATE_BOOLEAN),
-            'mail_mailer' => $settings['mail_mailer'] ?? 'resend',
-            'mail_host' => $settings['mail_host'] ?? 'smtp.mailtrap.io',
-            'mail_port' => $settings['mail_port'] ?? '2525',
+            'mail_mailer' => $settings['mail_mailer'] ?? 'smtp',
+            'mail_host' => $settings['mail_host'] ?? '',
+            'mail_port' => $settings['mail_port'] ?? '',
             'mail_username' => $settings['mail_username'] ?? '',
             'mail_password' => $this->maskSecret($settings['mail_password'] ?? ''),
             'mail_encryption' => $settings['mail_encryption'] ?? 'tls',
-            'from_address' => $settings['from_address'] ?? 'noreply@sectros.com',
+            'resend_api_key' => $this->maskSecret($settings['resend_api_key'] ?? ''),
+            'mailgun_secret' => $this->maskSecret($settings['mailgun_secret'] ?? ''),
+            'mailgun_domain' => $settings['mailgun_domain'] ?? '',
+            'postmark_token' => $this->maskSecret($settings['postmark_token'] ?? ''),
+            'from_address' => $settings['from_address'] ?? '',
+            'from_name' => $settings['from_name'] ?? '',
             'openai_api_key' => $this->maskSecret($settings['openai_api_key'] ?? ''),
             'claude_api_key' => $this->maskSecret($settings['claude_api_key'] ?? ''),
             'gemini_api_key' => $this->maskSecret($settings['gemini_api_key'] ?? ''),
@@ -1133,7 +1138,9 @@ class SaaSController extends Controller
         $allowedKeys = [
             'platform_name', 'central_domain', 'platform_site_domain',
             'require_2fa', 'disable_public_signups',
-            'mail_mailer', 'mail_host', 'mail_port', 'mail_username', 'mail_encryption', 'mail_password', 'from_address',
+            'mail_mailer', 'mail_host', 'mail_port', 'mail_username', 'mail_encryption', 'mail_password',
+            'resend_api_key', 'mailgun_secret', 'mailgun_domain', 'postmark_token',
+            'from_address', 'from_name',
             'openai_api_key', 'claude_api_key', 'gemini_api_key', 'ai_provider', 'global_ai_enabled',
             'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret',
             'meta_system_token',
@@ -1181,7 +1188,7 @@ class SaaSController extends Controller
         }
         
         foreach ($settings as $key => $value) {
-            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'meta_webhook_verify_token', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
+            if (in_array($key, ['mail_password', 'resend_api_key', 'mailgun_secret', 'postmark_token', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'meta_webhook_verify_token', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
                 continue;
             }
 
