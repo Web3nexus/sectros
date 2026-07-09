@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, Phone, BookOpen, BarChart3, CreditCard, Loader2, AlertCircle, CheckCircle, XCircle, ExternalLink } from 'lucide-react'
+import { Settings, Phone, BookOpen, BarChart3, CreditCard, Loader2, AlertCircle, CheckCircle, XCircle, ExternalLink, User, MessageSquare } from 'lucide-react'
 import api from '../../services/api'
+
+const CHARACTER_MAP = {
+  restaurant: { name: 'Lucia', role: 'Restaurant Receptionist' },
+  cafe: { name: 'Maya', role: 'Cafe Barista & Host' },
+  salon: { name: 'Sophie', role: 'Salon Receptionist & Booking Coordinator' },
+  spa: { name: 'Elena', role: 'Spa Concierge & Wellness Coordinator' },
+  hotel: { name: 'James', role: 'Hotel Concierge & Reservation Specialist' },
+  fitness: { name: 'Alex', role: 'Fitness Center Receptionist & Membership Coordinator' },
+  clinic: { name: 'Rachel', role: 'Medical Clinic Receptionist & Appointment Coordinator' },
+}
 
 export default function VoiceAgentSettings() {
   const navigate = useNavigate()
@@ -31,6 +41,11 @@ export default function VoiceAgentSettings() {
   const getProviderName = (providerId) => {
     const provider = providers.find(p => p.id === providerId)
     return provider?.provider_name || '—'
+  }
+
+  const getCharacter = () => {
+    const type = settings?.business_type || ''
+    return CHARACTER_MAP[type] || null
   }
 
   const LANGUAGES = {
@@ -151,6 +166,39 @@ export default function VoiceAgentSettings() {
           )}
         </div>
       </div>
+
+      {/* Character Profile */}
+      {getCharacter() && (
+        <div className="bg-white rounded-[32px] border border-border shadow-sm p-8 space-y-6">
+          <h3 className="font-black text-foreground uppercase tracking-tight text-sm flex items-center gap-2">
+            <User className="w-4 h-4 text-primary" /> AI Character Profile
+          </h3>
+          <div className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="text-xl font-black text-primary">{getCharacter().name[0]}</span>
+            </div>
+            <div>
+              <p className="font-black text-foreground text-lg">{getCharacter().name}</p>
+              <p className="text-sm text-muted-foreground">{getCharacter().role}</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mt-1">
+                Voice style: {VOICE_STYLES[settings?.voice_style] || settings?.voice_style || '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* System Prompt */}
+      {settings?.system_prompt && (
+        <div className="bg-white rounded-[32px] border border-border shadow-sm p-8 space-y-6">
+          <h3 className="font-black text-foreground uppercase tracking-tight text-sm flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-primary" /> System Prompt
+          </h3>
+          <pre className="w-full bg-slate-50 border-2 border-border rounded-2xl p-5 font-mono text-xs text-foreground whitespace-pre-wrap max-h-[400px] overflow-y-auto">
+            {settings.system_prompt}
+          </pre>
+        </div>
+      )}
 
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

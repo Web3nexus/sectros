@@ -153,6 +153,15 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
         Route::post('/purchase-twilio', [\App\Http\Controllers\Api\SuperAdmin\AdminVoicePhoneNumberController::class, 'purchaseFromTwilio']);
     });
 
+    // Messaging Integration Settings (Direct + BSP MVP)
+    Route::get('/messaging/settings', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'getSettings']);
+    Route::post('/messaging/settings', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'updateSettings']);
+    Route::get('/messaging/providers', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'getProviders']);
+    Route::post('/messaging/providers', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'storeProvider']);
+    Route::put('/messaging/providers/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'updateProvider']);
+    Route::post('/messaging/providers/{id}/test', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'testProvider']);
+    Route::delete('/messaging/providers/{id}', [\App\Http\Controllers\Api\SuperAdmin\AdminMessagingController::class, 'destroyProvider']);
+
     // Translation Management
     Route::get('/translations', [TranslationController::class, 'index']);
     Route::post('/translations', [TranslationController::class, 'store']);

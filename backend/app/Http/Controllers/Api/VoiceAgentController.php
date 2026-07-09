@@ -14,6 +14,7 @@ use App\Models\SubscriptionPlan;
 use App\Services\Voice\DefaultKnowledgeBasePopulator;
 use App\Services\Voice\TwilioVoiceNumberService;
 use App\Services\Voice\VoiceAgentCreditService;
+use App\Services\Voice\VoiceCharacterProfiles;
 use App\Services\Voice\VoiceProviderManager;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -126,11 +127,15 @@ class VoiceAgentController extends Controller
             if (!$defaultProvider) {
                 return response()->json(['message' => 'No active voice provider configured. Contact administrator.'], 500);
             }
+            $businessType = tenant('business_type') ?? 'restaurant';
+            $businessName = tenant('business_name') ?? '';
+            $profile = VoiceCharacterProfiles::getProfile($businessType, $businessName);
             $settings = VoiceAgentSetting::create([
                 'tenant_id' => $tenantId,
                 'provider_id' => $defaultProvider->id,
                 'language' => 'en',
-                'voice_style' => 'friendly_receptionist',
+                'voice_style' => $profile['voice_style'] ?? 'friendly_receptionist',
+                'system_prompt' => $profile['system_prompt'] ?? '',
                 'booking_enabled' => false,
                 'is_active' => false,
             ]);

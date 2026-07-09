@@ -829,7 +829,7 @@ class SaaSController extends Controller
             return response()->json([
                 'token' => $token,
                 'domain' => $domain,
-                'redirect_url' => "{$protocol}://{$domain}/login"
+                'redirect_url' => "{$protocol}://{$domain}/login?token={$token}&domain={$domain}&impersonate=1"
             ]);
         } catch (\Exception $e) {
             Log::error("Comprehensive impersonation failure", ['error' => $e->getMessage()]);
@@ -1078,6 +1078,17 @@ class SaaSController extends Controller
             'voice_prompt_cafe' => $settings['voice_prompt_cafe'] ?? '',
             'voice_prompt_fitness' => $settings['voice_prompt_fitness'] ?? '',
             'disabled_features' => $this->normalizeDisabledFeatures($settings['disabled_features'] ?? []),
+            // Messaging Integration Mode (Direct/BSP MVP)
+            'integration_mode' => $settings['integration_mode'] ?? 'partner',
+            'partner_program_enabled' => filter_var($settings['partner_program_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            'direct_meta_enabled' => filter_var($settings['direct_meta_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'bsp_mode_enabled' => filter_var($settings['bsp_mode_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'meta_app_id' => $settings['meta_app_id'] ?? '',
+            'meta_app_secret' => $this->maskSecret($settings['meta_app_secret'] ?? ''),
+            'meta_webhook_verify_token' => $this->maskSecret($settings['meta_webhook_verify_token'] ?? ''),
+            'meta_oauth_redirect_url' => $settings['meta_oauth_redirect_url'] ?? '',
+            'meta_required_permissions' => $settings['meta_required_permissions'] ?? 'pages_messaging,pages_manage_metadata,instagram_basic,instagram_manage_messages',
+            'meta_webhook_callback_url' => $settings['meta_webhook_callback_url'] ?? '/api/social/webhook',
         ]);
     }
 
@@ -1158,6 +1169,9 @@ class SaaSController extends Controller
             'phone_number_monthly_fee', 'phone_number_monthly_cost',
             'voice_prompt_restaurant', 'voice_prompt_salon', 'voice_prompt_spa',
             'voice_prompt_hotel', 'voice_prompt_cafe', 'voice_prompt_fitness',
+            'integration_mode', 'partner_program_enabled', 'direct_meta_enabled', 'bsp_mode_enabled',
+            'meta_app_id', 'meta_app_secret', 'meta_webhook_verify_token',
+            'meta_oauth_redirect_url', 'meta_required_permissions', 'meta_webhook_callback_url',
         ];
         
         $settings = $request->only($allowedKeys);
@@ -1167,7 +1181,7 @@ class SaaSController extends Controller
         }
         
         foreach ($settings as $key => $value) {
-            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
+            if (in_array($key, ['mail_password', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'meta_webhook_verify_token', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
                 continue;
             }
 
@@ -1270,6 +1284,7 @@ class SaaSController extends Controller
                         'ai_automation' => false,
                         'online_ordering' => false,
                         'inventory_tracking' => false,
+                        'kiosk_mode' => false,
                     ],
                     'is_active' => true,
                     'is_popular' => false,
@@ -1299,6 +1314,7 @@ class SaaSController extends Controller
                         'ai_automation' => false,
                         'online_ordering' => true,
                         'inventory_tracking' => false,
+                        'kiosk_mode' => true,
                     ],
                     'is_active' => true,
                     'is_popular' => false,
@@ -1328,6 +1344,7 @@ class SaaSController extends Controller
                         'ai_automation' => true,
                         'online_ordering' => true,
                         'inventory_tracking' => true,
+                        'kiosk_mode' => true,
                     ],
                     'is_active' => true,
                 ],

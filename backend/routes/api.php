@@ -14,6 +14,9 @@ Route::middleware('throttle:60,1')->group(function () {
 Route::get('/auth/facebook', [\App\Http\Controllers\Api\SocialiteController::class, 'redirectToFacebook']);
 Route::get('/auth/facebook/callback', [\App\Http\Controllers\Api\SocialiteController::class, 'handleFacebookCallback']);
 
+// Direct Meta + BSP OAuth Callback (separate endpoint for direct mode)
+Route::get('/auth/direct/callback', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'handleOAuthCallback']);
+
 // WhatsApp Embedded Signup Callback (handles Meta OAuth redirect for per-tenant WhatsApp connection)
 Route::get('/whatsapp/callback', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'handleCallback']);
 
@@ -35,6 +38,13 @@ Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookControl
 Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);
 Route::post('/webhooks/flutterwave', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleFlutterwave']);
 Route::post('/webhooks/dodo', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleDodo']);
+
+// Direct Meta + BSP Webhooks
+Route::middleware('throttle:60,1')->group(function () {
+    Route::post('/social/direct/webhook', [\App\Http\Controllers\Api\DirectWebhookController::class, 'handle']);
+    Route::get('/social/direct/webhook', [\App\Http\Controllers\Api\DirectWebhookController::class, 'verify']);
+    Route::post('/social/bsp/{provider}/webhook', [\App\Http\Controllers\Api\DirectWebhookController::class, 'handleBspWebhook']);
+});
 
 // AI Voice Agent Webhooks
 Route::middleware('throttle:60,1')->group(function () {
@@ -62,15 +72,16 @@ Route::get('/debug-config', function() {
 });
 
 // Public Tenant Auth (Central Domain Login)
-Route::middleware('throttle:6,1')->group(function () {
+Route::middleware('throttle:login')->group(function () {
     Route::post('/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
-    Route::post('/login/token', [\App\Http\Controllers\Api\AuthController::class, 'loginWithToken']);
     Route::post('/login/verify-2fa', [\App\Http\Controllers\Api\AuthController::class, 'verify2FA']);
     Route::post('/auth/register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
     Route::post('/auth/verify-email', [\App\Http\Controllers\Api\AuthController::class, 'verifyEmail']);
     Route::post('/forgot-password', [\App\Http\Controllers\Api\AuthController::class, 'forgotPassword']);
     Route::post('/reset-password', [\App\Http\Controllers\Api\AuthController::class, 'resetPassword']);
 });
+// Impersonation token login — not credential-based, generous limit
+Route::post('/login/token', [\App\Http\Controllers\Api\AuthController::class, 'loginWithToken'])->middleware('throttle:login-token');
 
 // Public CMS (Move here for global access)
 Route::group(['prefix' => 'public'], function () {
@@ -104,6 +115,13 @@ Route::get('/seo/schema', [\App\Http\Controllers\Api\SEOController::class, 'json
 Route::middleware('throttle:30,1')->prefix('public/voice-booking')->group(function () {
     Route::post('/parse', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseTranscript']);
     Route::post('/validate', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseAndValidate']);
+});
+
+// Kiosk Mode Public Endpoints
+Route::middleware('throttle:60,1')->prefix('kiosk/{tenant}')->group(function () {
+    Route::get('/menu', [\App\Http\Controllers\Api\KioskController::class, 'menu']);
+    Route::get('/tables', [\App\Http\Controllers\Api\KioskController::class, 'tables']);
+    Route::post('/order', [\App\Http\Controllers\Api\KioskController::class, 'placeOrder']);
 });
 
 // Webhook Test Endpoint (receives our outgoing webhooks for verification)

@@ -19,7 +19,9 @@ class Order extends Model
         'total_amount',
         'status',
         'payment_status',
-        'branch_id'
+        'branch_id',
+        'customer_name',
+        'dining_mode',
     ];
 
     public function branch(): BelongsTo

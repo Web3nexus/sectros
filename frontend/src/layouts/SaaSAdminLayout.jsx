@@ -84,6 +84,7 @@ export function SaaSAdminLayout() {
     { name: 'Translations', path: '/securegate/translations', icon: Globe },
     { name: 'Plan Management', path: '/securegate/plans', icon: PackageOpen },
     { name: 'Integrations', path: '/securegate/integrations', icon: PlugZap },
+    { name: 'Messaging Integration', path: '/securegate/messaging-integration', icon: MessageSquare },
     { name: 'Admin Management', path: '/securegate/admins', icon: Shield },
     { name: 'System Settings', path: '/securegate/settings', icon: Settings },
     { name: 'My Account', path: '/securegate/account', icon: Users },

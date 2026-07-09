@@ -20,6 +20,7 @@ export const FEATURE_LABELS = {
   waitlist_automation: 'Waitlist Pro',
   public_api: 'Public API',
   franchise_tools: 'Franchise Tools',
+  kiosk_mode: 'Self-Service Kiosk',
 };
 
 export const defaultPlans = [

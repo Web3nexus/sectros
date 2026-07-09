@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             SaaSCMSSeeder::class,
             AllTemplatesSeeder::class,
             AddonSeeder::class,
+            SitemapEntrySeeder::class,
         ]);
     }
 }

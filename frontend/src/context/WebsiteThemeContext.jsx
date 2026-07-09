@@ -3,11 +3,18 @@ import centralApi from '../services/centralApi';
 
 const WebsiteThemeContext = createContext();
 
+const VALID_THEMES = ['classic-ai', 'modern-business-os'];
+
 export function WebsiteThemeProvider({ children }) {
+  const cached = localStorage.getItem('website_theme');
+  const hasTrustedCache = cached && VALID_THEMES.includes(cached);
+
   const [activeTheme, setActiveTheme] = useState(() => {
-    return localStorage.getItem('website_theme') || 'classic-ai';
+    return hasTrustedCache ? cached : 'classic-ai';
   });
-  const [loading, setLoading] = useState(true);
+  // If we have a trusted cached theme, don't block rendering — render instantly.
+  // Only block on the first ever visit (no cache) until the API responds.
+  const [loading, setLoading] = useState(!hasTrustedCache);
 
   useEffect(() => {
     const fetchTheme = async () => {
@@ -17,8 +24,7 @@ export function WebsiteThemeProvider({ children }) {
         setActiveTheme(theme);
         localStorage.setItem('website_theme', theme);
       } catch (err) {
-        const cached = localStorage.getItem('website_theme');
-        if (cached) setActiveTheme(cached);
+        // On network failure, fall back to cached or default — already set above.
       } finally {
         setLoading(false);
       }

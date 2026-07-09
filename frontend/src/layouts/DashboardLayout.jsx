@@ -102,6 +102,7 @@ export function DashboardLayout() {
         ]},
         { key: 'automation', path: '/dashboard/automation', label: t('dashboard.aiCommand') || 'AI Command', alwaysOn: false, roleCheck: true, feature: 'ai_automation' },
         { key: 'messages', path: '/dashboard/messages', label: t('dashboard.unifiedChat'), alwaysOn: false, roleCheck: true, feature: 'social_integration' },
+        { key: 'channels', path: '/dashboard/channels', label: 'Channels', alwaysOn: false, roleCheck: true, feature: 'social_integration' },
       ],
     },
     {

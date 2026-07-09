@@ -466,6 +466,21 @@ export default function VoiceAgentSetupForm() {
         </div>
         <div>
           <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest block mb-2">System Prompt</label>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <span className="text-sm font-black text-primary">
+                {({ restaurant: 'L', cafe: 'M', salon: 'S', spa: 'E', hotel: 'J', fitness: 'A', clinic: 'R' })[form.business_type] || '?'}
+              </span>
+            </div>
+            <div>
+              <p className="text-xs font-bold text-foreground">
+                {({ restaurant: 'Lucia', cafe: 'Maya', salon: 'Sophie', spa: 'Elena', hotel: 'James', fitness: 'Alex', clinic: 'Rachel' })[form.business_type] || 'Custom'} Profile
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {({ restaurant: 'Restaurant Receptionist', cafe: 'Cafe Barista & Host', salon: 'Salon Receptionist & Booking Coordinator', spa: 'Spa Concierge & Wellness Coordinator', hotel: 'Hotel Concierge & Reservation Specialist', fitness: 'Fitness Center Receptionist & Membership Coordinator', clinic: 'Medical Clinic Receptionist & Appointment Coordinator' })[form.business_type] || 'Custom voice agent'}
+              </p>
+            </div>
+          </div>
           <textarea value={form.system_prompt}
             onChange={e => handleChange('system_prompt', e.target.value)}
             rows={6}

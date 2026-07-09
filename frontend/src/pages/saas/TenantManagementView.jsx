@@ -1028,7 +1028,7 @@ export default function TenantManagementView() {
               <div className="mb-10">
                  <h4 className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-4">Module Access Control</h4>
                  <div className="grid grid-cols-1 gap-3">
-                    {['AI Command Center', 'Online Ordering', 'Financial Reports', 'Staff Management'].map(feature => {
+                     {['AI Command Center', 'Online Ordering', 'Financial Reports', 'Staff Management', 'Self-Service Kiosk'].map(feature => {
                         const featureKey = feature.toLowerCase().replace(/\s+/g, '_');
                         const isEnabled = selectedTenant?.features?.[featureKey] !== false;
                         return (

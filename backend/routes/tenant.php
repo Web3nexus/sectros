@@ -202,13 +202,14 @@ Route::middleware(['api'])->group(function () {
         Route::post('/public/payments/create-checkout', [\App\Http\Controllers\Api\TenantPaymentController::class, 'createCheckoutSession']);
         Route::get('/public/payments/verify', [\App\Http\Controllers\Api\TenantPaymentController::class, 'verifyPayment']);
 
-        Route::middleware('throttle:6,1')->group(function () {
+        Route::middleware('throttle:login')->group(function () {
             Route::post('/login', [AuthController::class, 'login']);
-            Route::post('/login/token', [AuthController::class, 'loginWithToken']);
             Route::post('/login/verify-2fa', [AuthController::class, 'verify2FA']);
             Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
             Route::post('/reset-password', [AuthController::class, 'resetPassword']);
         });
+        // Impersonation token login — not credential-based, generous limit
+        Route::post('/login/token', [AuthController::class, 'loginWithToken'])->middleware('throttle:login-token');
 
         Route::get('/auth/facebook', [SocialiteController::class, 'redirectToFacebook']);
         Route::get('/auth/facebook/callback', [SocialiteController::class, 'handleFacebookCallback']);
@@ -371,6 +372,30 @@ Route::middleware(['api'])->group(function () {
                 Route::get('/accounts', [MetaAccountController::class, 'index']);
                 Route::post('/accounts/{id}/disconnect', [MetaAccountController::class, 'disconnect']);
                 Route::post('/accounts/disconnect-all', [MetaAccountController::class, 'disconnectAll']);
+            });
+
+            // Direct/BSP Channel Management
+            Route::prefix('channels')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'index']);
+                Route::post('/facebook/initiate', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'initiateFacebookOAuth']);
+                Route::post('/instagram/initiate', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'initiateInstagramOAuth']);
+                Route::post('/oauth/callback', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'handleOAuthCallback']);
+                Route::post('/whatsapp/connect', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'connectWhatsApp']);
+                Route::post('/{id}/disconnect', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'disconnect']);
+                Route::get('/{id}/status', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'status']);
+            });
+
+            // Unified Inbox (Direct/BSP mode)
+            Route::prefix('inbox')->group(function () {
+                Route::get('/conversations', [\App\Http\Controllers\Api\InboxController::class, 'conversations']);
+                Route::get('/conversations/{id}/messages', [\App\Http\Controllers\Api\InboxController::class, 'conversationMessages']);
+                Route::post('/conversations/{id}/reply', [\App\Http\Controllers\Api\InboxController::class, 'sendReply']);
+                Route::patch('/conversations/{id}', [\App\Http\Controllers\Api\InboxController::class, 'updateConversation']);
+                Route::get('/contacts', [\App\Http\Controllers\Api\InboxController::class, 'contacts']);
+                Route::get('/ai-settings', [\App\Http\Controllers\Api\InboxController::class, 'getAiSettings']);
+                Route::post('/ai-settings', [\App\Http\Controllers\Api\InboxController::class, 'updateAiSettings']);
+                Route::get('/ai-logs', [\App\Http\Controllers\Api\InboxController::class, 'getAiReplyLogs']);
+                Route::get('/channels', [\App\Http\Controllers\Api\InboxController::class, 'getChannels']);
             });
 
             Route::get('/dashboard/stats', [\App\Http\Controllers\Api\DashboardController::class, 'stats']);

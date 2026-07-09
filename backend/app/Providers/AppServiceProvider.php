@@ -19,6 +19,14 @@ class AppServiceProvider extends ServiceProvider
             return $this->withoutGlobalScope(StrictTenantScope::class);
         });
 
+        \Illuminate\Support\Facades\RateLimiter::for('login', function (\Illuminate\Http\Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(6)->by($request->ip());
+        });
+
+        \Illuminate\Support\Facades\RateLimiter::for('login-token', function (\Illuminate\Http\Request $request) {
+            return \Illuminate\Cache\RateLimiting\Limit::perMinute(60)->by($request->ip());
+        });
+
         \App\Models\Tenant::observe(\App\Observers\TenantObserver::class);
         try {
             if (\Illuminate\Support\Facades\Schema::hasTable((new \App\Models\SaaSSetting)->getTable())) {

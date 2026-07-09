@@ -18,8 +18,10 @@ import { FinancialsView } from './pages/FinancialsView'
 import ErrorBoundary from './components/ErrorBoundary'
 import { SEOHead } from './components/SEOHead'
 import { OrderPortal } from './pages/OrderPortal'
+import KioskView from './pages/KioskView'
 import AutomationView from './pages/AutomationView'
 import MessagesView from './pages/MessagesView'
+import WorkspaceChannelsView from './pages/WorkspaceChannelsView'
 import SettingsView from './pages/SettingsView'
 import AccountSettingsView from './pages/AccountSettingsView'
 import SecuregateLogin from './pages/SecuregateLogin'
@@ -29,6 +31,7 @@ import RestrictedBuilderView from './pages/RestrictedBuilderView'
 import WebsiteDashboardView from './pages/WebsiteDashboardView'
 import DomainSetupView from './pages/DomainSetupView'
 import { SaaSAdminLayout } from './layouts/SaaSAdminLayout'
+import MessagingIntegrationView from './pages/MessagingIntegrationView'
 import TenantManagementView from './pages/saas/TenantManagementView'
 import SaaSSettingsView from './pages/saas/SaaSSettingsView'
 import SaaSSubscriptionsView from './pages/saas/SaaSSubscriptionsView'
@@ -92,7 +95,8 @@ import ModernContact from './components/themes/modern-business-os/ModernContact'
 import ModernBlog from './components/themes/modern-business-os/ModernBlog'
 
 function ThemedPage({ classic, modern }) {
-  const { isModernBusinessOS } = useWebsiteTheme();
+  const { isModernBusinessOS, loading } = useWebsiteTheme();
+  if (loading) return null;
   return isModernBusinessOS ? (modern || classic) : classic;
 }
 
@@ -106,7 +110,8 @@ function SEO({ title, description, path, children }) {
 }
 
 function ThemeAwarePublicLayout() {
-  const { isModernBusinessOS } = useWebsiteTheme();
+  const { isModernBusinessOS, loading } = useWebsiteTheme();
+  if (loading) return null;
   return isModernBusinessOS ? <ModernPublicLayout /> : <PublicLayout />;
 }
 
@@ -163,12 +168,14 @@ function AppContent() {
           <Route path="voice-agent-plans" element={<VoiceAgentPlanListView />} />
           <Route path="translations" element={<TranslationManagementView />} />
           <Route path="settings" element={<SaaSSettingsView />} />
+          <Route path="messaging-integration" element={<MessagingIntegrationView />} />
           <Route path="account" element={<AccountSettingsView />} />
         </Route>
       </Route>
 
       {/* Public Customer View */}
       <Route path="/order" element={<OrderPortal />} />
+      <Route path="/kiosk/:tenantId" element={<KioskView />} />
 
       {/* Admin/Business Dashboard */}
       <Route element={<ProtectedRoute redirectPath="/login" />}>
@@ -193,6 +200,7 @@ function AppContent() {
             <Route path="financials" element={<FinancialsView />} />
             <Route path="automation" element={<AutomationView />} />
             <Route path="messages" element={<MessagesView />} />
+            <Route path="channels" element={<WorkspaceChannelsView />} />
              <Route path="settings" element={<SettingsView />} />
              <Route path="domain" element={<DomainSetupView />} />
 
