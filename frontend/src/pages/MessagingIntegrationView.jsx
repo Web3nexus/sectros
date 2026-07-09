@@ -119,12 +119,12 @@ export default function MessagingIntegrationView() {
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="bg-card rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-2xl">
           <h3 className="text-xl font-bold mb-6">{provider ? 'Edit Provider' : 'Add Provider'}</h3>
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Provider Key</label>
-              <select value={form.provider_key} onChange={e => setForm({ ...form, provider_key: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" disabled={!!provider}>
+              <select value={form.provider_key} onChange={e => setForm({ ...form, provider_key: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" disabled={!!provider}>
                 <option value="360dialog">360dialog</option>
                 <option value="twilio">Twilio</option>
                 <option value="meta_direct">Meta Direct</option>
@@ -134,35 +134,35 @@ export default function MessagingIntegrationView() {
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Provider Name</label>
-              <input type="text" value={form.provider_name} onChange={e => setForm({ ...form, provider_name: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder="My Provider" required />
+              <input type="text" value={form.provider_name} onChange={e => setForm({ ...form, provider_name: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder="My Provider" required />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Provider Type</label>
-              <select value={form.provider_type} onChange={e => setForm({ ...form, provider_type: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700">
+              <select value={form.provider_type} onChange={e => setForm({ ...form, provider_type: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border">
                 <option value="meta_direct">Meta Direct (FB/IG/WA)</option>
                 <option value="whatsapp_bsp">WhatsApp BSP</option>
               </select>
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">API Key / Auth Token</label>
-              <input type="password" value={form.api_key} onChange={e => setForm({ ...form, api_key: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder={provider ? 'Leave blank to keep existing' : 'Required'} />
+              <input type="password" value={form.api_key} onChange={e => setForm({ ...form, api_key: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder={provider ? 'Leave blank to keep existing' : 'Required'} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">API Secret</label>
-              <input type="password" value={form.api_secret} onChange={e => setForm({ ...form, api_secret: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder={provider ? 'Leave blank to keep existing' : ''} />
+              <input type="password" value={form.api_secret} onChange={e => setForm({ ...form, api_secret: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder={provider ? 'Leave blank to keep existing' : ''} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Webhook Secret</label>
-              <input type="password" value={form.webhook_secret} onChange={e => setForm({ ...form, webhook_secret: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder={provider ? 'Leave blank to keep existing' : ''} />
+              <input type="password" value={form.webhook_secret} onChange={e => setForm({ ...form, webhook_secret: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder={provider ? 'Leave blank to keep existing' : ''} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Webhook Verify Token</label>
-              <input type="password" value={form.webhook_verify_token} onChange={e => setForm({ ...form, webhook_verify_token: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder={provider ? 'Leave blank to keep existing' : ''} />
+              <input type="password" value={form.webhook_verify_token} onChange={e => setForm({ ...form, webhook_verify_token: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder={provider ? 'Leave blank to keep existing' : ''} />
             </div>
             {configKeys.map(key => (
               <div key={key}>
                 <label className="block text-sm font-medium mb-1 capitalize">{key.replace(/_/g, ' ')}</label>
-                <input type="text" value={form.config_json?.[key] || ''} onChange={e => setForm({ ...form, config_json: { ...form.config_json, [key]: e.target.value } })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" />
+                <input type="text" value={form.config_json?.[key] || ''} onChange={e => setForm({ ...form, config_json: { ...form.config_json, [key]: e.target.value } })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" />
               </div>
             ))}
             <div className="flex items-center gap-6">
@@ -177,7 +177,7 @@ export default function MessagingIntegrationView() {
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-8">
-            <button onClick={onCancel} className="px-6 py-2 border rounded-xl dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">Cancel</button>
+            <button onClick={onCancel} className="px-6 py-2 border rounded-xl border-border hover:bg-muted">Cancel</button>
             <button onClick={() => onSave(form)} className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700">Save Provider</button>
           </div>
         </div>
@@ -203,24 +203,24 @@ export default function MessagingIntegrationView() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border dark:border-gray-800">
+      <div className="bg-card rounded-2xl p-8 shadow-sm border border-border">
         <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Globe className="w-5 h-5" /> Integration Mode</h2>
         <div className="space-y-4">
-          <label className="flex items-start gap-4 p-4 border rounded-xl dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <label className="flex items-start gap-4 p-4 border rounded-xl border-border cursor-pointer hover:bg-muted dark:hover:bg-muted/50">
             <input type="radio" name="integration_mode" value="partner" checked={settings.integration_mode === 'partner'} onChange={e => setSettings({ ...settings, integration_mode: e.target.value })} className="mt-1" />
             <div>
               <div className="font-semibold">Partner Program Mode</div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Use the existing Meta Tech Provider / Partner Program integration. Admin manages system-level tokens.</div>
             </div>
           </label>
-          <label className="flex items-start gap-4 p-4 border rounded-xl dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <label className="flex items-start gap-4 p-4 border rounded-xl border-border cursor-pointer hover:bg-muted dark:hover:bg-muted/50">
             <input type="radio" name="integration_mode" value="direct" checked={settings.integration_mode === 'direct'} onChange={e => setSettings({ ...settings, integration_mode: e.target.value })} className="mt-1" />
             <div>
               <div className="font-semibold">Direct Meta + BSP Mode</div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Each workspace connects their own Facebook Pages, Instagram accounts, and WhatsApp Business numbers directly. Supports BSP providers.</div>
             </div>
           </label>
-          <label className="flex items-start gap-4 p-4 border rounded-xl dark:border-gray-700 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50">
+          <label className="flex items-start gap-4 p-4 border rounded-xl border-border cursor-pointer hover:bg-muted dark:hover:bg-muted/50">
             <input type="radio" name="integration_mode" value="workspace_choice" checked={settings.integration_mode === 'workspace_choice'} onChange={e => setSettings({ ...settings, integration_mode: e.target.value })} className="mt-1" />
             <div>
               <div className="font-semibold">Allow Workspace Admin to Choose</div>
@@ -230,17 +230,17 @@ export default function MessagingIntegrationView() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border dark:border-gray-800">
+      <div className="bg-card rounded-2xl p-8 shadow-sm border border-border">
         <h2 className="text-lg font-bold mb-6 flex items-center gap-2"><Facebook className="w-5 h-5" /> <Instagram className="w-5 h-5" /> Meta Direct API Settings</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Meta App ID</label>
-            <input type="text" value={settings.meta_app_id} onChange={e => setSettings({ ...settings, meta_app_id: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder="1234567890123456" />
+            <input type="text" value={settings.meta_app_id} onChange={e => setSettings({ ...settings, meta_app_id: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder="1234567890123456" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Meta App Secret</label>
             <div className="relative">
-              <input type={showSecrets.appSecret ? 'text' : 'password'} value={settings.meta_app_secret} onChange={e => setSettings({ ...settings, meta_app_secret: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700 pr-10" placeholder="App Secret" />
+              <input type={showSecrets.appSecret ? 'text' : 'password'} value={settings.meta_app_secret} onChange={e => setSettings({ ...settings, meta_app_secret: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border pr-10" placeholder="App Secret" />
               <button onClick={() => setShowSecrets({ ...showSecrets, appSecret: !showSecrets.appSecret })} className="absolute right-3 top-2.5 text-gray-400">
                 {showSecrets.appSecret ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -248,12 +248,12 @@ export default function MessagingIntegrationView() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">OAuth Redirect URL</label>
-            <input type="text" value={settings.meta_oauth_redirect_url} onChange={e => setSettings({ ...settings, meta_oauth_redirect_url: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder="https://sectrosweb.test/api/auth/facebook/callback" />
+            <input type="text" value={settings.meta_oauth_redirect_url} onChange={e => setSettings({ ...settings, meta_oauth_redirect_url: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder="https://sectrosweb.test/api/auth/facebook/callback" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Webhook Verify Token</label>
             <div className="relative">
-              <input type={showSecrets.webhookToken ? 'text' : 'password'} value={settings.meta_webhook_verify_token} onChange={e => setSettings({ ...settings, meta_webhook_verify_token: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700 pr-10" placeholder="sectros_webhook_verify" />
+              <input type={showSecrets.webhookToken ? 'text' : 'password'} value={settings.meta_webhook_verify_token} onChange={e => setSettings({ ...settings, meta_webhook_verify_token: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border pr-10" placeholder="sectros_webhook_verify" />
               <button onClick={() => setShowSecrets({ ...showSecrets, webhookToken: !showSecrets.webhookToken })} className="absolute right-3 top-2.5 text-gray-400">
                 {showSecrets.webhookToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -261,16 +261,16 @@ export default function MessagingIntegrationView() {
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Required Permissions (comma-separated)</label>
-            <input type="text" value={settings.meta_required_permissions} onChange={e => setSettings({ ...settings, meta_required_permissions: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" />
+            <input type="text" value={settings.meta_required_permissions} onChange={e => setSettings({ ...settings, meta_required_permissions: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" />
           </div>
           <div className="md:col-span-2">
             <label className="block text-sm font-medium mb-1">Webhook Callback URL</label>
-            <input type="text" value={settings.meta_webhook_callback_url} onChange={e => setSettings({ ...settings, meta_webhook_callback_url: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-gray-800 dark:border-gray-700" placeholder="/api/social/webhook" />
+            <input type="text" value={settings.meta_webhook_callback_url} onChange={e => setSettings({ ...settings, meta_webhook_callback_url: e.target.value })} className="w-full px-4 py-2 border rounded-xl dark:bg-muted dark:border-border" placeholder="/api/social/webhook" />
           </div>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-2xl p-8 shadow-sm border dark:border-gray-800">
+      <div className="bg-card rounded-2xl p-8 shadow-sm border border-border">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold flex items-center gap-2"><Smartphone className="w-5 h-5" /> WhatsApp BSP Providers</h2>
           <button onClick={() => { setEditingProvider(null); setShowProviderModal(true) }} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm">
@@ -282,7 +282,7 @@ export default function MessagingIntegrationView() {
         ) : (
           <div className="space-y-3">
             {providers.map(provider => (
-              <div key={provider.id} className="flex items-center justify-between p-4 border rounded-xl dark:border-gray-700">
+              <div key={provider.id} className="flex items-center justify-between p-4 border rounded-xl border-border">
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${provider.provider_type === 'meta_direct' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-green-100 dark:bg-green-900/30'}`}>
                     {provider.provider_type === 'meta_direct' ? <Globe className="w-5 h-5 text-blue-600" /> : <Smartphone className="w-5 h-5 text-green-600" />}
@@ -297,20 +297,20 @@ export default function MessagingIntegrationView() {
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${provider.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>
                         {provider.is_active ? 'Active' : 'Inactive'}
                       </span>
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${provider.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${provider.status === 'connected' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'}`}>
                         {provider.status}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => testProvider(provider.id)} className="p-2 text-sm border rounded-xl dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800" title="Test Connection">
+                  <button onClick={() => testProvider(provider.id)} className="p-2 text-sm border rounded-xl border-border hover:bg-muted" title="Test Connection">
                     <Loader2 className="w-4 h-4" />
                   </button>
-                  <button onClick={() => { setEditingProvider(provider); setShowProviderModal(true) }} className="p-2 text-sm border rounded-xl dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800">
+                  <button onClick={() => { setEditingProvider(provider); setShowProviderModal(true) }} className="p-2 text-sm border rounded-xl border-border hover:bg-muted">
                     Edit
                   </button>
-                  <button onClick={() => deleteProvider(provider.id)} className="p-2 text-sm border rounded-xl dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">
+                  <button onClick={() => deleteProvider(provider.id)} className="p-2 text-sm border rounded-xl border-border hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
