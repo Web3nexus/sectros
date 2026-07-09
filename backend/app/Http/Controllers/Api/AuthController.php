@@ -587,8 +587,19 @@ class AuthController extends Controller
         $request->validate(['email' => 'required|email']);
 
         if ($request->is('central-api/*')) {
-            $user = \App\Models\Admin::where('email', $request->email)->first();
-            $connection = 'mysql';
+            $user = \App\Models\Admin::on('platform')->where('email', $request->email)->first();
+            $connection = 'platform';
+
+            if (!$user) {
+                $user = User::withoutTenantScope()->where('email', $request->email)->first();
+                $connection = 'tenant';
+                if ($user && $user->tenant_id) {
+                    $tenant = \App\Models\Tenant::find($user->tenant_id);
+                    if ($tenant) {
+                        tenancy()->initialize($tenant);
+                    }
+                }
+            }
         } else {
             $user = User::where('email', $request->email)->first();
             $connection = config('database.default');
@@ -649,6 +660,17 @@ class AuthController extends Controller
         if ($request->is('central-api/*')) {
             $user = \App\Models\Admin::on('platform')->where('email', $request->email)->first();
             $connection = 'platform';
+
+            if (!$user) {
+                $user = User::withoutTenantScope()->where('email', $request->email)->first();
+                $connection = 'tenant';
+                if ($user && $user->tenant_id) {
+                    $tenant = \App\Models\Tenant::find($user->tenant_id);
+                    if ($tenant) {
+                        tenancy()->initialize($tenant);
+                    }
+                }
+            }
         } else {
             $user = User::on('tenant')->where('email', $request->email)->first();
             $connection = 'tenant';
