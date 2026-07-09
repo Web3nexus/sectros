@@ -44,9 +44,13 @@ class AuthController extends Controller
                 if ($isAdminEmail) {
                     $adminUser = \App\Models\Admin::where('email', $request->email)->first();
                 } else {
-                    $tenantUser = User::on('tenant')->where('email', $request->email)->first();
+                    $tenantUser = User::on('tenant')->withoutTenantScope()->where('email', $request->email)->first();
                     if ($tenantUser) {
                         $tenantRecord = Tenant::on('platform')->find($tenantUser->tenant_id);
+                        if ($tenantRecord) {
+                            \App\Services\TenantResolver::set($tenantRecord);
+                            tenancy()->initialize($tenantRecord);
+                        }
                     }
                 }
             }
@@ -536,10 +540,23 @@ class AuthController extends Controller
             'method' => 'required|in:email,totp,pin',
         ]);
 
-        if ($request->is('central-api/*')) {
-            $user = \App\Models\Admin::on('platform')->where('email', $request->email)->firstOrFail();
+        $user = null;
+        $isAdminEmail = \App\Models\Admin::where('email', $request->email)->exists();
+        if ($isAdminEmail) {
+            $user = \App\Models\Admin::on('platform')->where('email', $request->email)->first();
         } else {
-            $user = User::on('tenant')->where('email', $request->email)->firstOrFail();
+            $user = User::on('tenant')->withoutTenantScope()->where('email', $request->email)->first();
+            if ($user && $user->tenant_id) {
+                $tenant = Tenant::on('platform')->find($user->tenant_id);
+                if ($tenant) {
+                    \App\Services\TenantResolver::set($tenant);
+                    tenancy()->initialize($tenant);
+                }
+            }
+        }
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found.'], 404);
         }
 
         if ($request->method === 'email') {
