@@ -221,6 +221,7 @@ Route::middleware(['api'])->group(function () {
             Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/status', [\App\Http\Controllers\Api\SubscriptionController::class, 'currentStatus']);
                 Route::post('/subscribe', [\App\Http\Controllers\Api\SubscriptionController::class, 'subscribe']);
+                Route::post('/upgrade', [\App\Http\Controllers\Api\SubscriptionController::class, 'subscribe']);
                 Route::post('/purchase-credits', [\App\Http\Controllers\Api\SubscriptionController::class, 'purchaseCredits']);
                 Route::post('/purchase-sms-credits', [\App\Http\Controllers\Api\SubscriptionController::class, 'purchaseSmsCredits']);
             });
@@ -321,6 +322,7 @@ Route::middleware(['api'])->group(function () {
             Route::apiResource('/orders', OrderController::class);
             Route::apiResource('/reservations', ReservationController::class);
             Route::patch('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus']);
+            Route::get('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'index']);
 
             // Voice Booking NLP Parser (authenticated tenant)
             Route::prefix('voice-booking')->group(function () {
@@ -357,6 +359,10 @@ Route::middleware(['api'])->group(function () {
                 Route::post('/invoices/scan', [\App\Http\Controllers\Api\ProcurementController::class, 'scanInvoice']);
                 Route::get('/shopping-lists', [\App\Http\Controllers\Api\ProcurementController::class, 'shoppingLists']);
                 Route::post('/shopping-lists', [\App\Http\Controllers\Api\ProcurementController::class, 'createShoppingList']);
+                Route::get('/shopping-items', [\App\Http\Controllers\Api\ProcurementController::class, 'shoppingItems']);
+                Route::post('/shopping-items', [\App\Http\Controllers\Api\ProcurementController::class, 'storeShoppingItem']);
+                Route::patch('/shopping-items/{id}/toggle', [\App\Http\Controllers\Api\ProcurementController::class, 'toggleShoppingItem']);
+                Route::delete('/shopping-items/{id}', [\App\Http\Controllers\Api\ProcurementController::class, 'deleteShoppingItem']);
             });
 
             // Review Automation

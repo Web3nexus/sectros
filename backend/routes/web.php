@@ -8,6 +8,15 @@ Route::get('/robots.txt', [\App\Http\Controllers\Api\SEOController::class, 'robo
 Route::get('/sitemap.xml', [\App\Http\Controllers\Api\SEOController::class, 'sitemap']);
 Route::get('/schema.json', [\App\Http\Controllers\Api\SEOController::class, 'jsonLdSchema']);
 
+// Fallback named login route to prevent RouteNotFoundException
+Route::get('/login', function () {
+    return Response::make(
+        file_exists(public_path('index.html')) ? file_get_contents(public_path('index.html')) : 'Login',
+        200,
+        ['Content-Type' => 'text/html']
+    );
+})->name('login');
+
 foreach (config('tenancy.central_domains') as $domain) {
     // Match exact central domain (e.g. sectros.com)
     Route::domain($domain)->group(function () {

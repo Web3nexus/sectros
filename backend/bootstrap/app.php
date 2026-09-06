@@ -54,9 +54,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'tenancy.header' => \App\Http\Middleware\InitializeTenancyByHeader::class,
             'tenant.throttle' => \App\Http\Middleware\TenantThrottle::class,
+            'role' => \App\Http\Middleware\CheckRole::class,
         ]);
         $middleware->redirectGuestsTo(function ($request) {
-            if ($request->is('api/*') || $request->is('central-api/*') || $request->is('tenant-api/*')) {
+            if ($request->is('api/*') || $request->is('central-api/*') || $request->is('tenant-api/*') || $request->expectsJson()) {
                 return null; // Return 401 JSON for API
             }
             // Preserve subdomain context — redirect to same host's /login (SPA handles it)
@@ -65,5 +66,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->throttleApi('60,1');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+            if ($request->is('api/*') || $request->is('central-api/*') || $request->is('tenant-api/*') || $request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+        });
     })->create();

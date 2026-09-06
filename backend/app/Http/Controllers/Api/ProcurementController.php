@@ -211,5 +211,122 @@ class ProcurementController extends Controller
             'list' => $list->load('items'),
         ], 201);
     }
+
+    /**
+     * Get all active shopping items across lists for quick checklist.
+     */
+    public function shoppingItems(Request $request): JsonResponse
+    {
+        $items = ProcurementItem::with('procurementList')
+            ->orderByRaw("FIELD(status, 'pending', 'purchased')")
+            ->orderBy('id', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id'               => $item->id,
+                    'item_name'        => $item->item_name,
+                    'quantity'         => (float) $item->quantity,
+                    'unit'             => $item->unit ?? 'pcs',
+                    'department'       => $item->procurementList?->department ?? 'Kitchen',
+                    'status'           => $item->status ?? 'pending',
+                    'estimated_price'  => (float) ($item->estimated_price ?? 0),
+                    'created_at'       => $item->created_at?->toISOString() ?? null,
+                ];
+            });
+
+        return response()->json([
+            'items' => $items,
+            'counts' => [
+                'total'     => $items->count(),
+                'pending'   => $items->where('status', 'pending')->count(),
+                'purchased' => $items->where('status', 'purchased')->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Store single shopping item (adds to default departmental list or creates one).
+     */
+    public function storeShoppingItem(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'item_name'        => 'required|string|max:255',
+            'quantity'         => 'required|numeric|min:0.1',
+            'unit'             => 'nullable|string|max:50',
+            'department'       => 'nullable|string|in:Kitchen,Bar,Service,Cleaning',
+            'estimated_price'  => 'nullable|numeric|min:0',
+        ]);
+
+        $department = $validated['department'] ?? 'Kitchen';
+
+        // Find or create current active list for this department
+        $list = ProcurementList::where('department', $department)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        if (!$list) {
+            $list = ProcurementList::create([
+                'title'                => "{$department} Supplies",
+                'department'           => $department,
+                'status'               => 'pending',
+                'total_estimated_cost' => 0,
+            ]);
+        }
+
+        $item = ProcurementItem::create([
+            'procurement_list_id' => $list->id,
+            'item_name'           => $validated['item_name'],
+            'quantity'            => $validated['quantity'],
+            'unit'                => $validated['unit'] ?? 'pcs',
+            'estimated_price'     => $validated['estimated_price'] ?? 0,
+            'status'              => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Item added to purchase list.',
+            'item' => [
+                'id'               => $item->id,
+                'item_name'        => $item->item_name,
+                'quantity'         => (float) $item->quantity,
+                'unit'             => $item->unit ?? 'pcs',
+                'department'       => $department,
+                'status'           => 'pending',
+                'estimated_price'  => (float) ($item->estimated_price ?? 0),
+                'created_at'       => $item->created_at?->toISOString() ?? null,
+            ],
+        ], 201);
+    }
+
+    /**
+     * Toggle item status (pending <-> purchased).
+     */
+    public function toggleShoppingItem(Request $request, $id): JsonResponse
+    {
+        $item = ProcurementItem::findOrFail($id);
+        $newStatus = ($item->status === 'purchased') ? 'pending' : 'purchased';
+        $item->update(['status' => $newStatus]);
+
+        return response()->json([
+            'message' => 'Status updated.',
+            'item' => [
+                'id'        => $item->id,
+                'status'    => $item->status,
+                'item_name' => $item->item_name,
+            ],
+        ]);
+    }
+
+    /**
+     * Delete shopping item.
+     */
+    public function deleteShoppingItem(Request $request, $id): JsonResponse
+    {
+        $item = ProcurementItem::findOrFail($id);
+        $item->delete();
+
+        return response()->json(['message' => 'Item deleted.']);
+    }
 }
+
 
