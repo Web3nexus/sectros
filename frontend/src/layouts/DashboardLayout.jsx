@@ -50,19 +50,23 @@ export function DashboardLayout() {
     // Check globally disabled features first
     try {
       const disabled = JSON.parse(localStorage.getItem('disabled_features') || '[]');
-      if (Array.isArray(disabled) && disabled.includes(feat)) return false;
+      if (Array.isArray(disabled) && (disabled.includes(feat) || disabled.includes(feat.replace('.', '_')))) return false;
     } catch (e) {}
 
     const features = user?.features || {};
-    if (Array.isArray(features)) return features.includes(feat);
-    if (typeof features === 'object' && features !== null) return !!features[feat];
-    return false;
+    if (Array.isArray(features)) {
+      return features.includes(feat) || features.includes(feat.replace('.', '_')) || features.includes(feat.split('.')[0]);
+    }
+    if (typeof features === 'object' && features !== null) {
+      return !!features[feat] || !!features[feat.replace('.', '_')] || !!features[feat.split('.')[0]];
+    }
+    return true;
   };
 
   const isAllowed = (item) => {
     // Strictly enforce business-type configuration even for admins/impersonators
     // This ensures that when an admin is impersonating a Salon, they see the Salon UI
-    return config.sidebar.includes(item);
+    return config.sidebar.includes(item) || ['cash_register', 'procurement', 'kiosk_menu'].includes(item);
   };
 
   // Helper to get dynamic icon
@@ -74,24 +78,26 @@ export function DashboardLayout() {
   const SIDEBAR_GROUPS = [
     {
       label: 'Operations',
-      emoji: '\u{1F4CA}',
+      emoji: '📊',
       items: [
         { key: 'insights', path: '/dashboard', label: b.insights || 'Insights', alwaysOn: true, roleCheck: false, feature: null },
         { key: 'calendar', path: '/dashboard/calendar', label: b.calendar || 'Calendar', alwaysOn: false, roleCheck: false, feature: null },
-        { key: 'reservations', path: '/dashboard/reservations', label: b.reservations || 'Reservations', alwaysOn: false, roleCheck: false, feature: 'reservations' },
-        { key: 'tables', path: '/dashboard/tables', label: b.floorPlan || 'Floor Plan', alwaysOn: false, roleCheck: false, feature: 'floor_plan' },
+        { key: 'reservations', path: '/dashboard/reservations', label: b.reservations || 'Reservations', alwaysOn: false, roleCheck: false, feature: 'booking.core' },
+        { key: 'tables', path: '/dashboard/tables', label: b.floorPlan || 'Floor Plan', alwaysOn: false, roleCheck: false, feature: 'booking.floor_plan' },
         { key: 'waitlist', path: '/dashboard/waitlist', label: 'Waitlist Pro', alwaysOn: false, roleCheck: true, feature: 'waitlist_automation' },
         { key: 'menu', path: '/dashboard/menu', label: b.menu || 'Menu Builder', alwaysOn: false, roleCheck: false, feature: 'menu_builder' },
-        { key: 'online_ordering', path: '/dashboard/online-ordering', label: b.onlineOrdering || t('dashboard.onlineOrdering'), alwaysOn: false, roleCheck: true, feature: 'online_ordering' },
+        { key: 'kiosk_menu', path: '/dashboard/kiosk-menu', label: 'Kiosk Menu (86s)', alwaysOn: false, roleCheck: true, feature: 'kiosk.menu_manager' },
+        { key: 'online_ordering', path: '/dashboard/online-ordering', label: b.onlineOrdering || t('dashboard.onlineOrdering'), alwaysOn: false, roleCheck: true, feature: 'kiosk.takeout_orders' },
         { key: 'pos', path: '/dashboard/pos', label: b.pos || t('dashboard.posTerminal'), alwaysOn: false, roleCheck: true, feature: 'pos_terminal' },
         { key: 'inventory', path: '/dashboard/inventory', label: b.inventory || t('dashboard.inventoryTracking'), alwaysOn: false, roleCheck: true, feature: 'inventory_tracking' },
+        { key: 'procurement', path: '/dashboard/procurement', label: 'Procurement & OCR', alwaysOn: false, roleCheck: true, feature: 'finance.receipt_scanner' },
       ],
     },
     {
       label: 'AI & Communication',
-      emoji: '\u{1F916}',
+      emoji: '🤖',
       items: [
-        { key: 'voice_agent', path: '/dashboard/voice-agent', label: 'AI Voice Agent', alwaysOn: false, roleCheck: true, feature: 'ai_voice_agent', children: [
+        { key: 'voice_agent', path: '/dashboard/voice-agent', label: 'AI Voice Agent', alwaysOn: false, roleCheck: true, feature: 'ai.voice_agent', children: [
           { key: 'voice_overview', path: '/dashboard/voice-agent', label: 'Overview' },
           { key: 'voice_setup', path: '/dashboard/voice-agent/setup', label: 'Setup' },
           { key: 'voice_phone', path: '/dashboard/voice-agent/phone-number', label: 'Phone Number' },
@@ -100,14 +106,14 @@ export function DashboardLayout() {
           { key: 'voice_usage', path: '/dashboard/voice-agent/usage', label: 'Usage & Billing' },
           { key: 'voice_settings', path: '/dashboard/voice-agent/settings', label: 'Settings' },
         ]},
-        { key: 'automation', path: '/dashboard/automation', label: t('dashboard.aiCommand') || 'AI Command', alwaysOn: false, roleCheck: true, feature: 'ai_automation' },
-        { key: 'messages', path: '/dashboard/messages', label: t('dashboard.unifiedChat'), alwaysOn: false, roleCheck: true, feature: 'social_integration' },
-        { key: 'channels', path: '/dashboard/channels', label: 'Channels', alwaysOn: false, roleCheck: true, feature: 'social_integration' },
+        { key: 'automation', path: '/dashboard/automation', label: t('dashboard.aiCommand') || 'AI Command', alwaysOn: false, roleCheck: true, feature: 'ai.assistant' },
+        { key: 'messages', path: '/dashboard/messages', label: t('dashboard.unifiedChat'), alwaysOn: false, roleCheck: true, feature: 'inbox.unified' },
+        { key: 'channels', path: '/dashboard/channels', label: 'Channels', alwaysOn: false, roleCheck: true, feature: 'inbox.unified' },
       ],
     },
     {
       label: 'Online Presence',
-      emoji: '\u{1F310}',
+      emoji: '🌐',
       items: [
         { key: 'website', path: '/dashboard/website', label: t('dashboard.websiteBuilder') || 'Website Builder', alwaysOn: false, roleCheck: true, feature: 'white_label_website', children: [
           { key: 'reviews', path: '/dashboard/reviews', label: 'Reviews' },
@@ -122,18 +128,19 @@ export function DashboardLayout() {
     },
     {
       label: 'People & Operations',
-      emoji: '\u{1F465}',
+      emoji: '👥',
       items: [
-        { key: 'staff', path: '/dashboard/staff', label: b.staff || 'Staff Profiles', alwaysOn: false, roleCheck: true, feature: 'staff_management' },
-        { key: 'financials', path: '/dashboard/financials', label: b.financials || 'Financials', alwaysOn: false, roleCheck: true, feature: 'financial_reports' },
+        { key: 'staff', path: '/dashboard/staff', label: b.staff || 'Staff Profiles', alwaysOn: false, roleCheck: true, feature: 'staff.management' },
+        { key: 'cash_register', path: '/dashboard/cash-register', label: 'TSE Cash Book (Z-Bons)', alwaysOn: false, roleCheck: true, feature: 'finance.cash_register' },
+        { key: 'financials', path: '/dashboard/financials', label: b.financials || 'Financials', alwaysOn: false, roleCheck: true, feature: 'finance.dashboard' },
       ],
     },
     {
       label: 'Administration',
-      emoji: '\u2699\uFE0F',
+      emoji: '⚙️',
       items: [
         { key: 'billing', path: '/dashboard/billing', label: t('dashboard.billingPlan') || 'Billing & Plan', alwaysOn: true, roleCheck: true, feature: null },
-        { key: 'integrations', path: '/dashboard/integrations', label: 'Public API', alwaysOn: false, roleCheck: true, feature: 'public_api' },
+        { key: 'integrations', path: '/dashboard/integrations', label: 'Public API', alwaysOn: false, roleCheck: true, feature: 'api.access' },
         { key: 'settings', path: '/dashboard/settings', label: b.configuration || 'Configuration', alwaysOn: true, roleCheck: true, feature: null },
       ],
     },

@@ -7,17 +7,26 @@ import centralApi from '../../../services/centralApi';
 import { defaultPlans, mapFeaturesToList, getDefaultFeatures } from '../../../utils/planFeatures';
 
 const comparisonFeatures = [
-  { name: 'Reservations', starter: true, growth: true, pro: true, enterprise: true },
-  { name: 'Floor Plan', starter: false, growth: true, pro: true, enterprise: true },
-  { name: 'Guest CRM', starter: false, growth: true, pro: true, enterprise: true },
-  { name: 'Automation', starter: false, growth: false, pro: true, enterprise: true },
-  { name: 'Deposits', starter: false, growth: true, pro: true, enterprise: true },
-  { name: 'Analytics', starter: false, growth: true, pro: true, enterprise: true },
-  { name: 'Messaging', starter: false, growth: false, pro: true, enterprise: true },
-  { name: 'Integrations', starter: false, growth: false, pro: false, enterprise: true },
-  { name: 'Multi-location', starter: false, growth: false, pro: false, enterprise: true },
-  { name: 'Support level', starter: 'Email', growth: 'Email', pro: 'Priority', enterprise: 'SLA' },
+  { name: 'Core Reservations & Calendar', starter: true, pro: true, enterprise: true },
+  { name: 'Public Booking Page (/book)', starter: true, pro: true, enterprise: true },
+  { name: 'Interactive 2D Floor Plan', starter: true, pro: true, enterprise: true },
+  { name: 'Stripe Table Deposits', starter: false, pro: true, enterprise: true },
+  { name: 'Shift Planner & AU Sick Notes', starter: false, pro: true, enterprise: true },
+  { name: 'PIN Time Clock (Live Punch Clock)', starter: false, pro: true, enterprise: true },
+  { name: 'Digital Payslips & Signature Canvas', starter: false, pro: true, enterprise: true },
+  { name: 'Unified Social Inbox (WA/IG/FB)', starter: false, pro: true, enterprise: true },
+  { name: 'TSE Cash Book & Daily Closings (Z-Bons)', starter: false, pro: true, enterprise: true },
+  { name: 'AI Supplier Invoice OCR Scanner', starter: false, pro: true, enterprise: true },
+  { name: 'Tax Advisor Portal & DATEV Export', starter: false, pro: true, enterprise: true },
+  { name: '24/7 AI Phone Voice Receptionist', starter: false, pro: true, enterprise: true },
+  { name: 'Self-Ordering Kiosk & Menu 86 Manager', starter: false, pro: true, enterprise: true },
+  { name: 'Guest Walk-in Check-in Tablet', starter: false, false: false, enterprise: true },
+  { name: 'White-Label Branding & Custom Domain', starter: false, pro: false, enterprise: true },
+  { name: 'Public Developer API Access', starter: false, pro: false, enterprise: true },
+  { name: 'Staff Member Quota', starter: '3 Staff', pro: '15 Staff', enterprise: 'Unlimited (∞)' },
+  { name: 'Multi-Location Outlets', starter: '1 Outlet', pro: '1 Outlet', enterprise: 'Unlimited (∞)' },
 ];
+
 
 const addons = [
   { name: 'SMS Credits', price: '$0.05', unit: 'per SMS', icon: Smartphone, desc: 'Send booking confirmations and reminders via SMS.' },
@@ -115,10 +124,11 @@ export default function ModernPricing() {
           const mappedFeatures = mapFeaturesToList(p.features);
           return {
             name: p.name,
-            monthly: p.monthly_price ?? 0,
+            monthly: p.monthly_price ?? null,
             yearly: p.yearly_price ?? null,
             description: p.description || '',
             popular: !!p.is_popular,
+            isEnterprise: p.monthly_price === null && p.name?.toLowerCase().includes('enterprise'),
             features: mappedFeatures.length > 0 ? mappedFeatures : getDefaultFeatures(p.name),
           };
         }));
@@ -160,25 +170,23 @@ export default function ModernPricing() {
       </section>
 
       <section className="px-6 pb-20 pt-10">
-        <div className="mx-auto max-w-7xl flex flex-wrap justify-center gap-6">
+        <div className="mx-auto max-w-5xl grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan, idx) => (
             <motion.div
               key={plan.name}
               initial={{ opacity: 0, y: 32 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 * idx }}
-              className={`relative flex flex-col w-full sm:w-[calc(50%-12px)] ${
-                plans.length === 3 ? 'lg:w-[calc(33.333%-16px)]' :
-                plans.length === 2 ? 'lg:w-[calc(50%-12px)]' :
-                'lg:w-[calc(25%-18px)]'
-              } min-w-[220px] rounded-2xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md ${
-                plan.popular ? 'border-blue-500 ring-1 ring-blue-500 scale-[1.02]' : 'border-slate-200'
+              className={`relative flex flex-col rounded-2xl border bg-white p-7 shadow-sm transition-all hover:shadow-md ${
+                plan.popular
+                  ? 'border-indigo-400 ring-2 ring-indigo-400/60 scale-[1.02] shadow-indigo-100'
+                  : 'border-slate-200'
               }`}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white shadow-sm">
-                    <Briefcase className="h-3 w-3" />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-3.5 py-1 text-xs font-semibold text-white shadow-sm">
+                    <Zap className="h-3 w-3" />
                     Most Popular
                   </span>
                 </div>
@@ -197,15 +205,15 @@ export default function ModernPricing() {
                 <PriceDisplay plan={plan} annual={annual} />
               </motion.div>
               <div className="mb-8 flex-1 space-y-3">
-                {plan.features.map((f) => (
+                {plan.features.slice(0, 5).map((f) => (
                   <div key={f} className="flex items-start gap-2.5">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+                    <Check className={`mt-0.5 h-4 w-4 shrink-0 ${plan.popular ? 'text-indigo-500' : 'text-blue-500'}`} />
                     <span className="text-sm text-slate-600">{f}</span>
                   </div>
                 ))}
               </div>
               <div className="mt-auto">
-                {plan.name === 'Enterprise' ? (
+                {plan.isEnterprise || plan.name === 'Enterprise' ? (
                   <Link
                     to="/contact"
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
@@ -215,15 +223,15 @@ export default function ModernPricing() {
                   </Link>
                 ) : plan.popular ? (
                   <Link
-                    to="/signup"
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
+                    to="/register"
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:from-indigo-500 hover:to-violet-500"
                   >
                     Start Free Trial
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 ) : (
                   <Link
-                    to="/signup"
+                    to="/register"
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
                   >
                     Start Free Trial

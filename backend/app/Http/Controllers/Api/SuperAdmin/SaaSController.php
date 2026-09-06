@@ -912,7 +912,7 @@ class SaaSController extends Controller
     public function getPublicTheme()
     {
         $theme = \App\Models\SaaSSetting::where('key', 'website_theme')->value('value');
-        return response()->json(['website_theme' => $theme ?? 'classic-ai']);
+        return response()->json(['website_theme' => $theme ?? 'modern-business-os']);
     }
 
     /**
@@ -1023,7 +1023,7 @@ class SaaSController extends Controller
             'landing_cta_section_title' => $this->sanitizeLanding($settings['landing_cta_section_title'] ?? 'Ready to grow your restaurant?'),
             'landing_cta_section_body' => $this->sanitizeLanding($settings['landing_cta_section_body'] ?? 'Join hundreds of restaurants already using Sectros. Get set up in under 5 minutes — no tech skills required.'),
             'landing_cta_section_button' => $this->sanitizeLanding($settings['landing_cta_section_button'] ?? 'Start your 14-day free trial'),
-            'website_theme' => $settings['website_theme'] ?? 'classic-ai',
+            'website_theme' => $settings['website_theme'] ?? 'modern-business-os',
             'trial_days' => (int) ($settings['trial_days'] ?? 14),
             'turnstile_site_key' => $settings['turnstile_site_key'] ?? '',
             'turnstile_secret_key' => $this->maskSecret($settings['turnstile_secret_key'] ?? ''),

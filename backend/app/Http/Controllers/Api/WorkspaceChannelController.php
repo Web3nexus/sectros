@@ -246,23 +246,165 @@ class WorkspaceChannelController extends Controller
         return 'https://' . $centralDomain . '/dashboard/channels';
     }
 
+    public function initiateWhatsAppEmbeddedSignup(): JsonResponse
+    {
+        $settings = $this->cacheSaaSSettings();
+        $appId = $settings['meta_app_id'] ?? '';
+        $redirectUri = $settings['meta_oauth_redirect_url'] ?: url('/api/whatsapp/callback');
+
+        $state = Crypt::encryptString(json_encode([
+            'tenant_id' => tenant('id'),
+            'action' => 'connect_whatsapp',
+            'timestamp' => now()->timestamp,
+        ]));
+
+        $oauthUrl = "https://www.facebook.com/v22.0/dialog/oauth?" . http_build_query([
+            'client_id' => $appId,
+            'redirect_uri' => $redirectUri,
+            'state' => $state,
+            'scope' => 'whatsapp_business_management,whatsapp_business_messaging,business_management',
+            'response_type' => 'code',
+        ]);
+
+        return response()->json(['oauth_url' => $oauthUrl]);
+    }
+
+    public function handleWhatsAppCallback(Request $request)
+    {
+        $code = $request->input('code');
+        $state = $request->input('state');
+        $error = $request->input('error');
+
+        if ($error) {
+            return redirect()->away($this->getDashboardUrl() . '?oauth=error&reason=' . urlencode($error));
+        }
+
+        if (!$code || !$state) {
+            return redirect()->away($this->getDashboardUrl() . '?oauth=error&reason=missing_params');
+        }
+
+        try {
+            $stateData = json_decode(Crypt::decryptString($state), true);
+            $action = $stateData['action'] ?? 'connect_whatsapp';
+            $tenantId = $stateData['tenant_id'] ?? null;
+        } catch (\Exception $e) {
+            return redirect()->away($this->getDashboardUrl() . '?oauth=error&reason=invalid_state');
+        }
+
+        if (!$tenantId) {
+            return redirect()->away($this->getDashboardUrl() . '?oauth=error&reason=no_tenant');
+        }
+
+        $tenant = \App\Models\Tenant::find($tenantId);
+        if (!$tenant) {
+            return redirect()->away($this->getDashboardUrl() . '?oauth=error&reason=tenant_not_found');
+        }
+
+        $settings = $this->cacheSaaSSettings();
+        $appId = $settings['meta_app_id'] ?? '';
+        $appSecret = SaaSSetting::where('key', 'meta_app_secret')->value('value') ?? '';
+        $redirectUri = $settings['meta_oauth_redirect_url'] ?: url('/api/whatsapp/callback');
+
+        $tokenResponse = Http::asForm()->post('https://graph.facebook.com/v22.0/oauth/access_token', [
+            'client_id' => $appId,
+            'client_secret' => $appSecret,
+            'redirect_uri' => $redirectUri,
+            'code' => $code,
+        ]);
+
+        if (!$tokenResponse->successful()) {
+            return redirect()->away($this->getDashboardUrl($tenant) . '?oauth=error&reason=token_exchange_failed');
+        }
+
+        $tokenData = $tokenResponse->json();
+        $shortLivedToken = $tokenData['access_token'] ?? '';
+
+        $longTokenResponse = Http::asForm()->get('https://graph.facebook.com/v22.0/oauth/access_token', [
+            'grant_type' => 'fb_exchange_token',
+            'client_id' => $appId,
+            'client_secret' => $appSecret,
+            'fb_exchange_token' => $shortLivedToken,
+        ]);
+
+        $longTokenData = $longTokenResponse->successful() ? $longTokenResponse->json() : $tokenData;
+        $accessToken = $longTokenData['access_token'] ?? $shortLivedToken;
+        $expiresIn = $longTokenData['expires_in'] ?? 5184000;
+
+        // Fetch WABAs
+        $wabaResponse = Http::withToken($accessToken)->get('https://graph.facebook.com/v22.0/me/whatsapp_business_accounts');
+
+        $wabas = $wabaResponse->successful() ? ($wabaResponse->json()['data'] ?? []) : [];
+        $connectedCount = 0;
+
+        foreach ($wabas as $waba) {
+            $wabaId = $waba['id'] ?? null;
+            if (!$wabaId) continue;
+
+            $phoneResponse = Http::withToken($accessToken)->get("https://graph.facebook.com/v22.0/{$wabaId}/phone_numbers");
+            if (!$phoneResponse->successful()) continue;
+
+            $phoneNumbers = $phoneResponse->json()['data'] ?? [];
+            foreach ($phoneNumbers as $phone) {
+                $channelData = [
+                    'tenant_id' => $tenantId,
+                    'integration_mode' => 'meta_direct',
+                    'channel_type' => 'whatsapp',
+                    'provider_name' => 'meta',
+                    'external_account_id' => $phone['id'],
+                    'phone_number_id' => $phone['id'],
+                    'display_phone_number' => $phone['display_phone_number'] ?? $phone['phone_number'] ?? null,
+                    'waba_id' => $wabaId,
+                    'connection_status' => 'connected',
+                    'webhook_status' => 'subscribed',
+                    'webhook_subscribed_at' => now(),
+                    'token_expires_at' => now()->addSeconds($expiresIn),
+                ];
+
+                $channel = Channel::updateOrCreate(
+                    ['tenant_id' => $tenantId, 'channel_type' => 'whatsapp', 'external_account_id' => $phone['id']],
+                    $channelData
+                );
+                $channel->access_token = $accessToken;
+                $channel->save();
+
+                $this->subscribeWhatsAppToWebhooks($channel);
+                $connectedCount++;
+            }
+        }
+
+        return redirect()->away($this->getDashboardUrl($tenant) . '?oauth=success&count=' . $connectedCount);
+    }
+
+    protected function subscribeWhatsAppToWebhooks(Channel $channel): void
+    {
+        if (!$channel->phone_number_id) return;
+
+        $settings = $this->cacheSaaSSettings();
+        $callbackUrl = $settings['meta_webhook_callback_url'] ?: url('/api/social/webhook');
+        $verifyToken = SaaSSetting::where('key', 'meta_webhook_verify_token')->value('value') ?? '';
+
+        $resp = Http::withToken($channel->access_token)->timeout(15)->post("https://graph.facebook.com/v22.0/{$channel->phone_number_id}/subscribed_apps", [
+            'subscribed_fields' => 'messages,message_deliveries,messaging_optins,messaging_postbacks,message_reads',
+        ]);
+
+        $success = $resp->successful();
+        $channel->update([
+            'webhook_status' => $success ? 'subscribed' : 'failed',
+            'last_error' => $success ? null : 'WhatsApp webhook subscription failed: ' . $resp->body(),
+        ]);
+    }
+
     public function connectWhatsApp(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'provider_name' => 'required|string|in:360dialog,twilio,bird,custom,meta',
-            'phone_number' => 'required|string',
             'phone_number_id' => 'required|string',
             'waba_id' => 'nullable|string',
-            'api_key' => 'nullable|string',
             'display_phone_number' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-
-        $providerName = $request->provider_name;
-        $integrationMode = $providerName === 'meta' ? 'direct' : 'bsp';
 
         $channel = Channel::updateOrCreate(
             [
@@ -271,41 +413,20 @@ class WorkspaceChannelController extends Controller
                 'external_account_id' => $request->phone_number_id,
             ],
             [
-                'integration_mode' => $integrationMode,
-                'provider_name' => $providerName,
+                'integration_mode' => 'meta_direct',
+                'provider_name' => 'meta',
                 'phone_number_id' => $request->phone_number_id,
-                'display_phone_number' => $request->display_phone_number ?? $request->phone_number,
+                'display_phone_number' => $request->display_phone_number,
                 'waba_id' => $request->waba_id,
-                'connection_status' => 'pending',
+                'connection_status' => 'connected',
+                'webhook_status' => 'subscribed',
+                'webhook_subscribed_at' => now(),
             ]
         );
 
-        if ($request->api_key) {
-            $channel->access_token = $request->api_key;
-        }
+        $this->subscribeWhatsAppToWebhooks($channel);
 
-        try {
-            $adapter = $this->providerManager->resolveForChannel($channel);
-            $result = $adapter->connectAccount($channel, $request->all());
-
-            if ($result['success']) {
-                $channel->connection_status = 'connected';
-                $channel->save();
-                return response()->json(['message' => 'WhatsApp channel connected', 'channel' => $channel]);
-            }
-
-            $channel->connection_status = 'error';
-            $channel->last_error = $result['error'] ?? 'Unknown error';
-            $channel->save();
-
-            return response()->json(['error' => $result['error'] ?? 'Connection failed'], 400);
-        } catch (\Exception $e) {
-            $channel->connection_status = 'error';
-            $channel->last_error = $e->getMessage();
-            $channel->save();
-
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
+        return response()->json(['message' => 'WhatsApp channel connected', 'channel' => $channel]);
     }
 
     public function disconnect($id): JsonResponse

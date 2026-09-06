@@ -10,7 +10,7 @@ export function WebsiteThemeProvider({ children }) {
   const hasTrustedCache = cached && VALID_THEMES.includes(cached);
 
   const [activeTheme, setActiveTheme] = useState(() => {
-    return hasTrustedCache ? cached : 'classic-ai';
+    return hasTrustedCache ? cached : 'modern-business-os';
   });
   // If we have a trusted cached theme, don't block rendering — render instantly.
   // Only block on the first ever visit (no cache) until the API responds.
@@ -20,7 +20,7 @@ export function WebsiteThemeProvider({ children }) {
     const fetchTheme = async () => {
       try {
         const res = await centralApi.get('public/theme');
-        const theme = res.data.website_theme || 'classic-ai';
+        const theme = res.data.website_theme || 'modern-business-os';
         setActiveTheme(theme);
         localStorage.setItem('website_theme', theme);
       } catch (err) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, Globe, ChevronDown, Coffee, Music, Scissors, Building, PartyPopper, ChevronRight} from 'lucide-react';
+import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, Globe, ChevronDown, Coffee, Music, Scissors, Building, PartyPopper, ChevronRight, Code2, Award, Handshake, Mail} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useBranding } from '../../../hooks/useBranding';
@@ -57,6 +57,22 @@ export function ModernPublicLayout() {
     { label: 'Hotels', icon: Building },
     { label: 'Event Venues', icon: PartyPopper },
   ];
+
+  const resourceItems = [
+    { label: 'Blog & Articles', to: '/blog', icon: Book, description: 'Industry insights & product updates' },
+    { label: 'Help Center', to: '/help', icon: HelpCircle, description: 'Knowledge base, FAQs & support' },
+    { label: 'Case Studies', to: '/case-studies', icon: Award, description: 'Success stories from real operators' },
+    { label: 'Guides & Playbooks', to: '/guides', icon: FileText, description: 'Step-by-step hospitality setup tutorials' },
+    { label: 'Developer API Docs', to: '/api-docs', icon: Code2, description: 'REST endpoints, auth & webhooks' },
+  ];
+
+  const companyItems = [
+    { label: 'About Sectros', to: '/about', icon: Building, description: 'Our mission and hospitality team' },
+    { label: 'Contact Us', to: '/contact', icon: Mail, description: 'Sales inquiries & customer support' },
+    { label: 'Careers', to: '/careers', icon: Briefcase, description: 'Open positions & remote culture' },
+    { label: 'Partners & Affiliates', to: '/partners', icon: Handshake, description: 'Referral, integration & white-label tiers' },
+  ];
+
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans flex flex-col">
@@ -180,26 +196,105 @@ export function ModernPublicLayout() {
               >
                 Solutions
               </Link>
-              <Link
-                to="/blog"
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  location.pathname === '/blog'
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
+              {/* Resources Dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={() => handleMouseEnter('resources')}
+                onMouseLeave={handleMouseLeave}
               >
-                Resources
-              </Link>
-              <Link
-                to="/about"
-                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  location.pathname === '/about'
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
+                <button
+                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    ['/blog', '/help', '/case-studies', '/guides', '/api-docs'].includes(location.pathname)
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  Resources
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeMenu === 'resources' ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {activeMenu === 'resources' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[360px]"
+                    >
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 p-3 space-y-1">
+                        {resourceItems.map(item => {
+                          const Icon = item.icon;
+                          return (
+                            <Link
+                              key={item.label}
+                              to={item.to}
+                              className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-blue-50 group transition-colors"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{item.label}</div>
+                                <div className="text-xs text-slate-400">{item.description}</div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Company Dropdown */}
+              <div
+                className="relative"
+                onMouseEnter={() => handleMouseEnter('company')}
+                onMouseLeave={handleMouseLeave}
               >
-                Company
-              </Link>
+                <button
+                  className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    ['/about', '/contact', '/careers', '/partners'].includes(location.pathname)
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  Company
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${activeMenu === 'company' ? 'rotate-180' : ''}`} />
+                </button>
+                <AnimatePresence>
+                  {activeMenu === 'company' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[340px]"
+                    >
+                      <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 p-3 space-y-1">
+                        {companyItems.map(item => {
+                          const Icon = item.icon;
+                          return (
+                            <Link
+                              key={item.label}
+                              to={item.to}
+                              className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-blue-50 group transition-colors"
+                            >
+                              <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">{item.label}</div>
+                                <div className="text-xs text-slate-400">{item.description}</div>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </nav>
 
             <div className="hidden lg:flex items-center gap-3">
@@ -261,8 +356,26 @@ export function ModernPublicLayout() {
               </div>
               <Link to="/pricing" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Pricing</Link>
               <Link to="/solutions" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Solutions</Link>
-              <Link to="/blog" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Resources</Link>
-              <Link to="/about" className="text-lg font-semibold text-slate-900 py-3 px-4 rounded-lg hover:bg-slate-50 transition-colors">Company</Link>
+              <div className="px-4 py-2">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Resources</div>
+                <div className="grid grid-cols-1 gap-1">
+                  {resourceItems.map(item => (
+                    <Link key={item.label} to={item.to} className="text-sm font-semibold text-slate-700 hover:text-blue-600 py-1.5 px-2 rounded-lg hover:bg-slate-50 transition-colors">
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div className="px-4 py-2">
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Company</div>
+                <div className="grid grid-cols-1 gap-1">
+                  {companyItems.map(item => (
+                    <Link key={item.label} to={item.to} className="text-sm font-semibold text-slate-700 hover:text-blue-600 py-1.5 px-2 rounded-lg hover:bg-slate-50 transition-colors">
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
               <div className="h-px bg-slate-200 my-4" />
               {!loading && (
                 user ? (
@@ -330,26 +443,39 @@ export function ModernPublicLayout() {
             <div>
               <h4 className="text-white font-semibold mb-4 text-sm">Resources</h4>
               <ul className="space-y-3">
-                {['Blog', 'Help Center', 'Case Studies', 'Guides', 'API Docs'].map(item => (
-                  <li key={item}><Link to="/blog" className="text-sm text-slate-400 hover:text-white transition-colors">{item}</Link></li>
+                {[
+                  { label: 'Blog', to: '/blog' },
+                  { label: 'Help Center', to: '/help' },
+                  { label: 'Case Studies', to: '/case-studies' },
+                  { label: 'Guides', to: '/guides' },
+                  { label: 'API Docs', to: '/api-docs' },
+                ].map(item => (
+                  <li key={item.label}><Link to={item.to} className="text-sm text-slate-400 hover:text-white transition-colors">{item.label}</Link></li>
                 ))}
               </ul>
             </div>
             <div>
               <h4 className="text-white font-semibold mb-4 text-sm">Company</h4>
               <ul className="space-y-3">
-                {['About', 'Contact', 'Careers', 'Partners', 'Privacy'].map(item => (
-                  <li key={item}><Link to={item === 'Privacy' ? '/privacy' : '/about'} className="text-sm text-slate-400 hover:text-white transition-colors">{item}</Link></li>
+                {[
+                  { label: 'About', to: '/about' },
+                  { label: 'Contact', to: '/contact' },
+                  { label: 'Careers', to: '/careers' },
+                  { label: 'Partners', to: '/partners' },
+                  { label: 'Privacy', to: '/privacy' },
+                ].map(item => (
+                  <li key={item.label}><Link to={item.to} className="text-sm text-slate-400 hover:text-white transition-colors">{item.label}</Link></li>
                 ))}
               </ul>
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-slate-500">&copy; {new Date().getFullYear()} {platformName}. All rights reserved.</p>
-            <div className="flex gap-6">
+            <div className="flex flex-wrap gap-6">
               <Link to="/privacy" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Terms of Service</Link>
               <Link to="/cookies" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Cookie Policy</Link>
+              <Link to="/gdpr" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">GDPR & DMCA</Link>
             </div>
           </div>
         </div>

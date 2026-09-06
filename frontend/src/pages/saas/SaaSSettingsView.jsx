@@ -74,7 +74,7 @@ export default function SaaSSettingsView() {
     sales_email: '',
     trial_days: 14,
     require_card_for_trial: false,
-    website_theme: 'classic-ai',
+    website_theme: 'modern-business-os',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

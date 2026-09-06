@@ -332,6 +332,40 @@ Route::middleware(['api'])->group(function () {
             Route::get('/expenses', [ExpenseController::class, 'index']);
             Route::post('/expenses', [ExpenseController::class, 'store']);
 
+            // Kassenbuch (Daily Cash Closings & Z-Bons)
+            Route::prefix('daily-cash')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\DailyCashController::class, 'index']);
+                Route::post('/', [\App\Http\Controllers\Api\DailyCashController::class, 'store']);
+                Route::get('/draft-today', [\App\Http\Controllers\Api\DailyCashController::class, 'draftToday']);
+            });
+
+            // Employee Self-Service & Punch Clock
+            Route::prefix('employee-portal')->group(function () {
+                Route::post('/pin-verify', [\App\Http\Controllers\Api\EmployeePortalController::class, 'verifyPin']);
+                Route::post('/punch-clock', [\App\Http\Controllers\Api\EmployeePortalController::class, 'punchClock']);
+                Route::get('/dashboard', [\App\Http\Controllers\Api\EmployeePortalController::class, 'dashboard']);
+                Route::post('/sick-notes', [\App\Http\Controllers\Api\EmployeePortalController::class, 'submitSickNote']);
+                Route::post('/vacation', [\App\Http\Controllers\Api\EmployeePortalController::class, 'submitVacation']);
+                Route::post('/payslips/{id}/sign', [\App\Http\Controllers\Api\EmployeePortalController::class, 'signPayslip']);
+            });
+
+            // Procurement, Dynamic Product Catalog & Supplier Invoices
+            Route::prefix('procurement')->group(function () {
+                Route::get('/catalog', [\App\Http\Controllers\Api\ProcurementController::class, 'catalog']);
+                Route::post('/catalog', [\App\Http\Controllers\Api\ProcurementController::class, 'storeProduct']);
+                Route::get('/invoices', [\App\Http\Controllers\Api\ProcurementController::class, 'invoices']);
+                Route::post('/invoices/scan', [\App\Http\Controllers\Api\ProcurementController::class, 'scanInvoice']);
+                Route::get('/shopping-lists', [\App\Http\Controllers\Api\ProcurementController::class, 'shoppingLists']);
+                Route::post('/shopping-lists', [\App\Http\Controllers\Api\ProcurementController::class, 'createShoppingList']);
+            });
+
+            // Review Automation
+            Route::post('/reviews/{id}/ai-reply', [\App\Http\Controllers\Api\ReviewAutomationController::class, 'generateReply']);
+            Route::post('/reviews/send-invite', [\App\Http\Controllers\Api\ReviewAutomationController::class, 'sendReviewRequest']);
+
+            // Kiosk Menu Manager
+            Route::post('/kiosk/menu/{id}/toggle-stock', [\App\Http\Controllers\Api\KioskTerminalController::class, 'toggleItemAvailability']);
+
             Route::prefix('finance')->middleware('role:owner,admin')->group(function () {
                 Route::get('/overview', [\App\Http\Controllers\Api\FinanceController::class, 'overview']);
                 Route::get('/transactions', [\App\Http\Controllers\Api\FinanceController::class, 'transactions']);
@@ -339,6 +373,7 @@ Route::middleware(['api'])->group(function () {
                 Route::get('/settlements', [\App\Http\Controllers\Api\FinanceController::class, 'settlements']);
                 Route::get('/export', [\App\Http\Controllers\Api\FinanceController::class, 'export']);
             });
+
 
             Route::apiResource('/shifts', ShiftController::class);
             Route::apiResource('/attendance', AttendanceController::class);
@@ -374,13 +409,24 @@ Route::middleware(['api'])->group(function () {
                 Route::post('/accounts/disconnect-all', [MetaAccountController::class, 'disconnectAll']);
             });
 
-            // Direct/BSP Channel Management
+            // Meta Direct Channel Management
             Route::prefix('channels')->group(function () {
                 Route::get('/', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'index']);
+
+                // Facebook Page
                 Route::post('/facebook/initiate', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'initiateFacebookOAuth']);
+
+                // Instagram Business/Creator
                 Route::post('/instagram/initiate', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'initiateInstagramOAuth']);
-                Route::post('/oauth/callback', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'handleOAuthCallback']);
+
+                // WhatsApp via Embedded Signup
+                Route::post('/whatsapp/initiate', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'initiateWhatsAppEmbeddedSignup']);
                 Route::post('/whatsapp/connect', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'connectWhatsApp']);
+
+                // OAuth callback (Facebook/Instagram)
+                Route::post('/oauth/callback', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'handleOAuthCallback']);
+
+                // Channel lifecycle
                 Route::post('/{id}/disconnect', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'disconnect']);
                 Route::get('/{id}/status', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'status']);
             });

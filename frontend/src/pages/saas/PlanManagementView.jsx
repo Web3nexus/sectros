@@ -1,31 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import {Plus, Edit2, Trash2, CheckCircle, X, Loader2, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, Save, Infinity, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Briefcase, Building2, Globe, Table2, LayoutGrid, Phone, Smartphone} from 'lucide-react';
+import {Plus, Edit2, Trash2, CheckCircle, X, Loader2, MessageSquare, DollarSign, Bot, Calendar, Component, Utensils, Table, Save, Infinity, LayoutDashboard, Users, CreditCard, Settings, ShoppingBag, Package, Briefcase, Building2, Globe, Table2, LayoutGrid, Phone, Smartphone, Clock, FileText} from 'lucide-react';
 import api from '../../services/centralApi';
 
 const ALL_FEATURES = [
-  { key: 'insights',         label: 'Insights',            description: 'Dashboard overview & analytics', icon: LayoutDashboard, alwaysOn: true },
-  { key: 'reservations',     label: 'Reservations',        description: 'Accept and manage table bookings', icon: Calendar, alwaysOn: true },
-  { key: 'configuration',    label: 'Configuration',        description: 'Store & platform settings', icon: Settings, alwaysOn: true },
-  { key: 'provisioning',     label: 'Provisioning',         description: 'New setup & onboarding tools', icon: Plus, alwaysOn: true },
-  { key: 'billing_plan',     label: 'Billing & Plan',       description: 'View & upgrade subscription', icon: CreditCard, alwaysOn: true },
-  { key: 'social_integration', label: 'Unified Chat',        description: 'WhatsApp, Facebook, Instagram', icon: MessageSquare, alwaysOn: false },
-  { key: 'pos_terminal',       label: 'POS Terminal',         description: 'In-house ordering & payments', icon: Component, alwaysOn: false },
-  { key: 'menu_builder',       label: 'Menu Builder',         description: 'Digital catalog & QR ordering', icon: Utensils, alwaysOn: false },
-  { key: 'service_builder',    label: 'Service Builder',      description: 'Treatment & service cataloging', icon: Briefcase, alwaysOn: false },
-  { key: 'room_manager',       label: 'Room Manager',         description: 'Room inventory & categorization', icon: Building2, alwaysOn: false },
-  { key: 'floor_plan',         label: 'Space Manager',        description: 'Visual layout & resource mapping', icon: Table, alwaysOn: false },
-  { key: 'staff_management',   label: 'Staff Profiles',       description: 'Account access & role control', icon: Users, alwaysOn: false },
-  { key: 'financial_reports',  label: 'Financials',          description: 'Revenue, expenses & profit metrics', icon: DollarSign, alwaysOn: false },
-  { key: 'ai_automation',      label: 'AI Command',          description: 'AI workflow & intelligent responses', icon: Bot, alwaysOn: false },
-  { key: 'online_ordering',    label: 'Online Ordering',      description: 'Customer ordering web portal', icon: ShoppingBag, alwaysOn: false },
-  { key: 'inventory_tracking', label: 'Inventory Management', description: 'Stock levels & ingredient tracking', icon: Package, alwaysOn: false },
-  { key: 'reservation_deposits', label: 'Reservation Deposits', description: 'Require deposits or payments on bookings', icon: DollarSign, alwaysOn: false },
-  { key: 'directory_featured', label: 'Featured Listing',     description: 'Prioritized visibility in directory', icon: Briefcase, alwaysOn: false },
-  { key: 'branch_management',  label: 'Multi-Branch',         description: 'Manage multiple physical locations', icon: Building2, alwaysOn: false },
-  { key: 'waitlist_automation',label: 'Waitlist Pro',         description: 'Automated SMS & seating logic', icon: Plus, alwaysOn: false },
-  { key: 'public_api',         label: 'Public API',           description: 'External integration access', icon: Settings, alwaysOn: false },
-  { key: 'custom_domain',      label: 'Custom Domain',        description: 'Connect your own domain name', icon: Globe, alwaysOn: false },
-  { key: 'franchise_tools',    label: 'Franchise Tools',      description: 'Central management for groups', icon: Users, alwaysOn: false },
+  // Core Booking
+  { key: 'booking.core',          label: 'Core Reservations & Calendar',    description: 'Booking engine, timeline & tables', icon: Calendar, alwaysOn: true },
+  { key: 'booking.public_page',   label: 'Public Booking Page',            description: 'Customer-facing /book portal', icon: Globe, alwaysOn: true },
+  { key: 'booking.floor_plan',    label: '2D Floor Plan Editor',           description: 'Visual space layout & table mapping', icon: Table, alwaysOn: true },
+  
+  // Gated Booking & Deposits
+  { key: 'booking.deposits',      label: 'Stripe Table Deposits',          description: 'No-show protection with card hold/charge', icon: DollarSign, alwaysOn: false },
+  
+  // Staff & HR
+  { key: 'staff.management',      label: 'Staff Rota & Sick Notes',        description: 'Shift planner, team accounts & sick note uploads', icon: Users, alwaysOn: false },
+  { key: 'staff.time_tracking',   label: 'PIN Time Clock',                 description: 'Live clock-in/out kiosk with breaks', icon: Clock, alwaysOn: false },
+  { key: 'staff.payroll',         label: 'Payslip Signing & Tip Tracker',  description: 'Digital signature canvas & tip allocations', icon: FileText, alwaysOn: false },
+
+  // Unified Inbox & Socials
+  { key: 'inbox.unified',         label: 'Unified Inbox',                  description: 'Central inbox for guest chats & inquiries', icon: MessageSquare, alwaysOn: false },
+  { key: 'inbox.whatsapp',        label: 'WhatsApp Cloud API',             description: 'Official WhatsApp direct messaging', icon: Phone, alwaysOn: false },
+  { key: 'inbox.facebook',        label: 'Facebook Messenger',             description: 'Page messenger direct connection', icon: MessageSquare, alwaysOn: false },
+  { key: 'inbox.instagram',       label: 'Instagram Direct',               description: 'IG business DM synchronization', icon: MessageSquare, alwaysOn: false },
+  { key: 'inbox.ai_reply',        label: 'AI Chat Auto-Responder',         description: 'Smart AI generated reply suggestions', icon: Bot, alwaysOn: false },
+
+  // Finance & Compliance
+  { key: 'finance.cash_register', label: 'TSE Cash Book & Daily Closings', description: 'GoBD/KassenSichV cash book & daily Z-Bons', icon: DollarSign, alwaysOn: false },
+  { key: 'finance.receipt_scanner',label: 'Invoice & Receipt OCR',          description: 'AI document parsing & supplier invoice logs', icon: Package, alwaysOn: false },
+  { key: 'finance.dashboard',     label: 'Financial & VAT Analytics',      description: '7%/19% VAT split, COGS & margin stats', icon: LayoutDashboard, alwaysOn: false },
+  { key: 'finance.exports',       label: 'Tax Advisor Portal & DATEV',     description: 'External tax advisor login & CSV export', icon: Briefcase, alwaysOn: false },
+
+  // Kiosk & Terminal Modes
+  { key: 'kiosk.mode',            label: 'Guest Walk-in Kiosk',            description: 'Self check-in tablet terminal (/kiosk)', icon: Smartphone, alwaysOn: false },
+  { key: 'kiosk.takeout_orders',  label: 'Self-Ordering Food Kiosk',       description: 'Takeout POS ordering screen (/kiosk-order)', icon: ShoppingBag, alwaysOn: false },
+  { key: 'kiosk.menu_manager',    label: 'Digital Menu & 86 Item Manager', description: 'Live item availability & out-of-stock toggle', icon: Utensils, alwaysOn: false },
+
+  // AI & Telephony
+  { key: 'ai.assistant',          label: 'Conversational Business AI',     description: 'Executive assistant for insights & actions', icon: Bot, alwaysOn: false },
+  { key: 'ai.voice_agent',        label: 'AI Phone Voice Receptionist',    description: 'Twilio telephony answering agent (24/7)', icon: Phone, alwaysOn: false },
+
+  // Infrastructure & White-Label
+  { key: 'branding.white_label',  label: 'Custom Domain & White Label',    description: 'Custom domain and removed platform branding', icon: Globe, alwaysOn: false },
+  { key: 'api.access',            label: 'Developer REST API',             description: 'Webhook triggers & public API tokens', icon: Settings, alwaysOn: false },
 ];
 
 const FEATURE_KEYS = ALL_FEATURES.map(f => f.key);

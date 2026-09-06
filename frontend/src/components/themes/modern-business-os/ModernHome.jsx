@@ -568,12 +568,14 @@ export default function ModernHome() {
       const active = arr.filter(p => p.is_active);
       if (active.length > 0) {
         setPricingPlans(active.map(p => {
+          const isEnterprise = !p.monthly_price && p.name?.toLowerCase().includes('enterprise');
           const mappedFeatures = mapFeaturesToList(p.features);
           return {
             name: p.name,
-            price: p.monthly_price === 0 || p.monthly_price === null ? (p.name === 'Enterprise' ? 'Custom' : '$0') : `$${p.monthly_price}`,
-            period: p.monthly_price === 0 ? 'forever free' : p.monthly_price === null ? 'contact us' : '/month',
-            highlighted: !!p.popular,
+            price: isEnterprise ? 'Custom' : `$${p.monthly_price}`,
+            period: isEnterprise ? '' : '/mo',
+            highlighted: !!p.is_popular,
+            isEnterprise,
             features: mappedFeatures.length > 0 ? mappedFeatures : getDefaultFeatures(p.name),
             desc: p.description || '',
           };
@@ -1277,82 +1279,106 @@ export default function ModernHome() {
             <h2 className="text-3xl md:text-4xl font-bold text-white tracking-tight">{get('pricingPreview.heading')}</h2>
             <p className="mt-4 text-lg text-slate-400">{get('pricingPreview.subheading')}</p>
           </motion.div>
-          <motion.div className="flex flex-wrap justify-center gap-6" {...stagger}>
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto" {...stagger}>
             {(pricingPlans || [
               {
                 name: 'Starter',
-                desc: 'For new venues getting started',
-                price: '$0',
-                period: 'forever free',
-                highlighted: false,
-                features: ['Up to 50 bookings/mo', 'Single venue', 'Basic calendar', 'Email support', 'Booking widget'],
-              },
-              {
-                name: 'Growth',
-                desc: 'For growing independent venues',
+                desc: 'Launch reservations fast',
                 price: '$29',
-                period: '/month',
+                period: '/mo',
                 highlighted: false,
-                features: ['Unlimited bookings', 'Single venue', 'Floor plan management', 'Guest CRM', 'SMS reminders', 'Chat support'],
+                isEnterprise: false,
+                features: ['Core Reservations & Calendar', 'Public Online Booking Page', '2D Floor Plan Editor', 'Guest CRM & Notes', 'Up to 3 Staff Accounts'],
               },
               {
                 name: 'Professional',
-                desc: 'For busy venues with high volume',
-                price: '$79',
-                period: '/month',
+                desc: 'Full hospitality OS',
+                price: '$69',
+                period: '/mo',
                 highlighted: true,
-                features: ['Everything in Growth', 'Multi-location (up to 3)', 'Advanced analytics', 'Automation workflows', 'Priority support', 'Custom branding'],
+                isEnterprise: false,
+                features: ['Everything in Starter', 'Unified Social Inbox (WA/IG/FB)', 'Shift Planner & AI Receptionist', 'TSE Cash Book & DATEV Export', 'Self-Ordering Kiosk'],
               },
               {
                 name: 'Enterprise',
-                desc: 'For large hospitality groups',
+                desc: 'Tailored for your group',
                 price: 'Custom',
-                period: 'contact us',
+                period: '',
                 highlighted: false,
-                features: ['Everything in Pro', 'Unlimited locations', 'Dedicated account manager', 'Custom integrations', 'On-site training', 'SLA guarantee'],
+                isEnterprise: true,
+                features: ['Everything in Professional', 'Unlimited Staff & Locations', 'White-Label Branding', 'Developer API Access', 'Dedicated SLA & Support'],
               },
-            ]).map(({ name, desc, price, period, highlighted, features }, i) => (
-                <motion.div
-                  key={name}
-                  variants={stagger}
-                  className={`w-full sm:w-[calc(50%-12px)] ${
-                    plansCount === 3 ? 'lg:w-[calc(33.333%-16px)]' :
-                    plansCount === 2 ? 'lg:w-[calc(50%-12px)]' :
-                    'lg:w-[calc(25%-18px)]'
-                  } min-w-[220px] rounded-2xl p-6 md:p-8 flex flex-col ${
-                    highlighted
-                      ? 'bg-blue-600 text-white ring-2 ring-blue-400 scale-105 relative'
-                      : 'bg-slate-800 text-slate-200'
-                  }`}
-                >
-                  {highlighted && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-slate-900 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Most Popular</div>
-                  )}
-                  <div className="mb-1 text-lg font-bold">{name}</div>
-                  <div className={`text-sm mb-4 ${highlighted ? 'text-blue-100' : 'text-slate-400'}`}>{desc}</div>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold">{price}</span>
-                    <span className={`text-sm ml-1 ${highlighted ? 'text-blue-200' : 'text-slate-400'}`}>{period}</span>
+            ]).map(({ name, desc, price, period, highlighted, isEnterprise, features }, i) => (
+              <motion.div
+                key={name}
+                variants={stagger}
+                className={`relative flex flex-col rounded-2xl p-7 transition-all duration-300 ${
+                  highlighted
+                    ? 'bg-gradient-to-b from-slate-800 to-slate-900 ring-2 ring-indigo-500/70 shadow-[0_0_40px_rgba(99,102,241,0.18)] scale-[1.03]'
+                    : 'bg-slate-800/60 border border-slate-700/60 hover:border-slate-600/80'
+                }`}
+              >
+                {highlighted && (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-violet-500 text-white text-[10px] font-bold px-3.5 py-1.5 rounded-full shadow-lg uppercase tracking-widest">
+                    <span>✦</span> Most Popular
                   </div>
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {features.map(f => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm">
-                        <Check className={`w-4 h-4 mt-0.5 shrink-0 ${highlighted ? 'text-blue-200' : 'text-blue-400'}`} />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
+                )}
+
+                {/* Plan name & desc */}
+                <div className="mb-5">
+                  <div className={`text-[11px] font-bold uppercase tracking-widest mb-2 ${highlighted ? 'text-indigo-400' : 'text-slate-500'}`}>{name}</div>
+                  <div className="text-white text-base font-semibold leading-snug">{desc}</div>
+                </div>
+
+                {/* Price */}
+                <div className="mb-6 pb-6 border-b border-slate-700/60">
+                  {isEnterprise ? (
+                    <div>
+                      <div className="text-3xl font-bold text-white">Custom</div>
+                      <div className="text-sm text-slate-400 mt-1">Tailored to your venue</div>
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl font-bold text-white">{price}</span>
+                      <span className="text-slate-400 text-sm">{period}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Feature list */}
+                <ul className="space-y-3 mb-8 flex-1">
+                  {features.slice(0, 5).map(f => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-slate-300">
+                      <Check className={`w-4 h-4 mt-0.5 shrink-0 ${highlighted ? 'text-indigo-400' : 'text-slate-500'}`} />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* CTA */}
+                {isEnterprise ? (
                   <Link
-                    to={price === '$0' ? '/register' : '/pricing'}
-                    className={`w-full text-center py-3 rounded-xl text-sm font-semibold transition-all ${
-                      highlighted
-                        ? 'bg-white text-blue-600 hover:bg-blue-50'
-                        : 'bg-slate-700 text-white hover:bg-slate-600'
-                    }`}
+                    to="/contact"
+                    className="w-full text-center py-3 rounded-xl text-sm font-semibold transition-all border border-slate-600 text-slate-200 hover:bg-slate-700 hover:border-slate-500"
                   >
-                    {price === '$0' ? 'Get Started Free' : price === 'Custom' ? 'Contact Sales' : 'Start Free Trial'}
+                    Contact Sales →
                   </Link>
-                </motion.div>
+                ) : highlighted ? (
+                  <Link
+                    to="/register"
+                    className="w-full text-center py-3 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-500/20"
+                  >
+                    Start Free Trial
+                  </Link>
+                ) : (
+                  <Link
+                    to="/register"
+                    className="w-full text-center py-3 rounded-xl text-sm font-semibold transition-all bg-slate-700/80 text-white hover:bg-slate-700"
+                  >
+                    Start Free Trial
+                  </Link>
+                )}
+              </motion.div>
             ))}
           </motion.div>
         </div>

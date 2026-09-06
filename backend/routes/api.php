@@ -18,7 +18,7 @@ Route::get('/auth/facebook/callback', [\App\Http\Controllers\Api\SocialiteContro
 Route::get('/auth/direct/callback', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'handleOAuthCallback']);
 
 // WhatsApp Embedded Signup Callback (handles Meta OAuth redirect for per-tenant WhatsApp connection)
-Route::get('/whatsapp/callback', [\App\Http\Controllers\Api\TenantWhatsAppController::class, 'handleCallback']);
+Route::get('/whatsapp/callback', [\App\Http\Controllers\Api\WorkspaceChannelController::class, 'handleWhatsAppCallback']);
 
 // Meta App Review Required Pages
 Route::get('/privacy', function() {
@@ -117,11 +117,28 @@ Route::middleware('throttle:30,1')->prefix('public/voice-booking')->group(functi
     Route::post('/validate', [\App\Http\Controllers\Api\VoiceBookingController::class, 'parseAndValidate']);
 });
 
+// Tax Advisor Portal Endpoints
+Route::prefix('tax-advisor')->group(function () {
+    Route::post('/login', [\App\Http\Controllers\Api\TaxAdvisorController::class, 'login'])->middleware('throttle:login');
+    Route::post('/register', [\App\Http\Controllers\Api\TaxAdvisorController::class, 'register'])->middleware('throttle:10,1');
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/clients', [\App\Http\Controllers\Api\TaxAdvisorController::class, 'clients']);
+        Route::get('/clients/{tenantId}/data', [\App\Http\Controllers\Api\TaxAdvisorController::class, 'clientData']);
+        Route::get('/clients/{tenantId}/export/datev', [\App\Http\Controllers\Api\TaxAdvisorController::class, 'exportDatev']);
+        Route::post('/clients/{tenantId}/bills', [\App\Http\Controllers\Api\TaxAdvisorController::class, 'uploadBill']);
+    });
+});
+
 // Kiosk Mode Public Endpoints
 Route::middleware('throttle:60,1')->prefix('kiosk/{tenant}')->group(function () {
     Route::get('/menu', [\App\Http\Controllers\Api\KioskController::class, 'menu']);
     Route::get('/tables', [\App\Http\Controllers\Api\KioskController::class, 'tables']);
     Route::post('/order', [\App\Http\Controllers\Api\KioskController::class, 'placeOrder']);
+    Route::post('/walk-in', [\App\Http\Controllers\Api\KioskTerminalController::class, 'walkInCheckIn']);
+    Route::post('/menu/{id}/toggle-stock', [\App\Http\Controllers\Api\KioskTerminalController::class, 'toggleItemAvailability']);
+    Route::post('/punch-clock/pin', [\App\Http\Controllers\Api\EmployeePortalController::class, 'verifyPin']);
+    Route::post('/punch-clock/action', [\App\Http\Controllers\Api\EmployeePortalController::class, 'punchClock']);
 });
 
 // Webhook Test Endpoint (receives our outgoing webhooks for verification)
@@ -134,4 +151,5 @@ Route::post('/webhooks/test', function (\Illuminate\Http\Request $request) {
         'body' => $request->all(),
     ]);
 });
+
 
