@@ -48,6 +48,24 @@
 }
 
 @layer base {
+  :root, [data-theme-color="green"] {
+    /* ── Vibrant Green Brand (Default) ─────────────────────────── */
+    --primary:                #11c685;
+    --primary-foreground:     #FFFFFF;
+    --ring:                   #11c685;
+    --brand-accent:           #11c685;
+    --brand-accent-hover:     #0ea870;
+  }
+
+  [data-theme-color="blue"] {
+    /* ── Classic Blue Brand ─────────────────────────────────────── */
+    --primary:                #0071E3;
+    --primary-foreground:     #FFFFFF;
+    --ring:                   #0071E3;
+    --brand-accent:           #0071E3;
+    --brand-accent-hover:     #005ec0;
+  }
+
   :root {
     /* ── Apple off-white light mode ─────────────────────────────── */
     --background:             #F5F5F7; /* Apple off-white */
@@ -56,15 +74,12 @@
     --muted-foreground:       #8E8E93; /* iOS secondary text */
     --border:                 #E5E5EA; /* iOS separator */
     --input:                  #FFFFFF;
-    --primary:                #0071E3; /* Apple blue */
-    --primary-foreground:     #FFFFFF;
     --secondary:              #5856D6; /* iOS purple */
     --secondary-foreground:   #FFFFFF;
     --accent:                 #FF9500; /* iOS amber */
     --accent-foreground:      #FFFFFF;
     --destructive:            #FF3B30; /* iOS red */
     --destructive-foreground: #FFFFFF;
-    --ring:                   #0071E3;
     --radius:                 1rem;
     --card:                   #FFFFFF;
     --card-foreground:        #1D1D1F;
@@ -77,14 +92,14 @@
   }
 
   .dark {
-    /* ── OLED deep dark with subtle cool-blue glow ──────────────── */
+    /* ── OLED deep dark ────────────────────────────────────────── */
     --background:             #000000; /* OLED true black */
     --foreground:             #F5F5F7; /* Apple off-white */
     --muted:                  #1C1C1E; /* iOS dark surface */
     --muted-foreground:       #8E8E93;
     --border:                 rgba(255, 255, 255, 0.08);
     --input:                  #1C1C1E;
-    --primary:                #409CFF; /* Lighter for dark */
+    --primary:                #11c685;
     --primary-foreground:     #FFFFFF;
     --secondary:              #2C2C2E;
     --secondary-foreground:   #F5F5F7;
@@ -92,17 +107,73 @@
     --accent-foreground:      #FFFFFF;
     --destructive:            #FF453A;
     --destructive-foreground: #F5F5F7;
-    --ring:                   #409CFF;
+    --ring:                   #11c685;
     --radius:                 1rem;
     --card:                   #1C1C1E;
     --card-foreground:        #F5F5F7;
 
     --shadow-sm:  0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow-md:  0 4px 12px -2px rgba(0, 0, 0, 0.7), 0 2px 6px -1px rgba(0, 0, 0, 0.5);
-    --shadow-lg:  0 12px 24px -6px rgba(0, 0, 0, 0.8), 0 0 20px -5px rgba(64, 156, 255, 0.08);
-    --shadow-xl:  0 24px 48px -12px rgba(0, 0, 0, 0.85), 0 0 40px -10px rgba(64, 156, 255, 0.12);
+    --shadow-lg:  0 12px 24px -6px rgba(0, 0, 0, 0.8), 0 0 20px -5px rgba(17, 198, 133, 0.08);
+    --shadow-xl:  0 24px 48px -12px rgba(0, 0, 0, 0.85), 0 0 40px -10px rgba(17, 198, 133, 0.12);
     --shadow-2xl: 0 40px 80px -20px rgba(0, 0, 0, 0.9);
   }
+
+  .dark[data-theme-color="blue"] {
+    --primary:                #409CFF;
+    --ring:                   #409CFF;
+  }
+
+/* ── Dynamic Green Theme Overrides for Public Brand Accents ─────── */
+[data-theme-color="green"] {
+  --color-primary-50:  #ecfdf5;
+  --color-primary-100: #d1fae5;
+  --color-primary-200: #a7f3d0;
+  --color-primary-300: #6ee7b7;
+  --color-primary-400: #34d399;
+  --color-primary-500: #11c685;
+  --color-primary-600: #0ea870;
+  --color-primary-700: #047857;
+  --color-primary-800: #065f46;
+  --color-primary-900: #064e3b;
+}
+
+[data-theme-color="green"] .bg-blue-600,
+[data-theme-color="green"] .bg-indigo-600 {
+  background-color: #11c685 !important;
+}
+
+[data-theme-color="green"] .text-blue-600,
+[data-theme-color="green"] .text-indigo-600 {
+  color: #11c685 !important;
+}
+
+[data-theme-color="green"] .text-blue-700 {
+  color: #0ea870 !important;
+}
+
+[data-theme-color="green"] .bg-blue-50 {
+  background-color: #ecfdf5 !important;
+}
+
+[data-theme-color="green"] .bg-blue-100 {
+  background-color: #d1fae5 !important;
+}
+
+[data-theme-color="green"] .border-blue-500,
+[data-theme-color="green"] .border-blue-600 {
+  border-color: #11c685 !important;
+}
+
+[data-theme-color="green"] .from-blue-600,
+[data-theme-color="green"] .from-indigo-600 {
+  --tw-gradient-from: #11c685 var(--tw-gradient-from-position) !important;
+}
+
+[data-theme-color="green"] .to-indigo-600,
+[data-theme-color="green"] .to-violet-600 {
+  --tw-gradient-to: #059669 var(--tw-gradient-to-position) !important;
+}
 
 
 

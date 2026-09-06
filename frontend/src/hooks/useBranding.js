@@ -24,10 +24,18 @@ function setWithExpiry(key, data, ttl = CACHE_TTL) {
 
 export function useBranding() {
   const cached = getCachedOrNull('branding_cache');
+  const initialColor = localStorage.getItem('sectros_ui_color') || cached?.ui_color || 'green';
+
+  // Apply immediately to avoid flash of wrong color
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme-color', initialColor);
+  }
+
   const [settings, setSettings] = useState(cached || {
     platform_name: localStorage.getItem('platform_name') || import.meta.env.VITE_APP_NAME || 'Sectros',
-    platform_logo_url: '',
-    platform_favicon_url: '',
+    platform_logo_url: '/brand/logo-black.png',
+    platform_favicon_url: '/brand/icon-light.png',
+    ui_color: initialColor,
     turnstile_site_key: import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
   });
 
@@ -36,13 +44,21 @@ export function useBranding() {
       try {
         const res = await api.get('public/branding');
         const data = res.data;
+        const color = data.ui_color || 'green';
         setWithExpiry('branding_cache', data);
         setSettings({
           platform_name: data.platform_name || import.meta.env.VITE_APP_NAME || 'Sectros',
-          platform_logo_url: data.platform_logo_url || '',
-          platform_favicon_url: data.platform_favicon_url || '',
+          platform_logo_url: data.platform_logo_url || '/brand/logo-black.png',
+          platform_favicon_url: data.platform_favicon_url || '/brand/icon-light.png',
+          ui_color: color,
           turnstile_site_key: data.turnstile_site_key || import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
         });
+
+        // Update localStorage and DOM for theme color
+        localStorage.setItem('sectros_ui_color', color);
+        if (typeof document !== 'undefined') {
+          document.documentElement.setAttribute('data-theme-color', color);
+        }
 
         // Update localStorage for immediate use elsewhere
         if (data.platform_name) {

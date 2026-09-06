@@ -75,6 +75,7 @@ export default function SaaSSettingsView() {
     trial_days: 14,
     require_card_for_trial: false,
     website_theme: 'modern-business-os',
+    ui_color: 'green',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -1782,12 +1783,79 @@ export default function SaaSSettingsView() {
                   </label>
                 </div>
 
+                {/* ── Brand Accent Color (Green vs Blue) ── */}
+                <div className="pt-6 border-t border-border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h4 className="text-sm font-bold text-foreground">UI Brand Accent Color</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">Switch the primary accent color across the entire web platform and mobile app.</p>
+                    </div>
+                    <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary uppercase tracking-wider">
+                      Active: {settings.ui_color === 'blue' ? 'Blue' : 'Green'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Green Brand */}
+                    <div
+                      onClick={() => {
+                        setSettings({ ...settings, ui_color: 'green' });
+                        if (typeof document !== 'undefined') {
+                          document.documentElement.setAttribute('data-theme-color', 'green');
+                        }
+                      }}
+                      className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        (settings.ui_color || 'green') === 'green'
+                          ? 'border-[#11c685] bg-[#11c685]/5 shadow-sm'
+                          : 'border-border bg-card hover:border-border/80 hover:bg-muted/40'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-[#11c685] flex items-center justify-center shrink-0 shadow-md shadow-[#11c685]/20">
+                        <CheckCircle className={`w-5 h-5 text-white ${settings.ui_color === 'blue' ? 'opacity-0' : 'opacity-100'}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">Vibrant Green</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#11c685]/10 text-[#11c685]">New Brand</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">Modern hospitality green (#11c685) matching the new logo and app.</p>
+                      </div>
+                    </div>
+
+                    {/* Blue Brand */}
+                    <div
+                      onClick={() => {
+                        setSettings({ ...settings, ui_color: 'blue' });
+                        if (typeof document !== 'undefined') {
+                          document.documentElement.setAttribute('data-theme-color', 'blue');
+                        }
+                      }}
+                      className={`flex items-center gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        settings.ui_color === 'blue'
+                          ? 'border-[#0071E3] bg-[#0071E3]/5 shadow-sm'
+                          : 'border-border bg-card hover:border-border/80 hover:bg-muted/40'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-[#0071E3] flex items-center justify-center shrink-0 shadow-md shadow-[#0071E3]/20">
+                        <CheckCircle className={`w-5 h-5 text-white ${settings.ui_color === 'blue' ? 'opacity-100' : 'opacity-0'}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-foreground">Classic Apple Blue</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#0071E3]/10 text-[#0071E3]">Original</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">Traditional Apple-inspired blue (#0071E3) for a classic look.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="p-6 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex gap-4">
-                  <Briefcase className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+                  <Briefcase className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="text-xs font-bold text-foreground mb-1">Live Preview</h4>
+                    <h4 className="text-xs font-bold text-foreground mb-1">Unified Multi-Platform Theming</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      Save this setting to apply the theme across all public pages (home, pricing, features, solutions, about, blog, and contact). The dashboard and admin panel are not affected.
+                      Saving your theme and color settings immediately updates the public website, landing pages, authentication views, and mobile application styling.
                     </p>
                   </div>
                 </div>

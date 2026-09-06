@@ -893,15 +893,16 @@ class SaaSController extends Controller
      */
     public function getPublicBranding()
     {
-        $settings = \App\Models\SaaSSetting::whereIn('key', ['platform_name', 'platform_logo_url', 'platform_favicon_url', 'turnstile_site_key', 'disabled_features'])->pluck('value', 'key');
+        $settings = \App\Models\SaaSSetting::whereIn('key', ['platform_name', 'platform_logo_url', 'platform_favicon_url', 'turnstile_site_key', 'disabled_features', 'ui_color'])->pluck('value', 'key');
         
         $disabledFeatures = $this->normalizeDisabledFeatures($settings['disabled_features'] ?? []);
         
         return response()->json([
             'platform_name'       => $settings['platform_name'] ?? config('app.name'),
-            'platform_logo_url'   => $settings['platform_logo_url'] ?? null,
-            'platform_favicon_url'=> $settings['platform_favicon_url'] ?? null,
+            'platform_logo_url'   => $settings['platform_logo_url'] ?? '/brand/logo-black.png',
+            'platform_favicon_url'=> $settings['platform_favicon_url'] ?? '/brand/icon-light.png',
             'turnstile_site_key'  => $settings['turnstile_site_key'] ?? null,
+            'ui_color'            => $settings['ui_color'] ?? 'green',
             'disabled_features'   => $disabledFeatures,
         ]);
     }
@@ -1024,6 +1025,7 @@ class SaaSController extends Controller
             'landing_cta_section_body' => $this->sanitizeLanding($settings['landing_cta_section_body'] ?? 'Join hundreds of restaurants already using Sectros. Get set up in under 5 minutes — no tech skills required.'),
             'landing_cta_section_button' => $this->sanitizeLanding($settings['landing_cta_section_button'] ?? 'Start your 14-day free trial'),
             'website_theme' => $settings['website_theme'] ?? 'modern-business-os',
+            'ui_color' => $settings['ui_color'] ?? 'green',
             'trial_days' => (int) ($settings['trial_days'] ?? 14),
             'turnstile_site_key' => $settings['turnstile_site_key'] ?? '',
             'turnstile_secret_key' => $this->maskSecret($settings['turnstile_secret_key'] ?? ''),
@@ -1153,7 +1155,7 @@ class SaaSController extends Controller
             'landing_feature2_title', 'landing_feature2_subtitle', 'landing_feature2_bullets',
             'landing_bento_heading', 'landing_bento_subheading', 'landing_bento_items',
             'landing_cta_section_title', 'landing_cta_section_body', 'landing_cta_section_button',
-            'website_theme',
+            'website_theme', 'ui_color',
             'trial_days', 'require_card_for_trial',
             'email_logo_url',
             'turnstile_site_key', 'turnstile_secret_key',
