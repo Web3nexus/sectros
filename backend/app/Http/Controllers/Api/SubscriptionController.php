@@ -17,45 +17,69 @@ class SubscriptionController extends Controller
      */
     public function getPlans()
     {
-        $currentTenant = function_exists('tenant') ? tenant() : null;
-        $tenantPlan = $currentTenant?->plan ?? 'free';
+        try {
+            $currentTenant = function_exists('tenant') ? tenant() : null;
+            $tenantPlan = $currentTenant?->plan ?? 'free';
 
-        $plans = SubscriptionPlan::on('platform')
-            ->where('is_active', true)
-            ->orderBy('price_monthly', 'asc')
-            ->get()
-            ->map(function ($p) use ($tenantPlan) {
-                return [
-                    'id'          => $p->id,
-                    'name'        => $p->name,
-                    'slug'        => $p->slug,
-                    'description' => $p->description ?? ($p->name . ' tier for hospitality teams'),
-                    'price'       => (float) ($p->price_monthly ?? 0),
-                    'interval'    => 'month',
-                    'features'    => (array) ($p->features ?? []),
-                    'is_current'  => strtolower($p->slug) === strtolower($tenantPlan),
-                    'sms_credits_limit' => $p->sms_credits_limit ?? 0,
-                    'ai_credits_limit'  => $p->ai_credits_limit ?? 0,
-                ];
-            });
+            $plans = SubscriptionPlan::on('platform')
+                ->where('is_active', true)
+                ->orderBy('monthly_price', 'asc')
+                ->get()
+                ->map(function ($p) use ($tenantPlan) {
+                    return [
+                        'id'          => $p->id,
+                        'name'        => $p->name,
+                        'slug'        => $p->slug,
+                        'description' => $p->description ?? ($p->name . ' tier for hospitality teams'),
+                        'price'       => (float) ($p->monthly_price ?? $p->price_monthly ?? 0),
+                        'interval'    => 'month',
+                        'features'    => (array) ($p->features ?? []),
+                        'is_current'  => strtolower($p->slug) === strtolower($tenantPlan),
+                        'sms_credits_limit' => $p->sms_credits_limit ?? 0,
+                        'ai_credits_limit'  => $p->ai_credits_limit ?? 0,
+                    ];
+                });
 
-        $currentPlan = $plans->firstWhere('is_current', true) ?? $plans->first();
+            $currentPlan = $plans->firstWhere('is_current', true) ?? $plans->first();
 
-        $usage = [
-            'plan_name'        => $currentPlan['name'] ?? 'Free',
-            'plan_slug'        => $tenantPlan,
-            'status'           => $currentTenant?->subscription_status ?? 'active',
-            'ai_credits_used'  => $currentTenant?->ai_credits_used ?? 0,
-            'ai_credits_topup' => $currentTenant?->ai_credits_topup ?? 0,
-            'sms_credits'      => SMSService::getCreditsArray(),
-            'ends_at'          => $currentTenant?->subscription_ends_at ?? null,
-        ];
+            try {
+                $smsCredits = SMSService::getCreditsArray();
+            } catch (\Throwable $smsErr) {
+                \Illuminate\Support\Facades\Log::warning('SMSService::getCreditsArray failed: ' . $smsErr->getMessage());
+                $smsCredits = ['used' => 0, 'limit' => 0, 'topup' => 0];
+            }
 
-        return response()->json([
-            'plans'        => $plans,
-            'current_plan' => $currentPlan,
-            'usage'        => $usage,
-        ]);
+            $usage = [
+                'plan_name'        => $currentPlan['name'] ?? 'Free',
+                'plan_slug'        => $tenantPlan,
+                'status'           => $currentTenant?->subscription_status ?? 'active',
+                'ai_credits_used'  => $currentTenant?->ai_credits_used ?? 0,
+                'ai_credits_topup' => $currentTenant?->ai_credits_topup ?? 0,
+                'sms_credits'      => $smsCredits,
+                'ends_at'          => $currentTenant?->subscription_ends_at ?? null,
+            ];
+
+            return response()->json([
+                'plans'        => $plans,
+                'current_plan' => $currentPlan,
+                'usage'        => $usage,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('getPlans error: ' . $e->getMessage());
+            return response()->json([
+                'plans'        => [],
+                'current_plan' => null,
+                'usage'        => [
+                    'plan_name'        => 'Free',
+                    'plan_slug'        => 'free',
+                    'status'           => 'active',
+                    'ai_credits_used'  => 0,
+                    'ai_credits_topup' => 0,
+                    'sms_credits'      => ['used' => 0, 'limit' => 0, 'topup' => 0],
+                    'ends_at'          => null,
+                ],
+            ]);
+        }
     }
 
     /**
@@ -88,7 +112,10 @@ class SubscriptionController extends Controller
             'sales_email'       => $salesEmail,
             'is_testing'        => $currentTenant->is_testing ?? false,
             'testing_ends_at'   => $currentTenant->testing_ends_at ?? null,
-            'sms_credits'       => SMSService::getCreditsArray(),
+            'sms_credits'       => (function () {
+                try { return SMSService::getCreditsArray(); }
+                catch (\Throwable $e) { return ['used' => 0, 'limit' => 0, 'topup' => 0]; }
+            })(),
         ]);
     }
 
