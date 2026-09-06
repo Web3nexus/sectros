@@ -476,7 +476,7 @@ export default function EmployeePortal() {
                       ) : (
                         <button
                           onClick={() => setSigningPayslip(ps)}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-600/20 transition-all"
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary hover:opacity-90 text-white text-xs font-bold shadow-lg shadow-primary/20 transition-all"
                         >
                           <PenTool className="w-3.5 h-3.5" /> Sign Payslip
                         </button>
@@ -694,7 +694,7 @@ export default function EmployeePortal() {
                 <button
                   type="button"
                   onClick={handleConfirmSignature}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/20"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-primary hover:opacity-90 text-white shadow-lg shadow-primary/20"
                 >
                   Save & Confirm Signature
                 </button>

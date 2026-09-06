@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import {TrendingUp, TrendingDown, DollarSign, PieChart, ArrowUpRight, ArrowDownRight, Coffee, UtilityPole, Home, Briefcase, Scan, Loader2, Wallet, History, Download, Calendar, ChevronLeft, ChevronRight, Banknote} from 'lucide-react'
 import { AIScanner } from './AIScanner'
 import api from '../services/api'
+import { useCurrency } from '../hooks/useCurrency'
 
 const PERIODS = [
   { key: 'today', label: 'Today' },
@@ -22,6 +23,7 @@ const CAT_COLORS = {
 }
 
 export function FinancialsView() {
+  const { symbol, formatAmount } = useCurrency()
   const [showScanner, setShowScanner] = useState(false)
   const [period, setPeriod] = useState('all')
   const [tab, setTab] = useState('overview')
@@ -89,10 +91,7 @@ export function FinancialsView() {
     }
   }
 
-  const formatCurrency = (val) => {
-    const n = parseFloat(val || 0)
-    return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }
+  const formatCurrency = (val) => formatAmount(val)
 
   if (loading && !overview) {
     return (
@@ -135,7 +134,7 @@ export function FinancialsView() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowScanner(true)}
-            className="bg-primary text-white px-4 py-1.5 rounded-lg font-bold shadow-md hover:bg-blue-700 transition-all flex items-center gap-2 text-xs"
+            className="bg-primary text-white px-4 py-1.5 rounded-lg font-bold shadow-md hover:opacity-90 transition-all flex items-center gap-2 text-xs shadow-primary/20"
           >
             <Scan size={16} />
             AI Add Expense
@@ -168,7 +167,7 @@ export function FinancialsView() {
               Current Balance
             </span>
           </div>
-          <div className="text-3xl font-black tracking-tighter">${formatCurrency(currentBalance)}</div>
+          <div className="text-3xl font-black tracking-tighter">{formatCurrency(currentBalance)}</div>
           {overview?.latest_settlement && (
             <div className="text-emerald-100 text-[10px] font-bold uppercase tracking-wider mt-2">
               As of {new Date(overview.latest_settlement.date).toLocaleDateString()}
@@ -178,16 +177,16 @@ export function FinancialsView() {
 
         <div className="p-6 rounded-2xl bg-white border border-border shadow-sm relative overflow-hidden">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+            <div className="p-2 bg-primary/10 text-primary rounded-xl">
               <TrendingUp size={22} />
             </div>
-            <span className="text-blue-500 text-[10px] font-black uppercase tracking-widest bg-blue-50 px-2 py-1 rounded-full">
+            <span className="text-primary text-[10px] font-black uppercase tracking-widest bg-primary/10 px-2 py-1 rounded-full">
               {period === 'all' ? 'Lifetime' : period.charAt(0).toUpperCase() + period.slice(1)}
             </span>
           </div>
           <div className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-1">Total Revenue</div>
-          <div className="text-3xl font-black text-foreground tracking-tighter">${formatCurrency(totalRevenue)}</div>
-          <div className="text-[10px] text-muted-foreground font-bold mt-1">{orderCount} orders · ${formatCurrency(aov)} avg</div>
+          <div className="text-3xl font-black text-foreground tracking-tighter">{formatCurrency(totalRevenue)}</div>
+          <div className="text-[10px] text-muted-foreground font-bold mt-1">{orderCount} orders · {formatCurrency(aov)} avg</div>
         </div>
 
         <div className="p-6 rounded-2xl bg-white border border-border shadow-sm relative overflow-hidden">
@@ -200,12 +199,12 @@ export function FinancialsView() {
             </span>
           </div>
           <div className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest mb-1">Total Expenses</div>
-          <div className="text-3xl font-black text-foreground tracking-tighter">${formatCurrency(totalExpenses)}</div>
+          <div className="text-3xl font-black text-foreground tracking-tighter">{formatCurrency(totalExpenses)}</div>
         </div>
 
-        <div className="p-6 rounded-2xl bg-white border border-blue-100 shadow-md shadow-blue-500/5 relative overflow-hidden bg-gradient-to-br from-white to-blue-50/30">
+        <div className="p-6 rounded-2xl bg-white border border-primary/20 shadow-md shadow-primary/5 relative overflow-hidden bg-gradient-to-br from-white to-primary/5">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2 bg-primary text-white rounded-xl shadow-lg shadow-blue-500/20">
+            <div className="p-2 bg-primary text-white rounded-xl shadow-lg shadow-primary/20">
               <DollarSign size={22} />
             </div>
             <span className={`text-[10px] font-black flex items-center gap-1 px-2 py-1 rounded-full uppercase ${
@@ -215,7 +214,7 @@ export function FinancialsView() {
             </span>
           </div>
           <div className="text-primary text-[10px] font-bold uppercase tracking-widest mb-1">Net Profit</div>
-          <div className="text-3xl font-black text-foreground tracking-tighter">${formatCurrency(netProfit)}</div>
+          <div className="text-3xl font-black text-foreground tracking-tighter">{formatCurrency(netProfit)}</div>
         </div>
       </div>
 
@@ -229,7 +228,7 @@ export function FinancialsView() {
             </div>
             {revenueTrend && (
               <div className="text-right">
-                <div className="text-lg font-black text-emerald-600">${formatCurrency(revenueTrend.avg_daily_revenue)}</div>
+                <div className="text-lg font-black text-emerald-600">{formatCurrency(revenueTrend.avg_daily_revenue)}</div>
                 <div className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Avg Daily</div>
               </div>
             )}
@@ -244,12 +243,12 @@ export function FinancialsView() {
                     <div
                       key={day.date}
                       className={`flex-1 rounded-t transition-all duration-200 hover:opacity-80 relative group cursor-pointer ${
-                        isToday ? 'bg-blue-500' : day.revenue > 0 ? 'bg-emerald-400' : 'bg-slate-100'
+                        isToday ? 'bg-primary' : day.revenue > 0 ? 'bg-emerald-400' : 'bg-slate-100'
                       }`}
                       style={{ height: `${Math.max(pct, 2)}%` }}
                     >
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
-                        ${formatCurrency(day.revenue)} · {day.orders} orders
+                        {formatCurrency(day.revenue)} · {day.orders} orders
                         <div className="text-center text-[8px] text-slate-400 mt-0.5">{day.date}</div>
                       </div>
                     </div>
@@ -274,7 +273,7 @@ export function FinancialsView() {
                 <div key={item.category} className="space-y-1.5 animate-in slide-in-from-bottom-2 duration-300">
                   <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                     <span className="text-muted-foreground">{item.category}</span>
-                    <span className="text-foreground">${formatCurrency(item.total)} ({pct}%)</span>
+                    <span className="text-foreground">{formatCurrency(item.total)} ({pct}%)</span>
                   </div>
                   <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div className={`${color} h-full rounded-full transition-all duration-1000 ease-out`} style={{ width: `${pct}%` }}></div>
@@ -298,7 +297,7 @@ export function FinancialsView() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => exportCSV('transactions')}
-              className="text-primary font-bold hover:underline text-xs uppercase tracking-widest flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-lg"
+              className="text-primary font-bold hover:underline text-xs uppercase tracking-widest flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-lg"
             >
               <Download size={14} />
               Export CSV
@@ -342,7 +341,7 @@ export function FinancialsView() {
                   <td className={`px-5 py-3.5 text-right font-black ${
                     tx.type === 'income' ? 'text-emerald-600' : 'text-red-600'
                   }`}>
-                    {tx.type === 'income' ? '+' : '-'}${formatCurrency(tx.amount)}
+                    {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                   </td>
                   <td className="px-5 py-3.5">
                     <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${
@@ -399,7 +398,7 @@ export function FinancialsView() {
             </div>
             <button
               onClick={() => exportCSV('settlements')}
-              className="text-primary font-bold hover:underline text-xs uppercase tracking-widest flex items-center gap-1.5 bg-blue-50 px-3 py-1.5 rounded-lg"
+              className="text-primary font-bold hover:underline text-xs uppercase tracking-widest flex items-center gap-1.5 bg-primary/10 px-3 py-1.5 rounded-lg"
             >
               <Download size={14} />
               Export CSV
@@ -424,14 +423,14 @@ export function FinancialsView() {
                 {settlements.map(s => (
                   <tr key={s.id} className="hover:bg-slate-50/50 transition-colors text-sm">
                     <td className="px-5 py-3 font-bold text-slate-800">{new Date(s.date).toLocaleDateString()}</td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-700">${formatCurrency(s.opening_balance)}</td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-700">${formatCurrency(s.cash_collected)}</td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-700">${formatCurrency(s.card_collected)}</td>
-                    <td className="px-5 py-3 text-right font-medium text-slate-700">${formatCurrency(s.tips_collected)}</td>
-                    <td className="px-5 py-3 text-right font-medium text-red-600">-${formatCurrency(s.expenses_total)}</td>
-                    <td className="px-5 py-3 text-right font-black text-slate-900">${formatCurrency(s.closing_balance)}</td>
+                    <td className="px-5 py-3 text-right font-medium text-slate-700">{formatCurrency(s.opening_balance)}</td>
+                    <td className="px-5 py-3 text-right font-medium text-slate-700">{formatCurrency(s.cash_collected)}</td>
+                    <td className="px-5 py-3 text-right font-medium text-slate-700">{formatCurrency(s.card_collected)}</td>
+                    <td className="px-5 py-3 text-right font-medium text-slate-700">{formatCurrency(s.tips_collected)}</td>
+                    <td className="px-5 py-3 text-right font-medium text-red-600">-{formatCurrency(s.expenses_total)}</td>
+                    <td className="px-5 py-3 text-right font-black text-slate-900">{formatCurrency(s.closing_balance)}</td>
                     <td className={`px-5 py-3 text-right font-black ${s.net_total >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                      ${formatCurrency(s.net_total)}
+                      {formatCurrency(s.net_total)}
                     </td>
                     <td className="px-5 py-3 text-muted-foreground text-xs">{s.staff?.name || '—'}</td>
                   </tr>

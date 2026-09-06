@@ -177,11 +177,11 @@ export default function ChefDashboard() {
                 placeholder="Qty (e.g. 5kg)"
                 value={newShoppingItem.quantity}
                 onChange={(e) => setNewShoppingItem({ ...newShoppingItem, quantity: e.target.value })}
-                className="w-20 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-purple-500"
+                className="w-20 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-primary"
               />
               <button
                 type="submit"
-                className="p-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs"
+                className="p-2 rounded-xl bg-primary hover:opacity-90 text-white font-bold text-xs"
               >
                 <Plus className="w-4 h-4" />
               </button>

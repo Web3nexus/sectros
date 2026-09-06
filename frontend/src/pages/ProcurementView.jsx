@@ -6,8 +6,10 @@ import {
   Tag, Filter, ChevronRight, Sparkles
 } from 'lucide-react';
 import axios from 'axios';
+import { useCurrency } from '../hooks/useCurrency';
 
 export default function ProcurementView() {
+  const { symbol, formatAmount } = useCurrency();
   const [activeTab, setActiveTab] = useState('catalog'); // catalog, invoices, shopping_lists
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -110,7 +112,7 @@ export default function ProcurementView() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
-            <Package className="w-7 h-7 text-purple-500" />
+            <Package className="w-7 h-7 text-primary" />
             Procurement, Invoices & Product Catalog
           </h1>
           <p className="text-xs text-muted-foreground mt-1">
@@ -123,13 +125,13 @@ export default function ProcurementView() {
             onClick={() => setShowScanModal(true)}
             className="flex items-center gap-2 bg-secondary hover:bg-muted text-foreground border border-border text-xs font-bold px-4 py-2.5 rounded-xl transition-all"
           >
-            <Receipt className="w-4 h-4 text-purple-500" />
+            <Receipt className="w-4 h-4 text-primary" />
             Scan Supplier Invoice (OCR)
           </button>
 
           <button
             onClick={() => setShowProductModal(true)}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 transition-all"
+            className="flex items-center gap-2 bg-primary hover:opacity-90 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg shadow-primary/20 transition-all"
           >
             <Plus className="w-4 h-4" />
             + Add Catalog Item
@@ -151,7 +153,7 @@ export default function ProcurementView() {
               onClick={() => setActiveTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === tab.key
-                  ? 'bg-purple-600/10 text-purple-500 border border-purple-500/20'
+                  ? 'bg-primary/10 text-primary border border-primary/20'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
@@ -219,9 +221,9 @@ export default function ProcurementView() {
                         </td>
                         <td className="p-4 text-muted-foreground">{p.unit}</td>
                         <td className="p-4">{p.supplier_name || 'Metro'}</td>
-                        <td className="p-4 font-black text-foreground">€{parseFloat(p.current_price).toFixed(2)}</td>
+                        <td className="p-4 font-black text-foreground">{formatAmount(p.current_price)}</td>
                         <td className="p-4 text-muted-foreground">
-                          {p.target_price ? `€${parseFloat(p.target_price).toFixed(2)}` : '—'}
+                          {p.target_price ? formatAmount(p.target_price) : '—'}
                         </td>
                         <td className="p-4">
                           {isOverTarget ? (
@@ -273,8 +275,8 @@ export default function ProcurementView() {
                     <td className="p-4 font-bold text-foreground">{inv.invoice_number || `INV-${inv.id}`}</td>
                     <td className="p-4 font-semibold">{inv.supplier_name}</td>
                     <td className="p-4 text-muted-foreground">{inv.invoice_date}</td>
-                    <td className="p-4 font-medium">€{parseFloat(inv.total_net).toFixed(2)}</td>
-                    <td className="p-4 font-black text-foreground">€{parseFloat(inv.total_gross).toFixed(2)}</td>
+                    <td className="p-4 font-medium">{formatAmount(inv.total_net)}</td>
+                    <td className="p-4 font-black text-foreground">{formatAmount(inv.total_gross)}</td>
                     <td className="p-4 text-muted-foreground">{inv.tax_rate}%</td>
                     <td className="p-4">{inv.items?.length || 4} parsed items</td>
                     <td className="p-4">
@@ -307,7 +309,7 @@ export default function ProcurementView() {
                     <h3 className="font-bold text-foreground text-sm">{list.title}</h3>
                     <p className="text-[11px] text-muted-foreground">Department: {list.department}</p>
                   </div>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-500 border border-purple-500/20">
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-primary/10 text-primary border border-primary/20">
                     {list.status.toUpperCase()}
                   </span>
                 </div>
@@ -316,14 +318,14 @@ export default function ProcurementView() {
                   {list.items?.map((item) => (
                     <div key={item.id} className="py-2 flex items-center justify-between text-xs">
                       <span>{item.item_name} ({item.quantity} {item.unit})</span>
-                      <span className="font-bold text-foreground">€{parseFloat(item.estimated_price).toFixed(2)}</span>
+                      <span className="font-bold text-foreground">{formatAmount(item.estimated_price)}</span>
                     </div>
                   ))}
                 </div>
 
                 <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Est. Total:</span>
-                  <span className="font-black text-foreground">€{parseFloat(list.total_estimated_cost).toFixed(2)}</span>
+                  <span className="font-black text-foreground">{formatAmount(list.total_estimated_cost)}</span>
                 </div>
               </div>
             ))
@@ -340,7 +342,7 @@ export default function ProcurementView() {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Package className="w-5 h-5 text-purple-500" /> Add Product to Catalog
+              <Package className="w-5 h-5 text-primary" /> Add Product to Catalog
             </h3>
 
             <form onSubmit={handleCreateProduct} className="space-y-3">
@@ -385,7 +387,7 @@ export default function ProcurementView() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">Current Price (€)</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1">Current Price ({symbol})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -398,7 +400,7 @@ export default function ProcurementView() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">Target Max Price (€)</label>
+                  <label className="block text-xs font-bold text-muted-foreground mb-1">Target Max Price ({symbol})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -425,7 +427,7 @@ export default function ProcurementView() {
                 <button type="button" onClick={() => setShowProductModal(false)} className="px-4 py-2 text-xs font-semibold text-muted-foreground">
                   Cancel
                 </button>
-                <button type="submit" className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white">
+                <button type="submit" className="px-5 py-2 rounded-xl text-xs font-bold bg-primary hover:opacity-90 text-white shadow-md shadow-primary/20">
                   Add Item
                 </button>
               </div>
@@ -439,7 +441,7 @@ export default function ProcurementView() {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
             <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-purple-500" /> AI Supplier Invoice Scanner (OCR)
+              <Receipt className="w-5 h-5 text-primary" /> AI Supplier Invoice Scanner (OCR)
             </h3>
             <p className="text-xs text-muted-foreground">
               Upload a supplier invoice PDF or photo. Our AI OCR parser automatically extracts line items, quantities, and prices.
@@ -474,7 +476,7 @@ export default function ProcurementView() {
                 <button
                   type="submit"
                   disabled={isScanning}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow-lg shadow-purple-600/20 disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-primary hover:opacity-90 text-white shadow-lg shadow-primary/20 disabled:opacity-50"
                 >
                   {isScanning ? 'Scanning Line Items...' : 'Start AI OCR Scan'}
                 </button>

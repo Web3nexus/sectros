@@ -17,19 +17,67 @@ class ConfigurationController extends Controller
             $settings = [];
         }
         $tenant = tenant();
+        $tenantCountry = strtoupper($settings['country'] ?? $tenant?->country ?? 'US');
+
+        $countryCurrencyMap = [
+            'US' => ['currency' => 'USD', 'symbol' => '$'],
+            'GB' => ['currency' => 'GBP', 'symbol' => '£'],
+            'UK' => ['currency' => 'GBP', 'symbol' => '£'],
+            'DE' => ['currency' => 'EUR', 'symbol' => '€'],
+            'FR' => ['currency' => 'EUR', 'symbol' => '€'],
+            'IT' => ['currency' => 'EUR', 'symbol' => '€'],
+            'ES' => ['currency' => 'EUR', 'symbol' => '€'],
+            'NL' => ['currency' => 'EUR', 'symbol' => '€'],
+            'BE' => ['currency' => 'EUR', 'symbol' => '€'],
+            'AT' => ['currency' => 'EUR', 'symbol' => '€'],
+            'IE' => ['currency' => 'EUR', 'symbol' => '€'],
+            'PT' => ['currency' => 'EUR', 'symbol' => '€'],
+            'GR' => ['currency' => 'EUR', 'symbol' => '€'],
+            'FI' => ['currency' => 'EUR', 'symbol' => '€'],
+            'NG' => ['currency' => 'NGN', 'symbol' => '₦'],
+            'GH' => ['currency' => 'GHS', 'symbol' => 'GH₵'],
+            'KE' => ['currency' => 'KES', 'symbol' => 'KSh'],
+            'ZA' => ['currency' => 'ZAR', 'symbol' => 'R'],
+            'CA' => ['currency' => 'CAD', 'symbol' => 'CA$'],
+            'AU' => ['currency' => 'AUD', 'symbol' => 'A$'],
+            'NZ' => ['currency' => 'NZD', 'symbol' => 'NZ$'],
+            'AE' => ['currency' => 'AED', 'symbol' => 'AED'],
+            'SA' => ['currency' => 'SAR', 'symbol' => 'SAR'],
+            'IN' => ['currency' => 'INR', 'symbol' => '₹'],
+            'JP' => ['currency' => 'JPY', 'symbol' => '¥'],
+            'CH' => ['currency' => 'CHF', 'symbol' => 'CHF'],
+            'SE' => ['currency' => 'SEK', 'symbol' => 'kr'],
+            'NO' => ['currency' => 'NOK', 'symbol' => 'kr'],
+            'DK' => ['currency' => 'DKK', 'symbol' => 'kr'],
+            'PL' => ['currency' => 'PLN', 'symbol' => 'zł'],
+            'SG' => ['currency' => 'SGD', 'symbol' => 'S$'],
+            'BR' => ['currency' => 'BRL', 'symbol' => 'R$'],
+            'MX' => ['currency' => 'MXN', 'symbol' => 'MX$'],
+        ];
+
+        $matched = $countryCurrencyMap[$tenantCountry] ?? ['currency' => 'USD', 'symbol' => '$'];
 
         $defaults = [
             'business_name' => $tenant?->business_name ?? '',
             'business_phone' => $tenant?->business_phone ?? '',
             'business_address' => $tenant?->business_address ?? '',
             'business_type' => $tenant?->business_type ?? 'restaurant',
-            'currency_symbol' => '$',
-            'primary_color' => '#1D4ED8',
+            'country' => $tenantCountry,
+            'currency_code' => $matched['currency'],
+            'currency_symbol' => $matched['symbol'],
+            'primary_color' => '#11c685',
             'auto_responder' => false,
             'predictive_analytics' => false,
             'notification_email' => $tenant?->owner_email ?? '',
             'reservations_deposit_required' => false,
             'reservations_deposit_amount' => 0,
+            'tax_rate' => 0,
+            'service_charge' => 0,
+            'auto_confirm_bookings' => true,
+            'booking_slot_duration' => 90,
+            'cancellation_policy' => 'Free cancellation up to 2 hours before scheduled booking.',
+            'special_instructions' => '',
+            'business_hours' => 'Mon-Sun: 10:00 AM - 10:00 PM',
         ];
 
         return response()->json(array_merge($defaults, $settings));
@@ -38,11 +86,13 @@ class ConfigurationController extends Controller
     public function update(Request $request)
     {
         $allowed = [
-            'business_name', 'business_phone', 'business_address', 'currency_symbol',
-            'primary_color', 'auto_responder', 'predictive_analytics', 'notification_email',
+            'business_name', 'business_phone', 'business_address', 'country',
+            'currency_code', 'currency_symbol', 'primary_color', 'auto_responder',
+            'predictive_analytics', 'notification_email', 'contact_email',
             'business_hours', 'reservation_rules', 'cancellation_policy', 'check_in_out_time',
-            'delivery_settings', 'pickup_settings', 'tax_settings', 'service_charge',
-            'staff_roles', 'notification_settings', 'booking_rules',
+            'delivery_settings', 'pickup_settings', 'tax_settings', 'tax_rate', 'service_charge',
+            'staff_roles', 'notification_settings', 'booking_rules', 'auto_confirm_bookings',
+            'booking_slot_duration', 'special_instructions',
             'reservations_deposit_required', 'reservations_deposit_amount',
         ];
 
@@ -50,6 +100,14 @@ class ConfigurationController extends Controller
             foreach ($request->only($allowed) as $key => $value) {
                 $storeValue = is_array($value) ? json_encode($value) : (is_bool($value) ? ($value ? 'true' : 'false') : $value);
                 TenantSetting::updateOrCreate(['key' => $key], ['value' => $storeValue]);
+            }
+
+            if ($request->filled('country')) {
+                $tenant = tenant();
+                if ($tenant) {
+                    $tenant->country = strtoupper($request->country);
+                    $tenant->save();
+                }
             }
         });
 

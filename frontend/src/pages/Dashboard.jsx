@@ -3,6 +3,7 @@ import {DollarSign, BarChart2, Calendar, LayoutGrid, MoreHorizontal, Filter, Che
 import api from '../services/api'
 import { useTranslation } from 'react-i18next'
 import { useBusinessConfig } from '../hooks/useBusinessConfig'
+import { useCurrency } from '../hooks/useCurrency'
 import HotelLayoutBuilder from '../components/hotel/HotelLayoutBuilder'
 
 const ICON_MAP = {
@@ -20,6 +21,7 @@ const ICON_MAP = {
 export function Dashboard() {
   const { t } = useTranslation();
   const config = useBusinessConfig();
+  const { symbol, formatAmount } = useCurrency();
   const b = config.labels;
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
@@ -76,7 +78,7 @@ export function Dashboard() {
             key={kpi.id}
             title={kpi.label} 
             value={metrics[kpi.id] !== undefined ? 
-              (typeof metrics[kpi.id] === 'number' && kpi.id.includes('revenue') ? `$${metrics[kpi.id].toLocaleString()}` : metrics[kpi.id].toString()) 
+              (typeof metrics[kpi.id] === 'number' && (kpi.id.includes('revenue') || kpi.id.includes('profit') || kpi.id.includes('expense') || kpi.id === 'aov') ? formatAmount(metrics[kpi.id]) : metrics[kpi.id].toString()) 
               : '0'}
             icon={ICON_MAP[kpi.icon]} 
             trend={t('stats.liveData')} 
@@ -160,7 +162,7 @@ export function Dashboard() {
                      id={`ORDER-${order.id}`} 
                      guest={order.customer_name || (b.customers ? b.customers.slice(0, -1) : t('stats.guest'))} 
                      items={t('stats.units', { count: (order.id % 4 + 2) })} 
-                     total={`$${parseFloat(order.total_amount).toFixed(2)}`} 
+                     total={formatAmount(order.total_amount)} 
                      status={order.status.charAt(0).toUpperCase() + order.status.slice(1)} 
                      statusColor={order.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-primary/10 text-primary border border-primary/20'} 
                    />
