@@ -44,11 +44,11 @@ class SubscriptionController extends Controller
         $usage = [
             'plan_name'        => $currentPlan['name'] ?? 'Free',
             'plan_slug'        => $tenantPlan,
-            'status'           => $currentTenant->subscription_status ?? 'active',
-            'ai_credits_used'  => $currentTenant->ai_credits_used ?? 0,
-            'ai_credits_topup' => $currentTenant->ai_credits_topup ?? 0,
+            'status'           => $currentTenant?->subscription_status ?? 'active',
+            'ai_credits_used'  => $currentTenant?->ai_credits_used ?? 0,
+            'ai_credits_topup' => $currentTenant?->ai_credits_topup ?? 0,
             'sms_credits'      => SMSService::getCreditsArray(),
-            'ends_at'          => $currentTenant->subscription_ends_at ?? null,
+            'ends_at'          => $currentTenant?->subscription_ends_at ?? null,
         ];
 
         return response()->json([

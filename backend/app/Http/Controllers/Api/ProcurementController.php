@@ -224,11 +224,13 @@ class ProcurementController extends Controller
             ->map(function ($item) {
                 return [
                     'id'               => $item->id,
+                    'name'             => $item->item_name,
                     'item_name'        => $item->item_name,
                     'quantity'         => (float) $item->quantity,
                     'unit'             => $item->unit ?? 'pcs',
                     'department'       => $item->procurementList?->department ?? 'Kitchen',
                     'status'           => $item->status ?? 'pending',
+                    'is_purchased'     => ($item->status === 'purchased'),
                     'estimated_price'  => (float) ($item->estimated_price ?? 0),
                     'created_at'       => $item->created_at?->toISOString() ?? null,
                 ];
@@ -249,15 +251,15 @@ class ProcurementController extends Controller
      */
     public function storeShoppingItem(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'item_name'        => 'required|string|max:255',
-            'quantity'         => 'required|numeric|min:0.1',
-            'unit'             => 'nullable|string|max:50',
-            'department'       => 'nullable|string|in:Kitchen,Bar,Service,Cleaning',
-            'estimated_price'  => 'nullable|numeric|min:0',
-        ]);
+        $itemName = $request->input('item_name') ?? $request->input('name');
+        if (!$itemName) {
+            return response()->json(['message' => 'The item name field is required.'], 422);
+        }
 
-        $department = $validated['department'] ?? 'Kitchen';
+        $quantity = (float) ($request->input('quantity') ?: 1.0);
+        $unit = $request->input('unit') ?: 'pcs';
+        $department = $request->input('department') ?: 'Kitchen';
+        $estimatedPrice = (float) ($request->input('estimated_price') ?: 0);
 
         // Find or create current active list for this department
         $list = ProcurementList::where('department', $department)
@@ -276,10 +278,10 @@ class ProcurementController extends Controller
 
         $item = ProcurementItem::create([
             'procurement_list_id' => $list->id,
-            'item_name'           => $validated['item_name'],
-            'quantity'            => $validated['quantity'],
-            'unit'                => $validated['unit'] ?? 'pcs',
-            'estimated_price'     => $validated['estimated_price'] ?? 0,
+            'item_name'           => $itemName,
+            'quantity'            => $quantity,
+            'unit'                => $unit,
+            'estimated_price'     => $estimatedPrice,
             'status'              => 'pending',
         ]);
 

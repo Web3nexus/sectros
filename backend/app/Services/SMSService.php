@@ -16,16 +16,16 @@ class SMSService
      */
     public static function send($to, $message)
     {
-        $sid = SaaSSetting::where('key', 'twilio_sid')->value('value');
-        $token = SaaSSetting::where('key', 'twilio_auth_token')->value('value');
-        $from = SaaSSetting::where('key', 'twilio_from_number')->value('value');
+        $sid = SaaSSetting::on('platform')->where('key', 'twilio_sid')->value('value');
+        $token = SaaSSetting::on('platform')->where('key', 'twilio_auth_token')->value('value');
+        $from = SaaSSetting::on('platform')->where('key', 'twilio_from_number')->value('value');
 
         if (!$sid || !$token || !$from) {
             Log::error("SMS Service: Twilio credentials not configured.");
             return false;
         }
 
-        $tenant = tenant();
+        $tenant = function_exists('tenant') ? tenant() : null;
         if ($tenant && !self::checkAndConsumeCredit($tenant)) {
             return false;
         }
@@ -57,7 +57,7 @@ class SMSService
             $tenant->sms_credits_reset_at = now()->addMonth()->startOfMonth();
         }
 
-        $plan = SubscriptionPlan::where('slug', $tenant->plan ?? 'free')->first();
+        $plan = SubscriptionPlan::on('platform')->where('slug', $tenant->plan ?? 'free')->first();
         $monthlyLimit = $plan ? $plan->sms_credits_limit : 0;
         $totalLimit = $monthlyLimit + ($tenant->sms_credits_topup ?? 0);
 
@@ -110,14 +110,20 @@ class SMSService
      */
     public static function getCreditsArray()
     {
-        $tenant = tenant();
-        if (!$tenant) return null;
+        $tenant = function_exists('tenant') ? tenant() : null;
+        if (!$tenant) {
+            return [
+                'used' => 0,
+                'limit' => 0,
+                'topup' => 0,
+            ];
+        }
 
-        $plan = SubscriptionPlan::where('slug', $tenant->plan ?? 'free')->first();
+        $plan = SubscriptionPlan::on('platform')->where('slug', $tenant->plan ?? 'free')->first();
 
         return [
             'used' => $tenant->sms_credits_used ?? 0,
-            'limit' => $plan ? $plan->sms_credits_limit : 0,
+            'limit' => $plan ? ($plan->sms_credits_limit ?? 0) : 0,
             'topup' => $tenant->sms_credits_topup ?? 0,
         ];
     }

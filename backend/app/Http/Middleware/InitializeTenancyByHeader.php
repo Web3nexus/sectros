@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\TenantResolver;
-use Laravel\Sanctum\PersonalAccessToken;
+use App\Models\PersonalAccessToken;
 
 class InitializeTenancyByHeader
 {
@@ -33,8 +33,8 @@ class InitializeTenancyByHeader
         if (!TenantResolver::resolve() && ($bearerToken = $request->bearerToken())) {
             try {
                 $pat = PersonalAccessToken::findToken($bearerToken);
-                if ($pat && ($pat->tokenable_type === User::class || is_subclass_of($pat->tokenable_type, User::class))) {
-                    $user = User::withoutGlobalScopes()->find($pat->tokenable_id);
+                if ($pat) {
+                    $user = User::withoutGlobalScopes()->find($pat->tokenable_id) ?? $pat->tokenable;
                     if ($user && $user->tenant_id) {
                         $tenant = Tenant::find($user->tenant_id);
                         if ($tenant) {
