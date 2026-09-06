@@ -185,7 +185,7 @@ export default function SettingsView() {
           <p className="text-muted-foreground text-sm font-medium">Manage your {config.type} settings</p>
         </div>
         <button onClick={handleSave} disabled={saving}
-          className="flex items-center gap-3 bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50">
+          className="flex items-center gap-3 bg-primary text-white px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
           {saving ? <RefreshCw size={18} className="animate-spin" /> : <Save size={18} />}
           {saving ? 'Saving...' : 'Save Configuration'}
         </button>
@@ -297,7 +297,7 @@ export default function SettingsView() {
               <FormInput size={18} className="text-primary" /> Booking Form Fields
             </h3>
             <button onClick={saveBookingForm} disabled={bookingFormSaving || !bookingForm}
-              className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50">
+              className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95 disabled:opacity-50">
               {bookingFormSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
               Save Form
             </button>
@@ -392,7 +392,7 @@ export default function SettingsView() {
                     <input type="checkbox" checked={newField.required} onChange={e => setNewField(prev => ({ ...prev, required: e.target.checked }))} className="rounded" />
                     Required
                   </label>
-                  <button onClick={addField} className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:bg-blue-700 transition-all active:scale-95">
+                  <button onClick={addField} className="flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg hover:opacity-90 transition-all active:scale-95">
                     <Plus size={14} /> Add
                   </button>
                 </div>
@@ -497,7 +497,7 @@ export default function SettingsView() {
                 <button onClick={() => setEditingKey(null)} className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest text-muted-foreground border border-border hover:bg-slate-50 transition-all">
                   Cancel
                 </button>
-                <button onClick={saveSchemaItem} disabled={schemaSaving} className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-primary text-white hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50 flex items-center gap-2">
+                <button onClick={saveSchemaItem} disabled={schemaSaving} className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest bg-primary text-white hover:opacity-90 transition-all shadow-lg disabled:opacity-50 flex items-center gap-2">
                   {schemaSaving ? <Loader2 size={14} className="animate-spin" /> : null}
                   {schemaSaving ? 'Saving...' : 'Save'}
                 </button>

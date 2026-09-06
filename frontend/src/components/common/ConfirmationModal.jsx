@@ -27,10 +27,10 @@ export default function ConfirmationModal({
         button: 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
       };
       default: return {
-        icon: 'text-blue-400',
-        bg: 'bg-blue-400/10',
-        border: 'border-blue-400/20',
-        button: 'bg-primary hover:bg-blue-700 shadow-blue-600/20'
+        icon: 'text-primary',
+        bg: 'bg-primary/10',
+        border: 'border-primary/20',
+        button: 'bg-primary hover:opacity-90 shadow-primary/20'
       };
     }
   };

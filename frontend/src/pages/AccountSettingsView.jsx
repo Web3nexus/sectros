@@ -693,7 +693,7 @@ export default function AccountSettingsView() {
               <button 
                 onClick={handleVerifyEmail}
                 disabled={verifying || verificationCode.length !== 6}
-                className="w-full bg-primary hover:bg-blue-700 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 disabled:opacity-50 transition-all"
+                className="w-full bg-primary hover:opacity-90 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 disabled:opacity-50 transition-all"
               >
                 {verifying ? 'Verifying Code...' : 'Update Email Address'}
               </button>
@@ -730,7 +730,7 @@ function SaveButton({ saving, saved, onClick, label = 'Update Record' }) {
       onClick={onClick}
       disabled={saving || saved}
       className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-xl transition-all active:scale-95 disabled:opacity-70 ${
-        saved ? 'bg-emerald-600 shadow-emerald-500/20' : 'bg-primary shadow-blue-500/20 hover:bg-blue-700'
+        saved ? 'bg-emerald-600 shadow-emerald-500/20' : 'bg-primary shadow-primary/20 hover:opacity-90'
       } text-white`}
     >
       {saved ? <><Check size={14} /> Saved to Hub</> : saving ? 'Syncing...' : <><Save size={14} /> {label}</>}

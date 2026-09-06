@@ -176,7 +176,7 @@ export function DashboardLayout() {
               {settings.platform_logo_url ? (
                 <img src={settings.platform_logo_url} alt={settings.platform_name} className="h-10 w-auto object-contain mb-2" />
               ) : (
-                <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-lg shadow-blue-500/20 mb-2">
+                <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-lg shadow-primary/20 mb-2">
                   <span className="font-black text-xl leading-none">{settings.platform_name?.charAt(0) || 'R'}</span>
                 </div>
               )}
@@ -257,7 +257,7 @@ export function DashboardLayout() {
               <Link 
                 to="/dashboard/settings"
                 onClick={() => sessionStorage.setItem('dismissed_2fa_prompt', 'true')}
-                className="px-4 py-1.5 bg-white text-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-50 transition-colors shadow-sm whitespace-nowrap"
+                className="px-4 py-1.5 bg-white text-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary/10 transition-colors shadow-sm whitespace-nowrap"
               >
                  {t('dashboard.security_prompt.button')}
               </Link>
@@ -402,7 +402,7 @@ export function DashboardLayout() {
 
 function NotificationItem({ notification, onRead }) {
   const iconMap = {
-    order: <ShoppingBag size={14} className="text-blue-500" />,
+    order: <ShoppingBag size={14} className="text-primary" />,
     reservation: <Calendar size={14} className="text-emerald-500" />,
     'check-circle': <CheckCircle size={14} className="text-emerald-500" />,
     'x-circle': <XCircle size={14} className="text-red-500" />,
@@ -460,7 +460,7 @@ function SidebarGroup({ def, icon: Icon, isCollapsed }) {
         onClick={() => setExpanded(!expanded)}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all duration-300 ${
           isSelfActive
-            ? 'bg-primary text-primary-foreground shadow-lg shadow-blue-500/20'
+            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
             : 'text-muted-foreground hover:bg-muted hover:text-foreground'
         }`}
       >
@@ -536,7 +536,7 @@ function SidebarItem({ to, icon: Icon, label, feature, alwaysOn, roleCheck = tru
       }}
       className={`group flex items-center ${isCollapsed ? 'justify-center p-3 h-12 w-12 mx-auto' : 'justify-between px-4 py-3'} rounded-2xl transition-all duration-300 ${
         isActive 
-          ? 'bg-primary text-primary-foreground shadow-lg shadow-blue-500/20 active:scale-95' 
+          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 active:scale-95' 
           : isLocked 
             ? 'text-muted-foreground opacity-40 cursor-not-allowed hover:bg-muted' 
             : 'text-muted-foreground hover:bg-muted hover:text-foreground active:scale-95'

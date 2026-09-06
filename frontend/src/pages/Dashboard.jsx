@@ -7,14 +7,14 @@ import HotelLayoutBuilder from '../components/hotel/HotelLayoutBuilder'
 
 const ICON_MAP = {
   DollarSign: <DollarSign size={20} className="text-slate-500" />,
-  BarChart2: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><BarChart2 size={16} /></div>,
-  Calendar: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Calendar size={16} /></div>,
-  Activity: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Activity size={16} /></div>,
-  TrendingUp: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><TrendingUp size={16} /></div>,
-  Users: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Users size={16} /></div>,
-  ShoppingBag: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><ShoppingBag size={16} /></div>,
-  Briefcase: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><Briefcase size={16} /></div>,
-  LayoutGrid: <div className="bg-blue-50 p-1.5 rounded text-blue-500"><LayoutGrid size={16} /></div>,
+  BarChart2: <div className="bg-primary/10 p-1.5 rounded text-primary"><BarChart2 size={16} /></div>,
+  Calendar: <div className="bg-primary/10 p-1.5 rounded text-primary"><Calendar size={16} /></div>,
+  Activity: <div className="bg-primary/10 p-1.5 rounded text-primary"><Activity size={16} /></div>,
+  TrendingUp: <div className="bg-primary/10 p-1.5 rounded text-primary"><TrendingUp size={16} /></div>,
+  Users: <div className="bg-primary/10 p-1.5 rounded text-primary"><Users size={16} /></div>,
+  ShoppingBag: <div className="bg-primary/10 p-1.5 rounded text-primary"><ShoppingBag size={16} /></div>,
+  Briefcase: <div className="bg-primary/10 p-1.5 rounded text-primary"><Briefcase size={16} /></div>,
+  LayoutGrid: <div className="bg-primary/10 p-1.5 rounded text-primary"><LayoutGrid size={16} /></div>,
 };
 
 export function Dashboard() {
@@ -80,7 +80,7 @@ export function Dashboard() {
               : '0'}
             icon={ICON_MAP[kpi.icon]} 
             trend={t('stats.liveData')} 
-            trendColor="text-blue-500" 
+            trendColor="text-primary" 
             metric={<ArrowUpRight size={24} className="text-slate-200" />}
             topBorder={idx === 0}
           />
@@ -108,12 +108,12 @@ export function Dashboard() {
                 {(Array.isArray(stats.tables) ? stats.tables : []).map(table => (
                    <div key={table.id} className={`p-4 rounded-2xl border-2 transition-all cursor-default flex flex-col items-center justify-center gap-3 active:scale-95 ${
                       table.status === 'available' ? 'bg-white border-slate-200 hover:border-emerald-200' :
-                      table.status === 'occupied' ? 'bg-blue-50 border-blue-100' :
+                      table.status === 'occupied' ? 'bg-primary/10 border-primary/20' :
                       'bg-slate-50 border-slate-200'
                    }`}>
                       <div className={`h-8 w-8 rounded-lg flex items-center justify-center shadow-lg transition-transform ${
                          table.status === 'available' ? 'bg-emerald-500 text-white shadow-emerald-500/10' :
-                         table.status === 'occupied' ? 'bg-primary text-white shadow-blue-500/10 scale-110' :
+                         table.status === 'occupied' ? 'bg-primary text-white shadow-primary/20 scale-110' :
                          'bg-slate-300 text-white shadow-slate-300/10'
                       }`}>
                          <LayoutGrid size={16} />
@@ -162,7 +162,7 @@ export function Dashboard() {
                      items={t('stats.units', { count: (order.id % 4 + 2) })} 
                      total={`$${parseFloat(order.total_amount).toFixed(2)}`} 
                      status={order.status.charAt(0).toUpperCase() + order.status.slice(1)} 
-                     statusColor={order.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-blue-50 text-blue-700 border border-blue-100'} 
+                     statusColor={order.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-primary/10 text-primary border border-primary/20'} 
                    />
                  )) : (
                     <tr>
@@ -184,7 +184,7 @@ export function Dashboard() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden group hover:border-blue-200 transition-colors">
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 relative overflow-hidden group hover:border-primary/20 transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <Calendar size={80} />
               </div>
@@ -209,7 +209,7 @@ export function Dashboard() {
 
 function KpiCard({ title, value, subtitle, icon, trend, trendColor, metric, topBorder }) {
   return (
-    <div className={`p-5 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between group hover:shadow-lg transition-all duration-300 ${topBorder ? 'border-t-[3px] border-t-blue-600' : ''}`}>
+    <div className={`p-5 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between group hover:shadow-lg transition-all duration-300 ${topBorder ? 'border-t-[3px] border-t-primary' : ''}`}>
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{title}</h3>
         {icon}

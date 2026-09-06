@@ -92,17 +92,17 @@ export function TableView() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
          {Array.isArray(tables) && tables.length > 0 ? tables.map(table => (
-           <div key={table.id} className="bg-white p-8 rounded-[32px] shadow-sm border border-border flex flex-col items-center justify-center gap-4 group hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/5 transition-all text-center cursor-default relative overflow-hidden active:scale-95">
+           <div key={table.id} className="bg-white p-8 rounded-[32px] shadow-sm border border-border flex flex-col items-center justify-center gap-4 group hover:border-primary hover:shadow-2xl hover:shadow-primary/10 transition-all text-center cursor-default relative overflow-hidden active:scale-95">
              
              <div className="absolute top-4 right-4 group-hover:block hidden animate-in fade-in">
-                <button className="p-1.5 text-slate-300 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                <button className="p-1.5 text-slate-300 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
                    <MoreVertical size={16} />
                 </button>
              </div>
 
              <div className={`h-20 w-20 rounded-3xl flex items-center justify-center transition-all shadow-inner group-hover:scale-110 ${
                 table.status === 'available' ? 'bg-slate-50 text-slate-300 group-hover:bg-emerald-50 group-hover:text-emerald-500' : 
-                table.status === 'occupied' ? 'bg-blue-50 text-primary' : 
+                table.status === 'occupied' ? 'bg-primary/10 text-primary' : 
                 'bg-slate-100 text-muted-foreground'
              }`}>
                 <ResourceIcon size={36} strokeWidth={1.5} />
@@ -115,7 +115,7 @@ export function TableView() {
 
              <div className={`text-[9px] font-black uppercase tracking-widest px-4 py-1.5 rounded-xl border flex items-center gap-2 ${
                table.status === 'available' ? 'border-emerald-100 text-emerald-600 bg-emerald-50/50' : 
-               table.status === 'occupied' ? 'border-blue-100 text-primary bg-blue-50' : 
+               table.status === 'occupied' ? 'border-primary/20 text-primary bg-primary/10' : 
                'border-border text-muted-foreground bg-slate-50'
              }`}>
                <Briefcase size={6} fill="currentColor" className={table.status === 'occupied' ? 'animate-pulse' : ''} />

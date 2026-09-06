@@ -299,7 +299,7 @@ export default function LandingPage() {
           <motion.div variants={staggerContainer} initial="initial" whileInView="whileInView" className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <motion.div variants={childFade} className="p-8 md:p-12 rounded-[2.5rem] bg-card border border-border hover:border-primary/20 shadow-sm hover:shadow-xl transition-all duration-500 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none"><Clock className="w-32 h-32 text-foreground" /></div>
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-8 border border-blue-500/20 shadow-inner"><CalendarDays className="w-7 h-7 text-blue-500" /></div>
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-8 border border-primary/20 shadow-inner"><CalendarDays className="w-7 h-7 text-primary" /></div>
               <h3 className="text-2xl font-bold text-foreground mb-4">Smart Bookings</h3>
               <p className="text-muted-foreground leading-relaxed text-lg">Accept reservations 24/7 without commission fees. Prevent no-shows with automated SMS and email reminders.</p>
             </motion.div>
@@ -511,8 +511,8 @@ export default function LandingPage() {
             <motion.div variants={childFade} className="md:col-span-2 rounded-[2.5rem] border border-border p-8 md:p-12 flex flex-col justify-start bg-card shadow-sm hover:shadow-xl transition-all duration-700 overflow-hidden relative group">
                 <div className="absolute top-10 right-10 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none"><MessageSquare className="w-48 h-48" /></div>
                 <div className="relative z-10 space-y-6">
-                    <div className="w-14 h-14 bg-blue-500/10 rounded-2xl flex items-center justify-center border border-blue-500/20 shadow-inner mb-2">
-                        <Smartphone className="w-7 h-7 text-blue-500" />
+                    <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 shadow-inner mb-2">
+                        <Smartphone className="w-7 h-7 text-primary" />
                     </div>
                     <div className="space-y-4">
                       <h3 className="text-3xl font-bold text-foreground">Automated Notifications</h3>
@@ -597,7 +597,7 @@ export default function LandingPage() {
                 </p>
             </div>
             
-            <BackgroundParticles count={40} color="rgba(59, 130, 246, 0.6)" />
+            <BackgroundParticles count={40} color="rgba(17, 198, 133, 0.6)" />
 
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -606,11 +606,11 @@ export default function LandingPage() {
                 ) : (
                   plans.slice(0, 3).map((plan, i) => (
                     <div key={plan.id} className={`relative rounded-3xl p-8 bg-card/50 backdrop-blur-xl border transition-all duration-300 ${
-                      plan.popular || (i === 1 && plans.length === 3) ? 'border-blue-500/50 shadow-2xl shadow-blue-900/20 scale-100 md:scale-105 z-10 bg-card' : 'border-border hover:border-border hover:bg-card'
+                      plan.popular || (i === 1 && plans.length === 3) ? 'border-primary/50 shadow-2xl shadow-primary/20 scale-100 md:scale-105 z-10 bg-card' : 'border-border hover:border-border hover:bg-card'
                     }`}>
                         {(plan.popular || (i === 1 && plans.length === 3)) && (
                           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                              <div className="bg-linear-to-r from-blue-600 to-indigo-500 text-white text-[10px] uppercase font-black tracking-widest px-4 py-1.5 rounded-full shadow-lg">
+                              <div className="bg-linear-to-r from-primary to-emerald-600 text-white text-[10px] uppercase font-black tracking-widest px-4 py-1.5 rounded-full shadow-lg">
                                   Most Popular
                               </div>
                           </div>
@@ -630,8 +630,8 @@ export default function LandingPage() {
                             })().slice(0, 5).map((feat, idx) => (
                               <li key={idx} className="flex items-start gap-3">
                                 <div className="shrink-0 mt-0.5">
-                                    <div className="w-5 h-5 rounded-full bg-blue-500/10 flex items-center justify-center">
-                                        <Check className="w-3 h-3 text-blue-400" />
+                                    <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                                        <Check className="w-3 h-3 text-primary" />
                                     </div>
                                 </div>
                                 <span className="text-sm text-muted-foreground font-medium leading-relaxed">{typeof feat === 'string' ? feat.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : feat}</span>

@@ -175,6 +175,144 @@
   --tw-gradient-to: #059669 var(--tw-gradient-to-position) !important;
 }
 
+/* ── Hover background states ─────────────────────────────────── */
+[data-theme-color="green"] .hover\:bg-blue-700:hover,
+[data-theme-color="green"] .hover\:bg-blue-600:hover {
+  background-color: #0ea870 !important;
+}
+[data-theme-color="green"] .hover\:bg-blue-50:hover {
+  background-color: #ecfdf5 !important;
+}
+
+/* ── Hover border/text states ────────────────────────────────── */
+[data-theme-color="green"] .hover\:border-blue-500:hover,
+[data-theme-color="green"] .hover\:border-blue-200:hover {
+  border-color: #11c685 !important;
+}
+[data-theme-color="green"] .hover\:text-blue-500:hover {
+  color: #11c685 !important;
+}
+
+/* ── Border colours ──────────────────────────────────────────── */
+[data-theme-color="green"] .border-blue-100 {
+  border-color: #a7f3d0 !important;
+}
+[data-theme-color="green"] .border-blue-200 {
+  border-color: #6ee7b7 !important;
+}
+[data-theme-color="green"] .border-t-blue-600 {
+  border-top-color: #11c685 !important;
+}
+
+/* ── Text colours ────────────────────────────────────────────── */
+[data-theme-color="green"] .text-blue-500 {
+  color: #11c685 !important;
+}
+[data-theme-color="green"] .text-blue-400 {
+  color: #34d399 !important;
+}
+[data-theme-color="green"] .text-blue-700 {
+  color: #0ea870 !important;
+}
+[data-theme-color="green"] .text-blue-800 {
+  color: #065f46 !important;
+}
+[data-theme-color="green"] .text-blue-900 {
+  color: #064e3b !important;
+}
+[data-theme-color="green"] .hover\:text-blue-600:hover {
+  color: #0ea870 !important;
+}
+[data-theme-color="green"] .group:hover .group-hover\:text-blue-500,
+[data-theme-color="green"] .group:hover .group-hover\:text-blue-600 {
+  color: #11c685 !important;
+}
+
+/* ── Background colours ──────────────────────────────────────── */
+[data-theme-color="green"] .bg-blue-400 {
+  background-color: #34d399 !important;
+}
+[data-theme-color="green"] .bg-blue-500 {
+  background-color: #11c685 !important;
+}
+
+/* ── Opacity/alpha backgrounds ───────────────────────────────── */
+[data-theme-color="green"] .bg-blue-400\/10 {
+  background-color: rgb(52 211 153 / 0.1) !important;
+}
+[data-theme-color="green"] .bg-blue-50\/50 {
+  background-color: rgb(236 253 245 / 0.5) !important;
+}
+[data-theme-color="green"] .bg-blue-600\/10 {
+  background-color: rgb(17 198 133 / 0.1) !important;
+}
+
+/* ── Border opacity variants ─────────────────────────────────── */
+[data-theme-color="green"] .border-blue-400\/20 {
+  border-color: rgb(52 211 153 / 0.2) !important;
+}
+
+/* ── Ring colours ────────────────────────────────────────────── */
+[data-theme-color="green"] .ring-blue-600,
+[data-theme-color="green"] .ring-blue-500 {
+  --tw-ring-color: #11c685 !important;
+}
+[data-theme-color="green"] .focus\:ring-blue-500:focus,
+[data-theme-color="green"] .focus\:ring-blue-600:focus {
+  --tw-ring-color: #11c685 !important;
+}
+[data-theme-color="green"] .focus\:border-blue-500:focus,
+[data-theme-color="green"] .focus\:border-blue-600:focus {
+  border-color: #11c685 !important;
+}
+
+/* ── Shadow colours ──────────────────────────────────────────── */
+[data-theme-color="green"] .shadow-blue-200 {
+  --tw-shadow-color: rgb(17 198 133 / 0.2) !important;
+}
+[data-theme-color="green"] .shadow-blue-500\/10,
+[data-theme-color="green"] .shadow-blue-500\/20,
+[data-theme-color="green"] .shadow-blue-500\/40,
+[data-theme-color="green"] .shadow-blue-600\/10,
+[data-theme-color="green"] .shadow-blue-600\/20,
+[data-theme-color="green"] .shadow-blue-600\/30,
+[data-theme-color="green"] .shadow-blue-900\/20 {
+  --tw-shadow-color: rgb(17 198 133 / 0.2) !important;
+}
+
+/* ── Light text on dark bg variants ──────────────────────────── */
+[data-theme-color="green"] .text-blue-100 {
+  color: #ecfdf5 !important;
+}
+[data-theme-color="green"] .text-blue-200 {
+  color: #d1fae5 !important;
+}
+[data-theme-color="green"] .text-blue-300 {
+  color: #a7f3d0 !important;
+}
+
+/* ── Specific opacity variants ───────────────────────────────── */
+[data-theme-color="green"] .bg-blue-50\/70 {
+  background-color: rgb(236 253 245 / 0.7) !important;
+}
+[data-theme-color="green"] .bg-blue-900\/50 {
+  background-color: rgb(6 78 59 / 0.5) !important;
+}
+[data-theme-color="green"] .border-blue-500\/50 {
+  border-color: rgb(17 198 133 / 0.5) !important;
+}
+
+/* ── Indigo catchall (public pages use indigo for brand) ─────── */
+[data-theme-color="green"] .bg-indigo-50 {
+  background-color: #ecfdf5 !important;
+}
+[data-theme-color="green"] .text-indigo-600 {
+  color: #0ea870 !important;
+}
+[data-theme-color="green"] .hover\:bg-indigo-700:hover {
+  background-color: #0ea870 !important;
+}
+
 
 
   @keyframes float {

@@ -50,7 +50,7 @@ export function PublicLayout() {
   const megaMenus = {
     product: {
       items: [
-        { title: 'Reservation System', desc: 'Accept bookings 24/7', icon: Calendar, path: '/features#reservations', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { title: 'Reservation System', desc: 'Accept bookings 24/7', icon: Calendar, path: '/features#reservations', color: 'text-primary', bg: 'bg-primary/10' },
         { title: 'Calendar & Floor Plan', desc: 'Manage your operations', icon: Grid, path: '/features#calendar', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
         { title: 'Website Builder', desc: 'Create a branded site', icon: Globe, path: '/features#website', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
         { title: 'Guest Profiles', desc: 'Know your regulars', icon: Users, path: '/features#crm', color: 'text-purple-400', bg: 'bg-purple-500/10' },
@@ -68,7 +68,7 @@ export function PublicLayout() {
     },
     resources: {
       items: [
-        { title: 'Blog', desc: 'Latest industry insights', icon: Book, path: '/blog', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { title: 'Blog', desc: 'Latest industry insights', icon: Book, path: '/blog', color: 'text-primary', bg: 'bg-primary/10' },
         { title: 'Documentation', desc: 'Technical guides', icon: FileText, path: '/docs', color: 'text-muted-foreground', bg: 'bg-slate-500/10' },
         { title: 'Help Center', desc: 'Support & tutorials', icon: HelpCircle, path: '/help', color: 'text-amber-400', bg: 'bg-amber-500/10' },
         { title: 'Community', desc: 'Join the conversation', icon: MessageCircle, path: '/community', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -78,7 +78,7 @@ export function PublicLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-blue-500/30 selection:text-blue-200 flex flex-col transition-colors duration-300">
+    <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30 selection:text-primary flex flex-col transition-colors duration-300">
       {/* Navigation */}
       <header 
         className={`fixed top-6 left-1/2 -translate-x-1/2 w-[98%] max-w-[1400px] z-50 transition-all duration-300 rounded-[2.2rem] border border-border overflow-visible ${
@@ -93,7 +93,7 @@ export function PublicLayout() {
               <img src={settings.platform_logo_url} alt={settings.platform_name || 'Logo'} className="h-7 lg:h-8 w-auto object-contain" />
             ) : (
               <>
-                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/40 transition-shadow">
+                <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-xl bg-gradient-to-tr from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow">
                   <Briefcase className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
                 <span className="text-lg lg:text-xl font-bold text-foreground tracking-tight whitespace-nowrap">{settings.platform_name}</span>
@@ -106,7 +106,7 @@ export function PublicLayout() {
             {/* Product Dropdown */}
             <div className="relative py-4" onMouseEnter={() => handleMouseEnter('product')} onMouseLeave={handleMouseLeave}>
               <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Product <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeMenu === 'product' ? 'rotate-180 text-blue-400' : ''}`} />
+                Product <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeMenu === 'product' ? 'rotate-180 text-primary' : ''}`} />
               </button>
               <MegaMenuDropDown isOpen={activeMenu === 'product'} menuData={megaMenus.product} setActiveMenu={setActiveMenu} />
             </div>
@@ -114,7 +114,7 @@ export function PublicLayout() {
             {/* Solutions Dropdown */}
             <div className="relative py-4" onMouseEnter={() => handleMouseEnter('solutions')} onMouseLeave={handleMouseLeave}>
               <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Solutions <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeMenu === 'solutions' ? 'rotate-180 text-blue-400' : ''}`} />
+                Solutions <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeMenu === 'solutions' ? 'rotate-180 text-primary' : ''}`} />
               </button>
               <MegaMenuDropDown isOpen={activeMenu === 'solutions'} menuData={megaMenus.solutions} setActiveMenu={setActiveMenu} />
             </div>
@@ -122,7 +122,7 @@ export function PublicLayout() {
             {/* Resources Dropdown */}
             <div className="relative py-4" onMouseEnter={() => handleMouseEnter('resources')} onMouseLeave={handleMouseLeave}>
               <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-                Resources <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeMenu === 'resources' ? 'rotate-180 text-blue-400' : ''}`} />
+                Resources <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${activeMenu === 'resources' ? 'rotate-180 text-primary' : ''}`} />
               </button>
               <MegaMenuDropDown isOpen={activeMenu === 'resources'} menuData={megaMenus.resources} setActiveMenu={setActiveMenu} />
             </div>
@@ -151,7 +151,7 @@ export function PublicLayout() {
                 </Link>
                 <Link 
                 to="/register"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 lg:px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-blue-600/30 active:scale-95 border border-blue-500/50"
+                className="bg-primary hover:bg-primary/90 text-white px-4 lg:px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-primary/30 active:scale-95 border border-primary/50"
               >
                 Join {settings.platform_name}
               </Link>
@@ -184,7 +184,7 @@ export function PublicLayout() {
                 <div className="grid grid-cols-1 gap-2">
                   {megaMenus.product.items.map(item => (
                     <Link key={item.path} to={item.path} className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted text-foreground transition-colors">
-                      <item.icon className="w-5 h-5 text-blue-400" />
+                      <item.icon className="w-5 h-5 text-primary" />
                       <div>
                         <div className="font-semibold text-sm">{item.title}</div>
                         <div className="text-xs text-muted-foreground">{item.desc}</div>
@@ -243,7 +243,7 @@ export function PublicLayout() {
                   <img src={settings.platform_logo_url} alt={settings.platform_name || 'Logo'} className="h-8 w-auto object-contain" />
                 ) : (
                   <>
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-primary to-emerald-600 flex items-center justify-center">
                       <Briefcase className="w-4 h-4 text-white" />
                     </div>
                     <span className="text-xl font-bold text-foreground tracking-tight">{settings.platform_name}</span>

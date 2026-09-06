@@ -197,14 +197,14 @@ export function ReservationsView() {
           <p className="text-muted-foreground text-sm font-medium">{config.type === 'salon' ? 'Manage your client appointments and schedules.' : config.type === 'hotel' ? 'Manage guest check-ins and stay durations.' : 'Manage your bookings and guest requests.'}</p>
         </div>
         
-        <button onClick={() => setShowModal(true)} className="bg-primary text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">
+        <button onClick={() => setShowModal(true)} className="bg-primary text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all active:scale-95">
           New {b.reservations.endsWith('s') ? b.reservations.slice(0, -1) : b.reservations}
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
          {[
-           { label: 'Total Volume', value: stats.total, icon: Calendar, color: 'text-primary', bg: 'bg-blue-50' },
+           { label: 'Total Volume', value: stats.total, icon: Calendar, color: 'text-primary', bg: 'bg-primary/10' },
            { label: 'Pending', value: stats.pending, icon: Clock4, color: 'text-amber-600', bg: 'bg-amber-50' },
            { label: 'Confirmed', value: stats.confirmed, icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
            { label: 'Cancelled', value: stats.cancelled, icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
@@ -326,7 +326,7 @@ export function ReservationsView() {
                                   <button
                                     onClick={() => handlePayDeposit(res)}
                                     disabled={payingDepositId === res.id}
-                                    className="px-3 py-1 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
+                                    className="px-3 py-1 bg-primary text-white text-[9px] font-black uppercase tracking-widest rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
                                   >
                                     {payingDepositId === res.id ? 'Processing...' : 'Pay Now'}
                                   </button>
@@ -466,7 +466,7 @@ export function ReservationsView() {
                   </div>
                  
                  <div className="pt-4 border-t border-slate-100 flex justify-end">
-                    <button type="submit" className="bg-primary text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all">Submit {b.reservations.endsWith('s') ? b.reservations.slice(0, -1) : b.reservations}</button>
+                    <button type="submit" className="bg-primary text-white px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all">Submit {b.reservations.endsWith('s') ? b.reservations.slice(0, -1) : b.reservations}</button>
                  </div>
               </form>
            </div>

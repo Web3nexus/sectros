@@ -200,8 +200,8 @@ const defaultPlans = [
 
 const planAccentMap = {
   starter: { border: 'border-border', badge: 'bg-muted text-foreground', btn: 'bg-transparent hover:bg-muted border-2 border-border text-foreground' },
-  pro: { border: 'border-blue-500/50', badge: 'bg-blue-600 text-white', btn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30' },
-  professional: { border: 'border-blue-500/50', badge: 'bg-blue-600 text-white', btn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30' },
+  pro: { border: 'border-primary/50', badge: 'bg-primary text-white', btn: 'bg-primary hover:opacity-90 text-white shadow-xl shadow-primary/30' },
+  professional: { border: 'border-primary/50', badge: 'bg-primary text-white', btn: 'bg-primary hover:opacity-90 text-white shadow-xl shadow-primary/30' },
   enterprise: { border: 'border-purple-500/40', badge: 'bg-purple-600 text-white', btn: 'bg-purple-700 hover:bg-purple-600 text-white shadow-xl shadow-purple-600/20' },
 };
 
@@ -213,10 +213,10 @@ const getAccent = (slug, i, total) => {
 };
 
 const getPlanIcon = (slug) => {
-  if (!slug) return <Briefcase className="w-5 h-5 text-blue-400" />;
+  if (!slug) return <Briefcase className="w-5 h-5 text-primary" />;
   if (slug.includes('enterprise')) return <Building2 className="w-5 h-5 text-purple-400" />;
   if (slug.includes('pro')) return <Crown className="w-5 h-5 text-amber-400" />;
-  return <Briefcase className="w-5 h-5 text-blue-400" />;
+  return <Briefcase className="w-5 h-5 text-primary" />;
 };
 
 const parseFeatures = (features) => {
@@ -320,11 +320,11 @@ export default function PricingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
               className={`relative bg-card rounded-3xl border ${accent.border} p-8 flex flex-col justify-between shadow-xl backdrop-blur-sm ${
-                plan.is_popular ? 'ring-2 ring-blue-500/50 shadow-blue-500/10 scale-[1.02]' : ''
+                plan.is_popular ? 'ring-2 ring-primary/50 shadow-primary/10 scale-[1.02]' : ''
               }`}
             >
               {plan.is_popular && (
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg shadow-blue-600/30">
+                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg shadow-primary/30">
                   Most Popular
                 </div>
               )}

@@ -20,10 +20,10 @@ export default function StatusModal({
       };
       case 'info': return {
         icon: Info,
-        iconColor: 'text-blue-400',
-        bgColor: 'bg-blue-400/10',
-        borderColor: 'border-blue-400/20',
-        buttonColor: 'bg-primary hover:bg-blue-700'
+        iconColor: 'text-primary',
+        bgColor: 'bg-primary/10',
+        borderColor: 'border-primary/20',
+        buttonColor: 'bg-primary hover:opacity-90 shadow-primary/20'
       };
       default: return {
         icon: CheckCircle,
