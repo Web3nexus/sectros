@@ -127,7 +127,7 @@ class AuthController extends Controller
             // Issue token
             $token = $user->createToken('auth-token')->plainTextToken;
 
-            $tenantDomain = $tenant->domains()->first()?->domain;
+            $tenantDomain = $tenant->domains()->first()?->domain ?? $tenant->id;
 
             return response()->json([
                 'token'         => $token,
