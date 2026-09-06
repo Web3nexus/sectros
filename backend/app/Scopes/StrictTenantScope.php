@@ -13,6 +13,14 @@ class StrictTenantScope implements Scope
     {
         $tenantId = TenantResolver::resolve()?->id;
 
+        // Don't block User model resolution when authenticating by primary key or tokenable
+        if ($model instanceof \App\Models\User) {
+            if ($tenantId) {
+                $builder->where($model->getTable() . '.tenant_id', $tenantId);
+            }
+            return;
+        }
+
         if ($tenantId) {
             $builder->where($model->getTable() . '.tenant_id', $tenantId);
         } else {

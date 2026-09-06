@@ -15,8 +15,7 @@ class TenantConnectionManager
 
     public static function setAsCurrent(string $connectionName): void
     {
-        DB::purge('tenant');
-        DB::reconnect('tenant');
+        // Shared database: connection is persistent, no purge/reconnect needed
     }
 
     public static function connectionName(Tenant $tenant): string
