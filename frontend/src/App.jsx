@@ -91,6 +91,7 @@ import CareersPage from './pages/public/CareersPage'
 import PartnersPage from './pages/public/PartnersPage'
 import CookiePolicyPage from './pages/public/CookiePolicyPage'
 import GdprPage from './pages/public/GdprPage'
+import RefundPolicyPage from './pages/public/RefundPolicyPage'
 
 
 // Sectros Portals & Modules
@@ -170,6 +171,8 @@ function AppContent() {
           <Route path="/partners" element={<SEO title="Partners" path="/partners"><PartnersPage /></SEO>} />
           <Route path="/cookies" element={<SEO title="Cookie Policy" path="/cookies"><CookiePolicyPage /></SEO>} />
           <Route path="/gdpr" element={<SEO title="GDPR & Data Privacy" path="/gdpr"><GdprPage /></SEO>} />
+          <Route path="/refund" element={<SEO title="Refund Policy" path="/refund"><RefundPolicyPage /></SEO>} />
+          <Route path="/refund-policy" element={<SEO title="Refund Policy" path="/refund-policy"><RefundPolicyPage /></SEO>} />
         </Route>
 
         {/* Dedicated Role Portals */}

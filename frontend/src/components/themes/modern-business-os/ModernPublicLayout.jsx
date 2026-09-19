@@ -474,6 +474,7 @@ export function ModernPublicLayout() {
             <div className="flex flex-wrap gap-6">
               <Link to="/privacy" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Terms of Service</Link>
+              <Link to="/refund" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Refund Policy</Link>
               <Link to="/cookies" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Cookie Policy</Link>
               <Link to="/gdpr" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">GDPR & DMCA</Link>
             </div>
