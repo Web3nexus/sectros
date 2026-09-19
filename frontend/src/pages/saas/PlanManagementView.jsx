@@ -58,6 +58,11 @@ const defaultPlan = {
   ai_credits_limit: '',
   sms_credits_limit: '',
   voice_credits_limit: '',
+  paddle_product_id: '',
+  paddle_monthly_price_id: '',
+  paddle_yearly_price_id: '',
+  stripe_monthly_price_id: '',
+  stripe_yearly_price_id: '',
   features: { ...defaultFeatures },
   is_active: true,
   is_popular: false,
@@ -94,6 +99,11 @@ export default function PlanManagementView() {
     ai_credits_limit: plan.ai_credits_limit ?? '',
     sms_credits_limit: plan.sms_credits_limit ?? '',
     voice_credits_limit: plan.voice_credits_limit ?? '',
+    paddle_product_id: plan.paddle_product_id ?? '',
+    paddle_monthly_price_id: plan.paddle_monthly_price_id ?? '',
+    paddle_yearly_price_id: plan.paddle_yearly_price_id ?? '',
+    stripe_monthly_price_id: plan.stripe_monthly_price_id ?? '',
+    stripe_yearly_price_id: plan.stripe_yearly_price_id ?? '',
   });
 
   const handleSave = async (e) => {
@@ -399,6 +409,67 @@ export default function PlanManagementView() {
                       <input type="number" min="0" value={editingPlan.voice_credits_limit} onChange={e => setEditingPlan(p => ({ ...p, voice_credits_limit: e.target.value }))}
                         placeholder="Blank = unlimited" className="w-full bg-background border border-border rounded-xl py-2.5 px-4 text-foreground focus:ring-2 focus:ring-primary outline-none placeholder:text-muted-foreground/30 text-sm transition-all" />
                       <p className="text-[10px] text-muted-foreground/60 mt-1">Set to 0 to disable Voice Agent. Leave blank for unlimited.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gateway Package IDs (Paddle & Stripe) */}
+                <div className="bg-muted/20 border border-border/80 rounded-2xl p-4 space-y-3">
+                  <div>
+                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-primary" /> Gateway Package IDs (Paddle & Stripe)
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">
+                      Map this plan to your catalog IDs in Paddle and Stripe for automated checkout and webhooks.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-foreground mb-1">Paddle Product ID</label>
+                      <input
+                        value={editingPlan.paddle_product_id}
+                        onChange={e => setEditingPlan(p => ({ ...p, paddle_product_id: e.target.value }))}
+                        placeholder="pro_..."
+                        className="w-full bg-background border border-border rounded-xl py-2 px-3 text-xs font-mono text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-foreground mb-1">Paddle Monthly Price ID</label>
+                      <input
+                        value={editingPlan.paddle_monthly_price_id}
+                        onChange={e => setEditingPlan(p => ({ ...p, paddle_monthly_price_id: e.target.value }))}
+                        placeholder="pri_..."
+                        className="w-full bg-background border border-border rounded-xl py-2 px-3 text-xs font-mono text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-foreground mb-1">Paddle Yearly Price ID</label>
+                      <input
+                        value={editingPlan.paddle_yearly_price_id}
+                        onChange={e => setEditingPlan(p => ({ ...p, paddle_yearly_price_id: e.target.value }))}
+                        placeholder="pri_..."
+                        className="w-full bg-background border border-border rounded-xl py-2 px-3 text-xs font-mono text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-border/40">
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Stripe Monthly Price ID</label>
+                      <input
+                        value={editingPlan.stripe_monthly_price_id}
+                        onChange={e => setEditingPlan(p => ({ ...p, stripe_monthly_price_id: e.target.value }))}
+                        placeholder="price_..."
+                        className="w-full bg-background border border-border rounded-xl py-2 px-3 text-xs font-mono text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-muted-foreground mb-1">Stripe Yearly Price ID</label>
+                      <input
+                        value={editingPlan.stripe_yearly_price_id}
+                        onChange={e => setEditingPlan(p => ({ ...p, stripe_yearly_price_id: e.target.value }))}
+                        placeholder="price_..."
+                        className="w-full bg-background border border-border rounded-xl py-2 px-3 text-xs font-mono text-foreground focus:ring-2 focus:ring-primary outline-none transition-all"
+                      />
                     </div>
                   </div>
                 </div>

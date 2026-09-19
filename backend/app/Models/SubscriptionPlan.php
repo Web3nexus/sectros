@@ -18,6 +18,11 @@ class SubscriptionPlan extends Model
         'ai_credits_limit',
         'sms_credits_limit',
         'voice_credits_limit',
+        'paddle_product_id',
+        'paddle_monthly_price_id',
+        'paddle_yearly_price_id',
+        'stripe_monthly_price_id',
+        'stripe_yearly_price_id',
         'is_active',
         'is_popular',
     ];

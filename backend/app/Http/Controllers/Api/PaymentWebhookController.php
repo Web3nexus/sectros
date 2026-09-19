@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Tenant;
 use App\Models\SaaSSetting;
 use App\Models\SubscriptionPlan;
+use App\Models\PaddleCustomer;
+use App\Models\PaddleSubscription;
 use App\Services\TenantResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -276,76 +278,241 @@ class PaymentWebhookController extends Controller
 
         $event = $request->input('event_type');
         $data = $request->input('data') ?? [];
-        $customData = $data['custom_data'] ?? [];
-        $tenantId = $customData['tenant_id'] ?? null;
 
-        Log::info("Paddle Webhook received: {$event} for tenant " . ($tenantId ?? 'unknown'));
+        Log::info("Paddle Webhook received: {$event}", ['id' => $data['id'] ?? null]);
 
-        if ($event === 'transaction.completed' || $event === 'transaction.paid') {
-            $type = $customData['type'] ?? 'subscription';
+        try {
+            switch ($event) {
+                case 'customer.created':
+                case 'customer.updated':
+                    $this->handlePaddleCustomer($data);
+                    break;
 
-            if ($type === 'theme_purchase') {
-                $templateId = $customData['template_id'] ?? null;
-                $total = isset($data['details']['totals']['total']) ? ((float) $data['details']['totals']['total']) / 100 : 0;
-                if ($tenantId && $templateId) {
-                    $this->fulfillThemePurchase($tenantId, $templateId, $total);
-                }
-            } elseif ($type === 'addon_purchase') {
-                $addonId = $customData['addon_id'] ?? null;
-                $quantity = (int) ($customData['quantity'] ?? 1);
-                if ($tenantId && $addonId) {
-                    $this->fulfillAddonPurchase($tenantId, $addonId, $quantity);
-                }
-            } elseif ($type === 'reservation_deposit') {
-                $reservationId = $customData['reservation_id'] ?? null;
-                if ($tenantId && $reservationId) {
-                    $this->fulfillReservationDeposit($tenantId, $reservationId, $data['id'], 'paddle');
-                }
-            } else {
-                // Subscription purchase
-                $planSlug = $customData['plan_slug'] ?? null;
-                $subId = $data['subscription_id'] ?? $data['id'];
-                if ($tenantId && $planSlug) {
-                    $this->updateTenantSubscription($tenantId, 'paddle', $subId, $planSlug);
-                }
-            }
-        } elseif ($event === 'subscription.activated' || $event === 'subscription.updated') {
-            $subscriptionId = $data['id'] ?? null;
-            $tenant = null;
-            if ($tenantId) {
-                $tenant = Tenant::find($tenantId);
-            }
-            if (!$tenant && $subscriptionId) {
-                $tenant = Tenant::where('subscription_id', $subscriptionId)->first();
-            }
+                case 'subscription.created':
+                case 'subscription.activated':
+                case 'subscription.updated':
+                case 'subscription.canceled':
+                case 'subscription.past_due':
+                case 'subscription.paused':
+                    $this->handlePaddleSubscription($data, $event);
+                    break;
 
-            if ($tenant) {
-                $status = $data['status'] ?? 'active';
-                $tenant->subscription_status = in_array($status, ['active', 'trialing']) ? 'active' : $status;
-                if (!empty($data['current_billing_period']['ends_at'])) {
-                    $tenant->subscription_ends_at = \Carbon\Carbon::parse($data['current_billing_period']['ends_at']);
-                }
-                $tenant->save();
-                Log::info("Paddle subscription {$subscriptionId} synchronized for tenant {$tenant->id} (status: {$tenant->subscription_status})");
-            }
-        } elseif ($event === 'subscription.canceled' || $event === 'subscription.past_due') {
-            $subscriptionId = $data['id'] ?? null;
-            $tenant = null;
-            if ($tenantId) {
-                $tenant = Tenant::find($tenantId);
-            }
-            if (!$tenant && $subscriptionId) {
-                $tenant = Tenant::where('subscription_id', $subscriptionId)->first();
-            }
+                case 'transaction.completed':
+                case 'transaction.paid':
+                    $this->handlePaddleTransaction($data);
+                    break;
 
-            if ($tenant) {
-                $tenant->subscription_status = ($event === 'subscription.canceled') ? 'canceled' : 'past_due';
-                $tenant->save();
-                Log::info("Paddle subscription {$subscriptionId} marked as {$tenant->subscription_status} for tenant {$tenant->id}");
+                default:
+                    Log::info("Paddle Webhook unhandled event type: {$event}");
+                    break;
             }
+        } catch (\Throwable $e) {
+            Log::error("Paddle Webhook handling error for {$event}: " . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['message' => 'Webhook processing failed: ' . $e->getMessage()], 500);
         }
 
         return response()->json(['status' => 'success']);
+    }
+
+    private function handlePaddleCustomer(array $data): void
+    {
+        $customerId = $data['id'] ?? null;
+        if (!$customerId) return;
+
+        $email = $data['email'] ?? null;
+        $name = $data['name'] ?? null;
+        $locale = $data['locale'] ?? null;
+        $customData = $data['custom_data'] ?? [];
+        $tenantId = $customData['tenant_id'] ?? null;
+
+        if (!$tenantId && $email) {
+            $tenantId = Tenant::where('owner_email', $email)->value('id');
+        }
+
+        PaddleCustomer::updateOrCreate(
+            ['id' => $customerId],
+            [
+                'tenant_id' => $tenantId,
+                'email' => $email ?? 'unknown@paddle.com',
+                'name' => $name,
+                'locale' => $locale,
+            ]
+        );
+
+        Log::info("Mirrored Paddle customer: {$customerId} for tenant " . ($tenantId ?? 'unknown'));
+    }
+
+    private function handlePaddleSubscription(array $data, string $event): void
+    {
+        $subscriptionId = $data['id'] ?? null;
+        if (!$subscriptionId) return;
+
+        $customerId = $data['customer_id'] ?? null;
+        $status = $data['status'] ?? 'active';
+        $firstItem = $data['items'][0] ?? [];
+        $priceId = $firstItem['price']['id'] ?? null;
+        $productId = $firstItem['price']['product_id'] ?? null;
+        $interval = $firstItem['price']['billing_cycle']['interval'] ?? 'month';
+
+        $customData = $data['custom_data'] ?? [];
+        $tenantId = $customData['tenant_id'] ?? null;
+        $planSlug = $customData['plan_slug'] ?? null;
+
+        // Dynamic plan resolution from database if plan_slug is not in custom_data
+        if (!$planSlug && $priceId) {
+            $matchedPlan = SubscriptionPlan::on('platform')
+                ->where('paddle_monthly_price_id', $priceId)
+                ->orWhere('paddle_yearly_price_id', $priceId)
+                ->first();
+            if ($matchedPlan) {
+                $planSlug = $matchedPlan->slug;
+            }
+        }
+        if (!$planSlug && $productId) {
+            $matchedPlan = SubscriptionPlan::on('platform')
+                ->where('paddle_product_id', $productId)
+                ->first();
+            if ($matchedPlan) {
+                $planSlug = $matchedPlan->slug;
+            }
+        }
+
+        // Resolve tenant if missing
+        if (!$tenantId && $customerId) {
+            $tenantId = PaddleCustomer::where('id', $customerId)->value('tenant_id');
+        }
+        if (!$tenantId) {
+            $tenantId = Tenant::where('subscription_id', $subscriptionId)->value('id');
+        }
+
+        // Scheduled change
+        $scheduledAction = $data['scheduled_change']['action'] ?? null;
+        $scheduledAt = !empty($data['scheduled_change']['effective_at']) 
+            ? \Carbon\Carbon::parse($data['scheduled_change']['effective_at']) 
+            : null;
+
+        // Billing period timestamps
+        $startsAt = !empty($data['current_billing_period']['starts_at']) 
+            ? \Carbon\Carbon::parse($data['current_billing_period']['starts_at']) 
+            : null;
+        $endsAt = !empty($data['current_billing_period']['ends_at']) 
+            ? \Carbon\Carbon::parse($data['current_billing_period']['ends_at']) 
+            : null;
+        $canceledAt = !empty($data['canceled_at']) 
+            ? \Carbon\Carbon::parse($data['canceled_at']) 
+            : null;
+
+        if ($event === 'subscription.canceled') {
+            $status = 'canceled';
+            if (!$canceledAt) {
+                $canceledAt = now();
+            }
+        }
+
+        // Idempotent upsert into mirrored table
+        PaddleSubscription::updateOrCreate(
+            ['id' => $subscriptionId],
+            [
+                'customer_id' => $customerId ?? 'ctm_unknown',
+                'tenant_id' => $tenantId,
+                'status' => $status,
+                'price_id' => $priceId,
+                'product_id' => $productId,
+                'plan_slug' => $planSlug,
+                'billing_interval' => $interval,
+                'scheduled_change_action' => $scheduledAction,
+                'scheduled_change_at' => $scheduledAt,
+                'current_billing_period_starts_at' => $startsAt,
+                'current_billing_period_ends_at' => $endsAt,
+                'canceled_at' => $canceledAt,
+            ]
+        );
+
+        // Synchronize tenant state
+        $tenant = null;
+        if ($tenantId) {
+            $tenant = Tenant::find($tenantId);
+        }
+        if (!$tenant) {
+            $tenant = Tenant::where('subscription_id', $subscriptionId)->first();
+        }
+
+        if ($tenant) {
+            if ($planSlug) {
+                $tenant->plan = $planSlug;
+            }
+            $tenant->subscription_id = $subscriptionId;
+            $tenant->subscription_provider = 'paddle';
+
+            // Access check rule:
+            // Status active or trialing grants paid access.
+            // When user cancels, Paddle status remains 'active' until effective date (scheduled_change.action = 'cancel').
+            // We preserve active status until Paddle actually sends status 'canceled'.
+            if (in_array($status, ['active', 'trialing'])) {
+                $tenant->subscription_status = 'active';
+            } elseif ($status === 'canceled') {
+                $tenant->subscription_status = 'canceled';
+            } elseif ($status === 'past_due') {
+                $tenant->subscription_status = 'past_due';
+            } elseif ($status === 'paused') {
+                $tenant->subscription_status = 'paused';
+            }
+
+            if ($endsAt) {
+                $tenant->subscription_ends_at = $endsAt;
+            }
+            $tenant->save();
+
+            Log::info("Synchronized Paddle subscription {$subscriptionId} for tenant {$tenant->id} (plan: {$tenant->plan}, status: {$tenant->subscription_status})");
+        }
+    }
+
+    private function handlePaddleTransaction(array $data): void
+    {
+        $customData = $data['custom_data'] ?? [];
+        $tenantId = $customData['tenant_id'] ?? null;
+        $type = $customData['type'] ?? 'subscription';
+
+        if ($type === 'theme_purchase') {
+            $templateId = $customData['template_id'] ?? null;
+            $total = isset($data['details']['totals']['total']) ? ((float) $data['details']['totals']['total']) / 100 : 0;
+            if ($tenantId && $templateId) {
+                $this->fulfillThemePurchase($tenantId, $templateId, $total);
+            }
+        } elseif ($type === 'addon_purchase') {
+            $addonId = $customData['addon_id'] ?? null;
+            $quantity = (int) ($customData['quantity'] ?? 1);
+            if ($tenantId && $addonId) {
+                $this->fulfillAddonPurchase($tenantId, $addonId, $quantity);
+            }
+        } elseif ($type === 'reservation_deposit') {
+            $reservationId = $customData['reservation_id'] ?? null;
+            if ($tenantId && $reservationId) {
+                $this->fulfillReservationDeposit($tenantId, $reservationId, $data['id'], 'paddle');
+            }
+        } else {
+            // Subscription transaction
+            $planSlug = $customData['plan_slug'] ?? null;
+            $subId = $data['subscription_id'] ?? $data['id'];
+
+            // If plan_slug not in custom_data, resolve dynamically from items
+            if (!$planSlug && !empty($data['items'][0]['price']['id'])) {
+                $priceId = $data['items'][0]['price']['id'];
+                $matchedPlan = SubscriptionPlan::on('platform')
+                    ->where('paddle_monthly_price_id', $priceId)
+                    ->orWhere('paddle_yearly_price_id', $priceId)
+                    ->first();
+                if ($matchedPlan) {
+                    $planSlug = $matchedPlan->slug;
+                }
+            }
+
+            if ($tenantId && $planSlug) {
+                $this->updateTenantSubscription($tenantId, 'paddle', $subId, $planSlug);
+            }
+        }
     }
 
     private function updateTenantSubscription($tenantId, $provider, $subscriptionId, $planSlug)

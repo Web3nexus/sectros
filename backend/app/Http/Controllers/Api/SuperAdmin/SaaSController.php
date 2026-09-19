@@ -1392,6 +1392,11 @@ class SaaSController extends Controller
             'ai_credits_limit'   => 'nullable|integer|min:0',
             'sms_credits_limit'  => 'nullable|integer|min:0',
             'voice_credits_limit' => 'nullable|integer|min:0',
+            'paddle_product_id'   => 'nullable|string|max:255',
+            'paddle_monthly_price_id' => 'nullable|string|max:255',
+            'paddle_yearly_price_id'  => 'nullable|string|max:255',
+            'stripe_monthly_price_id' => 'nullable|string|max:255',
+            'stripe_yearly_price_id'  => 'nullable|string|max:255',
             'is_active'          => 'boolean',
             'is_popular'         => 'boolean',
         ]);
@@ -1404,6 +1409,11 @@ class SaaSController extends Controller
             'ai_credits_limit'   => $request->filled('ai_credits_limit') ? (int) $request->ai_credits_limit : null,
             'sms_credits_limit'  => $request->filled('sms_credits_limit') ? (int) $request->sms_credits_limit : null,
             'voice_credits_limit' => $request->filled('voice_credits_limit') ? (int) $request->voice_credits_limit : null,
+            'paddle_product_id'   => $request->filled('paddle_product_id') ? trim($request->paddle_product_id) : null,
+            'paddle_monthly_price_id' => $request->filled('paddle_monthly_price_id') ? trim($request->paddle_monthly_price_id) : null,
+            'paddle_yearly_price_id'  => $request->filled('paddle_yearly_price_id') ? trim($request->paddle_yearly_price_id) : null,
+            'stripe_monthly_price_id' => $request->filled('stripe_monthly_price_id') ? trim($request->stripe_monthly_price_id) : null,
+            'stripe_yearly_price_id'  => $request->filled('stripe_yearly_price_id') ? trim($request->stripe_yearly_price_id) : null,
         ]);
 
         if ($id) {

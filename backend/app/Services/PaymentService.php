@@ -795,9 +795,19 @@ class PaymentService
 
         $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $name);
 
-        $payload = [
-            'collection_mode' => 'automatic',
-            'items' => [
+        $catalogPriceId = ($interval === 'yearly') 
+            ? ($plan->paddle_yearly_price_id ?? null) 
+            : ($plan->paddle_monthly_price_id ?? null);
+
+        if (!empty($catalogPriceId)) {
+            $items = [
+                [
+                    'price_id' => $catalogPriceId,
+                    'quantity' => 1,
+                ],
+            ];
+        } else {
+            $items = [
                 [
                     'quantity' => 1,
                     'price' => [
@@ -817,7 +827,12 @@ class PaymentService
                         ],
                     ],
                 ],
-            ],
+            ];
+        }
+
+        $payload = [
+            'collection_mode' => 'automatic',
+            'items' => $items,
             'custom_data' => [
                 'type' => 'subscription',
                 'tenant_id' => (string) $tenant->id,
@@ -1062,9 +1077,21 @@ class PaymentService
 
         $baseUrl = $this->getPaddleBaseUrl();
         $email = $tenant->owner_email ?? ($tenant->data['email'] ?? null);
-        if (!$email) return null;
-
-        $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $tenant->business_name);
+        // Resolve customer ID strictly from server-side mirrored state
+        $customerId = null;
+        if (!empty($tenant->subscription_id)) {
+            $customerId = \App\Models\PaddleSubscription::where('id', $tenant->subscription_id)->value('customer_id');
+        }
+        if (!$customerId) {
+            $customerId = \App\Models\PaddleSubscription::where('tenant_id', $tenant->id)->value('customer_id')
+                ?? \App\Models\PaddleCustomer::where('tenant_id', $tenant->id)->value('id');
+        }
+        if (!$customerId && $email) {
+            $customerId = \App\Models\PaddleCustomer::where('email', $email)->value('id');
+        }
+        if (!$customerId) {
+            $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $tenant->business_name);
+        }
         if (!$customerId) return null;
 
         try {

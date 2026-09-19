@@ -62,4 +62,40 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'testing_ends_at' => 'datetime',
         'subscription_ends_at' => 'datetime',
     ];
+
+    public function paddleSubscriptions()
+    {
+        return $this->hasMany(PaddleSubscription::class, 'tenant_id', 'id');
+    }
+
+    public function paddleCustomer()
+    {
+        return $this->hasOne(PaddleCustomer::class, 'tenant_id', 'id');
+    }
+
+    /**
+     * Determine if this tenant has paid subscription access across any gateway.
+     * Grants access if testing/trial is active, or status is active/trialing.
+     * Preserves access during scheduled_change (cancellation at period end).
+     */
+    public function hasPaidAccess(): bool
+    {
+        if ($this->is_testing && $this->testing_ends_at && $this->testing_ends_at->isFuture()) {
+            return true;
+        }
+        if ($this->trial_ends_at && $this->trial_ends_at->isFuture()) {
+            return true;
+        }
+
+        // Check Paddle mirrored subscription if provider is paddle
+        if ($this->subscription_provider === 'paddle' && $this->subscription_id) {
+            $paddleSub = PaddleSubscription::find($this->subscription_id);
+            if ($paddleSub) {
+                return $paddleSub->hasPaidAccess();
+            }
+        }
+
+        return in_array($this->subscription_status, ['active', 'trialing']);
+    }
 }
+

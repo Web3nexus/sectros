@@ -236,7 +236,9 @@ class SubscriptionController extends Controller
             return response()->json(['message' => 'Tenant not found.'], 404);
         }
 
-        if ($currentTenant->subscription_provider === 'paddle') {
+        if ($currentTenant->subscription_provider === 'paddle' 
+            || \App\Models\PaddleSubscription::where('tenant_id', $currentTenant->id)->exists()
+            || \App\Models\PaddleCustomer::where('tenant_id', $currentTenant->id)->exists()) {
             $portalUrl = $paymentService->createPaddlePortalSession($currentTenant);
             if ($portalUrl) {
                 return response()->json(['url' => $portalUrl]);
