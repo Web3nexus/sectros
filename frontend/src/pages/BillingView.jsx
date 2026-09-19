@@ -25,6 +25,7 @@ export default function BillingView() {
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
   const [country, setCountry] = useState('');
+  const [billingCycle, setBillingCycle] = useState('monthly');
 
   const fetchData = async () => {
     setLoading(true);
@@ -98,7 +99,7 @@ export default function BillingView() {
     }
   }, []);
 
-  const handleSubscribe = async (planSlug, interval = 'monthly') => {
+  const handleSubscribe = async (planSlug, cycle = billingCycle) => {
     if (!country) {
       setError("Please select your country first to determine the best payment gateway.");
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -110,12 +111,16 @@ export default function BillingView() {
     try {
       const res = await api.post('billing/subscribe', {
         plan_slug: planSlug,
-        interval: interval,
+        interval: cycle,
         country: country
       });
       
-      if (res.data.url) {
-        window.location.href = res.data.url;
+      const redirectUrl = res.data?.url || res.data?.checkout_url || res.data?.payment_url;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+      } else if (res.data?.status === 'success' || res.data?.message) {
+        setSuccessMsg(res.data.message || "Plan updated successfully!");
+        fetchData();
       } else {
         setError("Payment initialization failed. Please contact support.");
       }
@@ -251,31 +256,37 @@ export default function BillingView() {
       )}
 
       {/* Current Plan Overview */}
-      <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-500/20">
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl shadow-slate-950/20">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-[10px] font-black uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-[10px] font-bold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
               Current Active Tier
             </div>
-            <h2 className="text-4xl font-black">{status?.plan_name || 'Free'}</h2>
-            <p className="text-blue-100 max-w-md">Your account is currently on the {status?.plan_name} model. Features are subject to this tier's limitations.</p>
+            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-white">{status?.plan_name || 'Free'}</h2>
+            <p className="text-slate-400 max-w-md text-sm leading-relaxed">
+              Your account is currently running on the <span className="text-white font-medium">{status?.plan_name || 'Free'}</span> plan. Features and quotas adapt to this tier.
+            </p>
           </div>
           
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-2xl w-full md:w-auto min-w-[240px]">
-            <div className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-4">Subscription Status</div>
+          <div className="bg-slate-800/80 backdrop-blur-sm border border-slate-700/80 p-6 rounded-2xl w-full md:w-auto min-w-[260px] shadow-inner">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-4">Subscription Status</div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-bold text-white uppercase tracking-tight">{status?.status || 'Active'}</span>
-              <Shield className="w-4 h-4 text-blue-300" />
+              <div className="flex items-center gap-2">
+                <span className={`inline-block w-2 h-2 rounded-full ${status?.status === 'canceled' ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+                <span className="text-xs font-bold text-white uppercase tracking-tight">{status?.status || 'Active'}</span>
+              </div>
+              <Shield className="w-4 h-4 text-slate-400" />
             </div>
-            <div className="text-[10px] text-blue-200 mb-1">Billing Provider</div>
-            <div className="font-bold text-sm capitalize">{status?.provider || 'System Internal'}</div>
+            <div className="text-[10px] text-slate-400 mb-1 uppercase tracking-wider font-semibold">Billing Provider</div>
+            <div className="font-bold text-sm text-slate-200 capitalize">{status?.provider || 'Standard'}</div>
 
             {status?.provider === 'paddle' && (
               <button
                 type="button"
                 onClick={handleOpenPortal}
                 disabled={openingPortal}
-                className="mt-3 w-full py-2 px-3 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="mt-3 w-full py-2.5 px-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border border-slate-600 shadow-sm"
               >
                 {openingPortal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
                 Manage Subscription
@@ -283,21 +294,21 @@ export default function BillingView() {
             )}
 
             {/* AI Credits Usage Indicator */}
-            <div className="mt-6 pt-6 border-t border-white/10">
+            <div className="mt-5 pt-5 border-t border-slate-700/70">
               <div className="flex justify-between items-end mb-2">
-                <div className="text-[10px] font-black text-blue-200 uppercase tracking-widest">Base Credits Used</div>
+                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Base Credits Used</div>
                 <div className="text-xs font-bold text-white">{status?.ai_credits_used || 0} / {status?.ai_credits_limit ?? '∞'}</div>
               </div>
-              <div className="h-2 w-full bg-white/10 rounded-full overflow-hidden mb-4">
+              <div className="h-2 w-full bg-slate-700 rounded-full overflow-hidden mb-3">
                 <div 
-                  className="h-full bg-blue-300 transition-all duration-500" 
+                  className="h-full bg-emerald-400 transition-all duration-500 rounded-full" 
                   style={{ width: `${Math.min(((status?.ai_credits_used || 0) / (status?.ai_credits_limit || 1)) * 100, 100)}%` }}
                 />
               </div>
               
-              <div className="flex justify-between items-end mb-2">
-                <div className="text-[10px] font-black hover:text-amber-300 text-amber-400 uppercase tracking-widest">Rollover Top-Up Balance</div>
-                <div className="text-xs font-bold text-amber-400">{status?.ai_credits_topup || 0} left</div>
+              <div className="flex justify-between items-end">
+                <div className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Top-Up Balance</div>
+                <div className="text-xs font-bold text-amber-400">{status?.ai_credits_topup || 0} credits</div>
               </div>
             </div>
           </div>
@@ -305,96 +316,153 @@ export default function BillingView() {
 
         {/* Upgrade Call to Action for Free Users */}
         {(status?.plan_slug === 'free' || !status?.plan_slug) && (
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
-            <div className="mb-4 sm:mb-0">
-              <p className="text-sm font-bold text-blue-100 italic">"Your account is limited by the Free tier. Unlock high-performance AI and premium management tools."</p>
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between p-5 bg-slate-800/60 rounded-2xl border border-slate-700/80 gap-4">
+            <div>
+              <p className="text-sm font-medium text-slate-300">Unlock high-performance AI automations, increased team seats, and premium features.</p>
             </div>
             <button 
               onClick={() => document.getElementById('plans-selection').scrollIntoView({ behavior: 'smooth' })}
-              className="px-6 py-3 bg-white text-primary rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-50 transition-colors shadow-lg"
+              className="px-5 py-2.5 bg-white text-slate-900 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-100 transition-colors shadow shrink-0 cursor-pointer"
             >
-              Choose a Premium Plan
+              View Premium Plans
             </button>
           </div>
         )}
         
-        {/* Background Decorative Element */}
-        <CreditCard className="absolute -bottom-10 -right-10 w-64 h-64 text-white/5 rotate-12" />
+        {/* Subtle Background Watermark */}
+        <CreditCard className="absolute -bottom-10 -right-10 w-64 h-64 text-white/[0.03] rotate-12 pointer-events-none" />
       </div>
 
       {/* Plan Selection — MUST come before Top Up so scroll-to works correctly */}
       <div id="plans-selection" className="scroll-mt-6">
-        <h2 className="text-2xl font-black text-foreground mb-6 flex items-center gap-2">
-          <CreditCard className="w-6 h-6 text-primary" /> Choose Your Plan
-        </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-2xl font-black text-foreground flex items-center gap-2">
+            <CreditCard className="w-6 h-6 text-slate-800" /> Choose Your Plan
+          </h2>
+
+          {/* Billing Cycle Toggle */}
+          <div className="inline-flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setBillingCycle('monthly')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                billingCycle === 'monthly'
+                  ? 'bg-white text-slate-900 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              Monthly Billing
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingCycle('yearly')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                billingCycle === 'yearly'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span>Annual Billing</span>
+              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                billingCycle === 'yearly' ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'
+              }`}>
+                Save ~20%
+              </span>
+            </button>
+          </div>
+        </div>
         
         {/* Responsive Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {(Array.isArray(plans) ? plans : []).map((plan) => (
-            <div key={plan.id} className={`bg-white border-2 rounded-3xl p-8 flex flex-col transition-all group relative shadow-sm ${
-              status?.plan_slug === plan.slug ? 'border-blue-500 bg-blue-50/50 shadow-md' : 'border-border hover:border-slate-300'
-            }`}>
-              {plan.is_popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg">
-                  Most Popular
-                </div>
-              )}
+          {(Array.isArray(plans) ? plans : []).map((plan) => {
+            const isCurrentPlan = 
+              (status?.plan_slug && plan.slug && status.plan_slug.toLowerCase() === plan.slug.toLowerCase()) ||
+              Boolean(plan.is_current);
 
-              <div className="mb-8">
-                <h3 className="text-xl font-black text-foreground mb-2">{plan.name}</h3>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-foreground">${plan.monthly_price}</span>
-                  <span className="text-muted-foreground text-sm">/month</span>
-                </div>
-              </div>
+            const monthlyPrice = Number(plan.monthly_price ?? plan.price ?? 0);
+            const yearlyPrice = Number(plan.yearly_price && plan.yearly_price > 0 ? plan.yearly_price : (monthlyPrice * 10));
+            const displayedPrice = billingCycle === 'yearly' ? yearlyPrice : monthlyPrice;
 
-              <div className="space-y-4 mb-8 flex-1">
-                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">What's included</p>
-                <ul className="space-y-3">
-                  {plan.features && typeof plan.features === 'object' && !Array.isArray(plan.features)
-                    ? Object.entries(plan.features)
-                        .filter(([, v]) => v === true)
-                        .map(([key]) => (
-                          <li key={key} className="flex items-center gap-3 text-sm text-slate-600">
-                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                            <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                          </li>
-                        ))
-                    : Array.isArray(plan.features) && plan.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
-                          <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
-                          <span className="capitalize">{feature.replace(/_/g, ' ')}</span>
-                        </li>
-                      ))
-                  }
-                  <li className="flex items-center gap-3 text-sm font-bold text-primary pt-2 border-t border-border mt-2">
-                    <Zap className="w-4 h-4 text-blue-500 shrink-0" />
-                    <span>{plan.ai_credits_limit !== null && plan.ai_credits_limit !== undefined ? `${plan.ai_credits_limit.toLocaleString()} AI Credits/mo` : 'Unlimited AI Credits'}</span>
-                  </li>
-                </ul>
-              </div>
-
-              <button 
-                onClick={() => handleSubscribe(plan.slug)}
-                disabled={status?.plan_slug === plan.slug || subscribing === plan.slug}
-                className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
-                  status?.plan_slug === plan.slug 
-                    ? 'bg-slate-100 text-muted-foreground cursor-default' 
-                    : 'bg-slate-100 text-foreground hover:bg-primary hover:text-white active:scale-95 transition-colors'
+            return (
+              <div
+                key={plan.id || plan.slug}
+                className={`bg-white border-2 rounded-3xl p-8 flex flex-col transition-all group relative ${
+                  isCurrentPlan
+                    ? 'border-slate-900 bg-slate-50/50 shadow-md ring-1 ring-slate-900/10'
+                    : 'border-border hover:border-slate-400 hover:shadow-lg'
                 }`}
               >
-                {subscribing === plan.slug ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : status?.plan_slug === plan.slug ? (
-                  'Current Plan'
-                ) : (
-                  <>
-                    Checkout Now <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </div>
-          ))}
+                {isCurrentPlan ? (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md flex items-center gap-1.5 whitespace-nowrap">
+                    <CheckCircle className="w-3 h-3 text-emerald-400" /> Current Plan
+                  </div>
+                ) : plan.is_popular ? (
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-[10px] font-black uppercase tracking-wider px-3.5 py-1 rounded-full shadow-md">
+                    Most Popular
+                  </div>
+                ) : null}
+
+                <div className="mb-8">
+                  <h3 className="text-xl font-black text-foreground mb-2">{plan.name}</h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-3xl font-black text-foreground">${displayedPrice}</span>
+                    <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+                  </div>
+                  {billingCycle === 'yearly' && displayedPrice > 0 && (
+                    <p className="text-[11px] font-semibold text-emerald-600 mt-1">
+                      Approx. ${Math.round(displayedPrice / 12)}/mo billed annually
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-4 mb-8 flex-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest border-b border-border pb-2">What's included</p>
+                  <ul className="space-y-3">
+                    {plan.features && typeof plan.features === 'object' && !Array.isArray(plan.features)
+                      ? Object.entries(plan.features)
+                          .filter(([, v]) => v === true)
+                          .map(([key]) => (
+                            <li key={key} className="flex items-center gap-3 text-sm text-slate-600">
+                              <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                              <span className="capitalize">{key.replace(/_/g, ' ')}</span>
+                            </li>
+                          ))
+                      : Array.isArray(plan.features) && plan.features.map((feature, i) => (
+                          <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                            <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                            <span className="capitalize">{feature.replace(/_/g, ' ')}</span>
+                          </li>
+                        ))
+                    }
+                    <li className="flex items-center gap-3 text-sm font-bold text-slate-800 pt-2 border-t border-border mt-2">
+                      <Zap className="w-4 h-4 text-amber-500 shrink-0" />
+                      <span>{plan.ai_credits_limit !== null && plan.ai_credits_limit !== undefined ? `${plan.ai_credits_limit.toLocaleString()} AI Credits/mo` : 'Unlimited AI Credits'}</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <button 
+                  onClick={() => !isCurrentPlan && handleSubscribe(plan.slug, billingCycle)}
+                  disabled={isCurrentPlan || subscribing === plan.slug}
+                  className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                    isCurrentPlan
+                      ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                      : 'bg-slate-900 text-white hover:bg-slate-800 active:scale-95 shadow-sm cursor-pointer'
+                  }`}
+                >
+                  {subscribing === plan.slug ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : isCurrentPlan ? (
+                    'Current Plan'
+                  ) : (
+                    <>
+                      Upgrade to {plan.name} <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            );
+          })}
         </div>
 
         {/* Enterprise Flex — Now explicitly UNDER the pricing plans */}

@@ -32,6 +32,12 @@ class PaddlePaymentTest extends TestCase
         config([
             'cache.default' => 'array',
             'database.default' => 'platform',
+            'tenancy.database.central_connection' => 'platform',
+            'database.connections.sqlite' => [
+                'driver' => 'sqlite',
+                'database' => $dbFile,
+                'prefix' => '',
+            ],
             'database.connections.platform' => [
                 'driver' => 'sqlite',
                 'database' => $dbFile,
@@ -48,6 +54,7 @@ class PaddlePaymentTest extends TestCase
                 'prefix' => '',
             ],
         ]);
+        DB::purge('sqlite');
         DB::purge('platform');
         DB::purge('mysql');
         DB::purge('tenant');

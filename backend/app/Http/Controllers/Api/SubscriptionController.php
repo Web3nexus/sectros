@@ -15,10 +15,25 @@ class SubscriptionController extends Controller
     /**
      * Get all available subscription plans.
      */
-    public function getPlans()
+    public function getPlans(Request $request)
     {
         try {
             $currentTenant = function_exists('tenant') ? tenant() : null;
+
+            if (!$currentTenant) {
+                $user = $request->user();
+                if ($user && !empty($user->tenant_id)) {
+                    $currentTenant = Tenant::find($user->tenant_id);
+                }
+            }
+
+            if (!$currentTenant) {
+                $host = $request->getHost();
+                $currentTenant = Tenant::whereHas('domains', function ($q) use ($host) {
+                    $q->where('domain', $host);
+                })->first();
+            }
+
             $tenantPlan = $currentTenant?->plan ?? 'free';
 
             $plans = SubscriptionPlan::on('platform')
@@ -27,16 +42,24 @@ class SubscriptionController extends Controller
                 ->get()
                 ->map(function ($p) use ($tenantPlan) {
                     return [
-                        'id'          => $p->id,
-                        'name'        => $p->name,
-                        'slug'        => $p->slug,
-                        'description' => $p->description ?? ($p->name . ' tier for hospitality teams'),
-                        'price'       => (float) ($p->monthly_price ?? $p->price_monthly ?? 0),
-                        'interval'    => 'month',
-                        'features'    => (array) ($p->features ?? []),
-                        'is_current'  => strtolower($p->slug) === strtolower($tenantPlan),
-                        'sms_credits_limit' => $p->sms_credits_limit ?? 0,
-                        'ai_credits_limit'  => $p->ai_credits_limit ?? 0,
+                        'id'                      => $p->id,
+                        'name'                    => $p->name,
+                        'slug'                    => $p->slug,
+                        'description'             => $p->description ?? ($p->name . ' tier for hospitality teams'),
+                        'price'                   => (float) ($p->monthly_price ?? 0),
+                        'monthly_price'           => (float) ($p->monthly_price ?? 0),
+                        'yearly_price'            => (float) ($p->yearly_price ?? 0),
+                        'interval'                => 'month',
+                        'is_popular'              => (bool) ($p->is_popular ?? false),
+                        'features'                => (array) ($p->features ?? []),
+                        'is_current'              => strtolower($p->slug) === strtolower($tenantPlan),
+                        'sms_credits_limit'       => $p->sms_credits_limit ?? 0,
+                        'ai_credits_limit'        => $p->ai_credits_limit ?? 0,
+                        'max_staff'               => $p->max_staff ?? 0,
+                        'reservation_limit'       => $p->reservation_limit ?? 0,
+                        'paddle_product_id'       => $p->paddle_product_id,
+                        'paddle_monthly_price_id' => $p->paddle_monthly_price_id,
+                        'paddle_yearly_price_id'  => $p->paddle_yearly_price_id,
                     ];
                 });
 
@@ -184,9 +207,24 @@ class SubscriptionController extends Controller
             return response()->json(['message' => 'Please provide a valid plan.'], 422);
         }
 
-        $currentTenant = tenant();
+        $currentTenant = function_exists('tenant') ? tenant() : null;
+
         if (!$currentTenant) {
-            return response()->json(['message' => 'Tenant not found.'], 404);
+            $user = $request->user();
+            if ($user && !empty($user->tenant_id)) {
+                $currentTenant = Tenant::find($user->tenant_id);
+            }
+        }
+
+        if (!$currentTenant) {
+            $host = $request->getHost();
+            $currentTenant = Tenant::whereHas('domains', function ($q) use ($host) {
+                $q->where('domain', $host);
+            })->first();
+        }
+
+        if (!$currentTenant) {
+            return response()->json(['message' => 'Tenant context could not be resolved.'], 404);
         }
 
         if ($request->filled('country')) {
@@ -200,7 +238,8 @@ class SubscriptionController extends Controller
         }
 
         // Direct switch for free plan
-        if ((float)($plan->price_monthly ?? 0) <= 0) {
+        $planCost = (float) ($plan->monthly_price ?? $plan->price_monthly ?? 0);
+        if ($planCost <= 0) {
             $currentTenant->update([
                 'plan' => $plan->slug,
                 'subscription_status' => 'active',
@@ -208,6 +247,7 @@ class SubscriptionController extends Controller
             return response()->json([
                 'message' => "Successfully switched to {$plan->name} plan.",
                 'checkout_url' => null,
+                'url' => null,
                 'status' => 'success',
             ]);
         }
@@ -221,6 +261,7 @@ class SubscriptionController extends Controller
             $url = $paymentInfo['checkout_url'] ?? $paymentInfo['payment_url'] ?? $paymentInfo['url'] ?? null;
             return response()->json(array_merge($paymentInfo, [
                 'checkout_url' => $url,
+                'url'          => $url,
             ]));
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
