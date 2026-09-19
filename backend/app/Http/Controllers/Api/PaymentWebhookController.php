@@ -229,6 +229,125 @@ class PaymentWebhookController extends Controller
         return response()->json(['status' => 'success']);
     }
 
+    public function handlePaddle(Request $request)
+    {
+        $webhookSecret = SaaSSetting::where('key', 'paddle_webhook_secret')->value('value');
+        $signatureHeader = $request->header('Paddle-Signature') ?? $request->header('paddle-signature');
+        $payload = $request->getContent();
+
+        if (!$webhookSecret) {
+            Log::error("Paddle Webhook Secret not configured in SaaS settings.");
+            return response()->json(['message' => 'Webhook secret missing'], 500);
+        }
+
+        if (!$signatureHeader) {
+            Log::error("Paddle Webhook missing Paddle-Signature header");
+            return response()->json(['message' => 'Missing signature header'], 401);
+        }
+
+        // Parse Paddle-Signature (format: ts=...;h1=...)
+        $ts = null;
+        $h1 = null;
+        foreach (explode(';', $signatureHeader) as $part) {
+            $pair = explode('=', trim($part), 2);
+            if (count($pair) === 2) {
+                if ($pair[0] === 'ts') $ts = $pair[1];
+                if ($pair[0] === 'h1') $h1 = $pair[1];
+            }
+        }
+
+        if (!$ts || !$h1) {
+            Log::error("Paddle Webhook invalid signature format");
+            return response()->json(['message' => 'Invalid signature format'], 401);
+        }
+
+        // Replay attack check: verify timestamp within 5 minutes (300 seconds)
+        if (abs(time() - (int) $ts) > 300) {
+            Log::error("Paddle Webhook timestamp expired: ts={$ts}");
+            return response()->json(['message' => 'Signature timestamp expired'], 401);
+        }
+
+        // Compute HMAC-SHA256 of ts:raw_payload
+        $expectedHash = hash_hmac('sha256', "{$ts}:{$payload}", $webhookSecret);
+        if (!hash_equals($expectedHash, $h1)) {
+            Log::error("Paddle Webhook signature mismatch");
+            return response()->json(['message' => 'Invalid signature'], 401);
+        }
+
+        $event = $request->input('event_type');
+        $data = $request->input('data') ?? [];
+        $customData = $data['custom_data'] ?? [];
+        $tenantId = $customData['tenant_id'] ?? null;
+
+        Log::info("Paddle Webhook received: {$event} for tenant " . ($tenantId ?? 'unknown'));
+
+        if ($event === 'transaction.completed' || $event === 'transaction.paid') {
+            $type = $customData['type'] ?? 'subscription';
+
+            if ($type === 'theme_purchase') {
+                $templateId = $customData['template_id'] ?? null;
+                $total = isset($data['details']['totals']['total']) ? ((float) $data['details']['totals']['total']) / 100 : 0;
+                if ($tenantId && $templateId) {
+                    $this->fulfillThemePurchase($tenantId, $templateId, $total);
+                }
+            } elseif ($type === 'addon_purchase') {
+                $addonId = $customData['addon_id'] ?? null;
+                $quantity = (int) ($customData['quantity'] ?? 1);
+                if ($tenantId && $addonId) {
+                    $this->fulfillAddonPurchase($tenantId, $addonId, $quantity);
+                }
+            } elseif ($type === 'reservation_deposit') {
+                $reservationId = $customData['reservation_id'] ?? null;
+                if ($tenantId && $reservationId) {
+                    $this->fulfillReservationDeposit($tenantId, $reservationId, $data['id'], 'paddle');
+                }
+            } else {
+                // Subscription purchase
+                $planSlug = $customData['plan_slug'] ?? null;
+                $subId = $data['subscription_id'] ?? $data['id'];
+                if ($tenantId && $planSlug) {
+                    $this->updateTenantSubscription($tenantId, 'paddle', $subId, $planSlug);
+                }
+            }
+        } elseif ($event === 'subscription.activated' || $event === 'subscription.updated') {
+            $subscriptionId = $data['id'] ?? null;
+            $tenant = null;
+            if ($tenantId) {
+                $tenant = Tenant::find($tenantId);
+            }
+            if (!$tenant && $subscriptionId) {
+                $tenant = Tenant::where('subscription_id', $subscriptionId)->first();
+            }
+
+            if ($tenant) {
+                $status = $data['status'] ?? 'active';
+                $tenant->subscription_status = in_array($status, ['active', 'trialing']) ? 'active' : $status;
+                if (!empty($data['current_billing_period']['ends_at'])) {
+                    $tenant->subscription_ends_at = \Carbon\Carbon::parse($data['current_billing_period']['ends_at']);
+                }
+                $tenant->save();
+                Log::info("Paddle subscription {$subscriptionId} synchronized for tenant {$tenant->id} (status: {$tenant->subscription_status})");
+            }
+        } elseif ($event === 'subscription.canceled' || $event === 'subscription.past_due') {
+            $subscriptionId = $data['id'] ?? null;
+            $tenant = null;
+            if ($tenantId) {
+                $tenant = Tenant::find($tenantId);
+            }
+            if (!$tenant && $subscriptionId) {
+                $tenant = Tenant::where('subscription_id', $subscriptionId)->first();
+            }
+
+            if ($tenant) {
+                $tenant->subscription_status = ($event === 'subscription.canceled') ? 'canceled' : 'past_due';
+                $tenant->save();
+                Log::info("Paddle subscription {$subscriptionId} marked as {$tenant->subscription_status} for tenant {$tenant->id}");
+            }
+        }
+
+        return response()->json(['status' => 'success']);
+    }
+
     private function updateTenantSubscription($tenantId, $provider, $subscriptionId, $planSlug)
     {
         $tenant = Tenant::find($tenantId);

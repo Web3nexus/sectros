@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X} from 'lucide-react';
+import {CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X, ExternalLink} from 'lucide-react';
 import api from '../services/api';
 import { COUNTRIES } from '../utils/countries';
 
@@ -18,6 +18,7 @@ export default function BillingView() {
   const [activeAddons, setActiveAddons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState(null);
+  const [openingPortal, setOpeningPortal] = useState(false);
   const [purchasingTopup, setPurchasingTopup] = useState(false);
   const [purchasingAddon, setPurchasingAddon] = useState(null);
   const [cancellingAddon, setCancellingAddon] = useState(null);
@@ -110,6 +111,23 @@ export default function BillingView() {
       setError(err.response?.data?.message || "Failed to start payment process.");
     } finally {
       setSubscribing(null);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    setOpeningPortal(true);
+    setError(null);
+    try {
+      const res = await api.post('billing/portal');
+      if (res.data?.url) {
+        window.open(res.data.url, '_blank');
+      } else {
+        setError('Unable to open billing portal at this time.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to generate billing portal session.');
+    } finally {
+      setOpeningPortal(false);
     }
   };
 
@@ -239,6 +257,18 @@ export default function BillingView() {
             </div>
             <div className="text-[10px] text-blue-200 mb-1">Billing Provider</div>
             <div className="font-bold text-sm capitalize">{status?.provider || 'System Internal'}</div>
+
+            {status?.provider === 'paddle' && (
+              <button
+                type="button"
+                onClick={handleOpenPortal}
+                disabled={openingPortal}
+                className="mt-3 w-full py-2 px-3 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                {openingPortal ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                Manage Subscription
+              </button>
+            )}
 
             {/* AI Credits Usage Indicator */}
             <div className="mt-6 pt-6 border-t border-white/10">

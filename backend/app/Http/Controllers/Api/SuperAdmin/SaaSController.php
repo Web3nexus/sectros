@@ -1049,6 +1049,11 @@ class SaaSController extends Controller
             'dodo_publishable_key' => $this->maskSecret($settings['dodo_publishable_key'] ?? ''),
             'dodo_secret_key' => $this->maskSecret($settings['dodo_secret_key'] ?? ''),
             'dodo_webhook_secret' => $this->maskSecret($settings['dodo_webhook_secret'] ?? ''),
+            'paddle_enabled' => filter_var($settings['paddle_enabled'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'paddle_environment' => $settings['paddle_environment'] ?? 'sandbox',
+            'paddle_api_key' => $this->maskSecret($settings['paddle_api_key'] ?? ''),
+            'paddle_client_token' => $settings['paddle_client_token'] ?? '',
+            'paddle_webhook_secret' => $this->maskSecret($settings['paddle_webhook_secret'] ?? ''),
             'default_currency' => $settings['default_currency'] ?? 'USD',
             'sales_email' => $settings['sales_email'] ?? '',
             // Twilio SMS
@@ -1163,6 +1168,7 @@ class SaaSController extends Controller
             'paystack_enabled', 'paystack_public_key', 'paystack_secret_key',
             'flutterwave_enabled', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key',
             'dodo_enabled', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret',
+            'paddle_enabled', 'paddle_environment', 'paddle_api_key', 'paddle_client_token', 'paddle_webhook_secret',
             'default_currency', 'sales_email',
             'server_ip',
             'namesilo_enabled', 'namesilo_api_key',
@@ -1190,7 +1196,7 @@ class SaaSController extends Controller
         }
         
         foreach ($settings as $key => $value) {
-            if (in_array($key, ['mail_password', 'resend_api_key', 'mailgun_secret', 'postmark_token', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'meta_webhook_verify_token', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
+            if (in_array($key, ['mail_password', 'resend_api_key', 'mailgun_secret', 'postmark_token', 'openai_api_key', 'claude_api_key', 'gemini_api_key', 'social_verify_token', 'meta_app_secret', 'meta_webhook_verify_token', 'facebook_client_id', 'facebook_client_secret', 'stripe_publishable_key', 'stripe_secret_key', 'stripe_webhook_secret', 'paystack_public_key', 'paystack_secret_key', 'flutterwave_public_key', 'flutterwave_secret_key', 'flutterwave_encryption_key', 'dodo_publishable_key', 'dodo_secret_key', 'dodo_webhook_secret', 'paddle_api_key', 'paddle_webhook_secret', 'turnstile_secret_key', 'namesilo_api_key', 'twilio_auth_token']) && !empty($value) && str_contains($value, '*')) {
                 continue;
             }
 

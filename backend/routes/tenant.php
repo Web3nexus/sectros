@@ -222,6 +222,7 @@ Route::middleware(['api'])->group(function () {
                 Route::get('/status', [\App\Http\Controllers\Api\SubscriptionController::class, 'currentStatus']);
                 Route::post('/subscribe', [\App\Http\Controllers\Api\SubscriptionController::class, 'subscribe']);
                 Route::post('/upgrade', [\App\Http\Controllers\Api\SubscriptionController::class, 'subscribe']);
+                Route::post('/portal', [\App\Http\Controllers\Api\SubscriptionController::class, 'customerPortal']);
                 Route::post('/purchase-credits', [\App\Http\Controllers\Api\SubscriptionController::class, 'purchaseCredits']);
                 Route::post('/purchase-sms-credits', [\App\Http\Controllers\Api\SubscriptionController::class, 'purchaseSmsCredits']);
             });

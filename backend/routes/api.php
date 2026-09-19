@@ -38,6 +38,7 @@ Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookControl
 Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);
 Route::post('/webhooks/flutterwave', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleFlutterwave']);
 Route::post('/webhooks/dodo', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleDodo']);
+Route::post('/webhooks/paddle', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaddle']);
 
 // Direct Meta + BSP Webhooks
 Route::middleware('throttle:60,1')->group(function () {

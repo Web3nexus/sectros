@@ -225,4 +225,24 @@ class SubscriptionController extends Controller
             'credits'             => SMSService::getCreditsArray(),
         ]);
     }
+
+    /**
+     * Get Customer Portal URL for the tenant's subscription.
+     */
+    public function customerPortal(PaymentService $paymentService)
+    {
+        $currentTenant = tenant();
+        if (!$currentTenant) {
+            return response()->json(['message' => 'Tenant not found.'], 404);
+        }
+
+        if ($currentTenant->subscription_provider === 'paddle') {
+            $portalUrl = $paymentService->createPaddlePortalSession($currentTenant);
+            if ($portalUrl) {
+                return response()->json(['url' => $portalUrl]);
+            }
+        }
+
+        return response()->json(['message' => 'Customer portal not available for this provider.'], 400);
+    }
 }

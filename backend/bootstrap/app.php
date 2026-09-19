@@ -26,6 +26,17 @@ return Application::configure(basePath: dirname(__DIR__))
                     require base_path('routes/public.php');
                 });
 
+            // Direct /api/webhooks aliases for external payment providers
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(function () {
+                    Route::post('/webhooks/paddle', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaddle']);
+                    Route::post('/webhooks/stripe', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleStripe']);
+                    Route::post('/webhooks/paystack', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handlePaystack']);
+                    Route::post('/webhooks/flutterwave', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleFlutterwave']);
+                    Route::post('/webhooks/dodo', [\App\Http\Controllers\Api\PaymentWebhookController::class, 'handleDodo']);
+                });
+
             // Tenant API — accessible under both prefixes for transition
             Route::middleware(['api', 'tenancy.header'])
                 ->prefix('tenant-api')

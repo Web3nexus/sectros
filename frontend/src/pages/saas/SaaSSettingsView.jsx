@@ -58,6 +58,11 @@ export default function SaaSSettingsView() {
     dodo_publishable_key: '',
     dodo_secret_key: '',
     dodo_webhook_secret: '',
+    paddle_enabled: false,
+    paddle_environment: 'sandbox',
+    paddle_api_key: '',
+    paddle_client_token: '',
+    paddle_webhook_secret: '',
     default_currency: 'USD',
     twilio_sid: '',
     twilio_auth_token: '',
@@ -81,11 +86,12 @@ export default function SaaSSettingsView() {
   const [isLoading, setIsLoading] = useState(true);
   const [showSecrets, setShowSecrets] = useState(false);
   const [modal, setModal] = useState({ isOpen: false, title: '', message: '', type: 'success' });
+  const [copiedPaddleWebhook, setCopiedPaddleWebhook] = useState(false);
 
   const secretKeys = ['social_verify_token', 'mail_password', 'resend_api_key', 'mailgun_secret', 'postmark_token',
     'openai_api_key', 'claude_api_key', 'gemini_api_key', 'meta_app_secret', 'facebook_client_secret',
     'stripe_secret_key', 'stripe_webhook_secret', 'paystack_secret_key', 'flutterwave_secret_key',
-    'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'turnstile_secret_key',
+    'flutterwave_encryption_key', 'dodo_secret_key', 'dodo_webhook_secret', 'paddle_api_key', 'paddle_webhook_secret', 'turnstile_secret_key',
     'namesilo_api_key', 'twilio_auth_token'];
 
 
@@ -1645,6 +1651,109 @@ export default function SaaSSettingsView() {
                             placeholder="dodo_whsec_..."
                             className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
                           />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Paddle Billing */}
+                  <div className="bg-card/50 border border-border/50 rounded-2xl p-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                          <CreditCard className="w-5 h-5 text-blue-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-foreground font-bold">Paddle Billing</h4>
+                          <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Merchant of Record / Global Tax & Subscriptions</p>
+                        </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={settings.paddle_enabled}
+                          onChange={e => setSettings({...settings, paddle_enabled: e.target.checked})}
+                          className="sr-only peer" 
+                        />
+                        <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                    
+                    {settings.paddle_enabled && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-border animate-in fade-in slide-in-from-top-2 duration-200">
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Environment</label>
+                          <select
+                            value={settings.paddle_environment || 'sandbox'}
+                            onChange={e => setSettings({...settings, paddle_environment: e.target.value})}
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none cursor-pointer"
+                          >
+                            <option value="sandbox">Sandbox (Testing / sandbox-api.paddle.com)</option>
+                            <option value="production">Production (Live / api.paddle.com)</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Client Token (Optional)</label>
+                          <input 
+                            type="text" 
+                            value={settings.paddle_client_token || ''}
+                            onChange={e => setSettings({...settings, paddle_client_token: e.target.value})}
+                            placeholder="live_... or test_..."
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">API Secret Key</label>
+                          <input 
+                            type="password" 
+                            value={settings.paddle_api_key || ''}
+                            onChange={e => setSettings({...settings, paddle_api_key: e.target.value})}
+                            placeholder="padd_live_... or padd_sbox_..."
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-black text-muted-foreground uppercase tracking-widest mb-2">Webhook Secret Key</label>
+                          <input 
+                            type="password" 
+                            value={settings.paddle_webhook_secret || ''}
+                            onChange={e => setSettings({...settings, paddle_webhook_secret: e.target.value})}
+                            placeholder="pdl_ntfset_..."
+                            className="w-full bg-background border border-border text-foreground rounded-xl py-2 px-4 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                          />
+                        </div>
+                        <div className="md:col-span-2 bg-background/80 border border-border/80 rounded-xl p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-foreground">Paddle Webhook Notification URL</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const url = `${window.location.origin}/central-api/webhooks/paddle`;
+                                navigator.clipboard.writeText(url);
+                                setCopiedPaddleWebhook(true);
+                                setTimeout(() => setCopiedPaddleWebhook(false), 2000);
+                              }}
+                              className="text-xs text-primary hover:underline flex items-center gap-1 font-semibold"
+                            >
+                              {copiedPaddleWebhook ? (
+                                <>
+                                  <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />
+                                  <span className="text-emerald-500">Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  Copy Webhook URL
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <code className="block bg-slate-900 text-slate-200 text-xs px-3 py-2 rounded-lg break-all font-mono select-all">
+                            {window.location.origin}/central-api/webhooks/paddle
+                          </code>
+                          <p className="text-[11px] text-muted-foreground">
+                            In your Paddle Dashboard (<strong>Developer Tools &rarr; Notifications &rarr; New Destination</strong>), paste this endpoint and subscribe to events: <code>transaction.completed</code>, <code>subscription.activated</code>, <code>subscription.updated</code>, <code>subscription.canceled</code>, and <code>subscription.past_due</code>.
+                          </p>
                         </div>
                       </div>
                     )}

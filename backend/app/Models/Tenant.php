@@ -37,6 +37,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase
             'voice_credits_reset_at',
             'features',
             'country',
+            'subscription_id',
+            'subscription_provider',
+            'subscription_status',
+            'subscription_ends_at',
             'created_at',
             'updated_at',
         ];
@@ -56,5 +60,6 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'trial_ends_at' => 'datetime',
         'is_testing' => 'boolean',
         'testing_ends_at' => 'datetime',
+        'subscription_ends_at' => 'datetime',
     ];
 }

@@ -15,14 +15,22 @@ class PaymentService
     /**
      * Get the appropriate payment gateway based on country and availability.
      */
-    public static function getGateway(?string $country = null)
+    public static function getGateway(?string $country = null, ?string $preferred = null)
     {
         $country = strtoupper($country ?? 'US');
         
+        $paddleEnabled = SaaSSetting::where('key', 'paddle_enabled')->first()?->value === 'true';
         $stripeEnabled = SaaSSetting::where('key', 'stripe_enabled')->first()?->value === 'true';
         $paystackEnabled = SaaSSetting::where('key', 'paystack_enabled')->first()?->value === 'true';
         $flutterwaveEnabled = SaaSSetting::where('key', 'flutterwave_enabled')->first()?->value === 'true';
         $dodoEnabled = SaaSSetting::where('key', 'dodo_enabled')->first()?->value === 'true';
+
+        // Explicit preference if supported and enabled
+        if ($preferred === 'paddle' && $paddleEnabled) return 'paddle';
+        if ($preferred === 'stripe' && $stripeEnabled) return 'stripe';
+        if ($preferred === 'paystack' && $paystackEnabled) return 'paystack';
+        if ($preferred === 'flutterwave' && $flutterwaveEnabled) return 'flutterwave';
+        if ($preferred === 'dodo' && $dodoEnabled) return 'dodo';
 
         // Paystack is great for NG, GH, ZA, KE
         $paystackCountries = ['NG', 'GH', 'ZA', 'KE'];
@@ -42,15 +50,22 @@ class PaymentService
             return 'dodo';
         }
 
+        // Default to Paddle if enabled
+        if ($paddleEnabled) {
+            return 'paddle';
+        }
+
         // Default to Stripe if enabled
         if ($stripeEnabled) {
             return 'stripe';
         }
 
         // Fallback to whatever is enabled if the primary choice isn't
+        if ($paddleEnabled) return 'paddle';
         if ($paystackEnabled) return 'paystack';
         if ($flutterwaveEnabled) return 'flutterwave';
         if ($dodoEnabled) return 'dodo';
+        if ($stripeEnabled) return 'stripe';
 
         return null;
     }
@@ -69,6 +84,7 @@ class PaymentService
         }
 
         return match($gateway) {
+            'paddle' => $this->initPaddle($tenant, $plan, $amount, $currency, $interval),
             'stripe' => $this->initStripe($tenant, $plan, $amount, $currency, $interval),
             'paystack' => $this->initPaystack($tenant, $plan, $amount, $currency, $interval),
             'flutterwave' => $this->initFlutterwave($tenant, $plan, $amount, $currency, $interval),
@@ -89,6 +105,7 @@ class PaymentService
         }
 
         return match($gateway) {
+            'paddle' => $this->initPaddleDeposit($tenant, $reservation, $successUrl, $cancelUrl),
             'stripe' => $this->initStripeDeposit($tenant, $reservation, $successUrl, $cancelUrl),
             'paystack' => $this->initPaystackDeposit($tenant, $reservation, $successUrl, $cancelUrl),
             'flutterwave' => $this->initFlutterwaveDeposit($tenant, $reservation, $successUrl, $cancelUrl),
@@ -111,6 +128,7 @@ class PaymentService
         }
 
         return match($gateway) {
+            'paddle' => $this->initPaddleTheme($tenant, $template, $amount, $currency),
             'stripe' => $this->initStripeTheme($tenant, $template, $amount, $currency),
             'paystack' => $this->initPaystackTheme($tenant, $template, $amount, $currency),
             'flutterwave' => $this->initFlutterwaveTheme($tenant, $template, $amount, $currency),
@@ -134,6 +152,7 @@ class PaymentService
         $isRecurring = $addon->billing_type === 'recurring';
 
         return match($gateway) {
+            'paddle' => $this->initPaddleAddon($tenant, $addon, $total, $currency, $quantity, $isRecurring),
             'stripe' => $this->initStripeAddon($tenant, $addon, $total, $currency, $quantity, $isRecurring),
             'paystack' => $this->initPaystackAddon($tenant, $addon, $total, $currency, $quantity),
             'flutterwave' => $this->initFlutterwaveAddon($tenant, $addon, $total, $currency, $quantity),
@@ -703,5 +722,366 @@ class PaymentService
             'provider' => 'dodo',
             'checkout_id' => $response->json('payment_id'),
         ];
+    }
+
+    /**
+     * Get Paddle API base URL according to the configured environment.
+     */
+    private function getPaddleBaseUrl(): string
+    {
+        $environment = SaaSSetting::where('key', 'paddle_environment')->value('value') ?? 'sandbox';
+        return $environment === 'production' 
+            ? 'https://api.paddle.com' 
+            : 'https://sandbox-api.paddle.com';
+    }
+
+    /**
+     * Retrieve or create a Paddle customer ID using customer email.
+     */
+    private function getOrCreatePaddleCustomer(string $apiKey, ?string $email, ?string $name = null): ?string
+    {
+        if (empty($email)) {
+            return null;
+        }
+
+        $baseUrl = $this->getPaddleBaseUrl();
+
+        try {
+            // 1. Search for existing customer
+            $searchRes = Http::withToken($apiKey)
+                ->timeout(15)
+                ->get("{$baseUrl}/customers", ['email' => $email]);
+
+            if ($searchRes->successful()) {
+                $customers = $searchRes->json('data');
+                if (!empty($customers) && isset($customers[0]['id'])) {
+                    return $customers[0]['id'];
+                }
+            }
+
+            // 2. Create customer if not found
+            $createRes = Http::withToken($apiKey)
+                ->timeout(15)
+                ->post("{$baseUrl}/customers", [
+                    'email' => $email,
+                    'name' => !empty($name) ? $name : 'Customer',
+                ]);
+
+            if ($createRes->successful()) {
+                return $createRes->json('data.id');
+            }
+
+            Log::warning("Paddle customer creation failed: " . $createRes->body());
+        } catch (\Throwable $e) {
+            Log::warning("Paddle getOrCreateCustomer error: " . $e->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Initialize Paddle subscription checkout transaction.
+     */
+    private function initPaddle($tenant, $plan, $amount, $currency, $interval)
+    {
+        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        if (!$apiKey) {
+            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+        }
+
+        $baseUrl = $this->getPaddleBaseUrl();
+        $email = $tenant->owner_email ?? ($tenant->data['email'] ?? null);
+        $name = $tenant->business_name ?? $tenant->owner_name ?? 'Tenant';
+
+        $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $name);
+
+        $payload = [
+            'collection_mode' => 'automatic',
+            'items' => [
+                [
+                    'quantity' => 1,
+                    'price' => [
+                        'description' => "{$plan->name} - Sectros Subscription",
+                        'name' => "{$plan->name} Plan",
+                        'product' => [
+                            'name' => "{$plan->name}",
+                            'tax_category' => 'standard',
+                        ],
+                        'unit_price' => [
+                            'amount' => (string) (int) round($amount * 100),
+                            'currency_code' => strtoupper($currency),
+                        ],
+                        'billing_cycle' => [
+                            'interval' => $interval === 'yearly' ? 'year' : 'month',
+                            'frequency' => 1,
+                        ],
+                    ],
+                ],
+            ],
+            'custom_data' => [
+                'type' => 'subscription',
+                'tenant_id' => (string) $tenant->id,
+                'plan_slug' => $plan->slug,
+                'interval' => $interval,
+            ],
+        ];
+
+        if ($customerId) {
+            $payload['customer_id'] = $customerId;
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->post("{$baseUrl}/transactions", $payload);
+
+        if ($response->failed()) {
+            Log::error("Paddle Subscription Init Failed: " . $response->body());
+            $errorMsg = $response->json('error.detail') ?? $response->json('message') ?? 'Failed to initialize Paddle payment.';
+            throw new \Exception("Paddle error: {$errorMsg}");
+        }
+
+        $checkoutUrl = $response->json('data.checkout.url');
+        $transactionId = $response->json('data.id');
+
+        return [
+            'url' => $checkoutUrl,
+            'checkout_url' => $checkoutUrl,
+            'provider' => 'paddle',
+            'checkout_id' => $transactionId,
+            'transaction_id' => $transactionId,
+        ];
+    }
+
+    /**
+     * Initialize Paddle website theme purchase.
+     */
+    private function initPaddleTheme($tenant, $template, $amount, $currency)
+    {
+        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        if (!$apiKey) {
+            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+        }
+
+        $baseUrl = $this->getPaddleBaseUrl();
+        $email = $tenant->owner_email ?? ($tenant->data['email'] ?? null);
+        $name = $tenant->business_name ?? $tenant->owner_name ?? 'Tenant';
+
+        $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $name);
+
+        $payload = [
+            'collection_mode' => 'automatic',
+            'items' => [
+                [
+                    'quantity' => 1,
+                    'price' => [
+                        'description' => "Lifetime unlock for theme: {$template->name}",
+                        'name' => "Theme: {$template->name}",
+                        'product' => [
+                            'name' => "Theme: {$template->name}",
+                            'tax_category' => 'standard',
+                        ],
+                        'unit_price' => [
+                            'amount' => (string) (int) round($amount * 100),
+                            'currency_code' => strtoupper($currency),
+                        ],
+                        'billing_cycle' => null,
+                    ],
+                ],
+            ],
+            'custom_data' => [
+                'type' => 'theme_purchase',
+                'tenant_id' => (string) $tenant->id,
+                'template_id' => (string) $template->id,
+            ],
+        ];
+
+        if ($customerId) {
+            $payload['customer_id'] = $customerId;
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->post("{$baseUrl}/transactions", $payload);
+
+        if ($response->failed()) {
+            Log::error("Paddle Theme Init Failed: " . $response->body());
+            $errorMsg = $response->json('error.detail') ?? $response->json('message') ?? 'Failed to initialize Paddle theme purchase.';
+            throw new \Exception("Paddle error: {$errorMsg}");
+        }
+
+        return [
+            'url' => $response->json('data.checkout.url'),
+            'checkout_url' => $response->json('data.checkout.url'),
+            'provider' => 'paddle',
+            'checkout_id' => $response->json('data.id'),
+        ];
+    }
+
+    /**
+     * Initialize Paddle add-on purchase (one-time or recurring).
+     */
+    private function initPaddleAddon($tenant, $addon, $amount, $currency, $quantity, $isRecurring)
+    {
+        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        if (!$apiKey) {
+            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+        }
+
+        $baseUrl = $this->getPaddleBaseUrl();
+        $email = $tenant->owner_email ?? ($tenant->data['email'] ?? null);
+        $name = $tenant->business_name ?? $tenant->owner_name ?? 'Tenant';
+
+        $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $name);
+        $billingCycle = $isRecurring ? ['interval' => 'month', 'frequency' => 1] : null;
+
+        $payload = [
+            'collection_mode' => 'automatic',
+            'items' => [
+                [
+                    'quantity' => 1,
+                    'price' => [
+                        'description' => "Add-on: {$addon->name}" . ($quantity > 1 ? " (x{$quantity})" : ''),
+                        'name' => "Add-on: {$addon->name}",
+                        'product' => [
+                            'name' => "Add-on: {$addon->name}",
+                            'tax_category' => 'standard',
+                        ],
+                        'unit_price' => [
+                            'amount' => (string) (int) round($amount * 100),
+                            'currency_code' => strtoupper($currency),
+                        ],
+                        'billing_cycle' => $billingCycle,
+                    ],
+                ],
+            ],
+            'custom_data' => [
+                'type' => 'addon_purchase',
+                'tenant_id' => (string) $tenant->id,
+                'addon_id' => (string) $addon->id,
+                'addon_slug' => $addon->slug,
+                'quantity' => (int) $quantity,
+            ],
+        ];
+
+        if ($customerId) {
+            $payload['customer_id'] = $customerId;
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->post("{$baseUrl}/transactions", $payload);
+
+        if ($response->failed()) {
+            Log::error("Paddle Addon Init Failed: " . $response->body());
+            $errorMsg = $response->json('error.detail') ?? $response->json('message') ?? 'Failed to initialize Paddle add-on purchase.';
+            throw new \Exception("Paddle error: {$errorMsg}");
+        }
+
+        return [
+            'url' => $response->json('data.checkout.url'),
+            'checkout_url' => $response->json('data.checkout.url'),
+            'provider' => 'paddle',
+            'checkout_id' => $response->json('data.id'),
+        ];
+    }
+
+    /**
+     * Initialize Paddle reservation deposit.
+     */
+    private function initPaddleDeposit($tenant, $reservation, $successUrl, $cancelUrl)
+    {
+        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        if (!$apiKey) {
+            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+        }
+        $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
+
+        $baseUrl = $this->getPaddleBaseUrl();
+        $customerId = $this->getOrCreatePaddleCustomer(
+            $apiKey,
+            $reservation->customer_email,
+            $reservation->customer_name
+        );
+
+        $payload = [
+            'collection_mode' => 'automatic',
+            'items' => [
+                [
+                    'quantity' => 1,
+                    'price' => [
+                        'description' => "Deposit for reservation on {$reservation->reservation_time->format('M d, Y H:i')}",
+                        'name' => "Reservation Deposit",
+                        'product' => [
+                            'name' => "Reservation Deposit",
+                            'tax_category' => 'standard',
+                        ],
+                        'unit_price' => [
+                            'amount' => (string) (int) round($reservation->deposit_amount * 100),
+                            'currency_code' => strtoupper($currency),
+                        ],
+                        'billing_cycle' => null,
+                    ],
+                ],
+            ],
+            'custom_data' => [
+                'type' => 'reservation_deposit',
+                'tenant_id' => (string) $tenant->id,
+                'reservation_id' => (string) $reservation->id,
+            ],
+        ];
+
+        if ($customerId) {
+            $payload['customer_id'] = $customerId;
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->post("{$baseUrl}/transactions", $payload);
+
+        if ($response->failed()) {
+            Log::error("Paddle Deposit Init Failed: " . $response->body());
+            $errorMsg = $response->json('error.detail') ?? $response->json('message') ?? 'Failed to initialize Paddle deposit.';
+            throw new \Exception("Paddle error: {$errorMsg}");
+        }
+
+        return [
+            'url' => $response->json('data.checkout.url'),
+            'checkout_url' => $response->json('data.checkout.url'),
+            'provider' => 'paddle',
+            'checkout_id' => $response->json('data.id'),
+        ];
+    }
+
+    /**
+     * Create an authenticated Paddle Customer Portal session URL.
+     */
+    public function createPaddlePortalSession(Tenant $tenant): ?string
+    {
+        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        if (!$apiKey) return null;
+
+        $baseUrl = $this->getPaddleBaseUrl();
+        $email = $tenant->owner_email ?? ($tenant->data['email'] ?? null);
+        if (!$email) return null;
+
+        $customerId = $this->getOrCreatePaddleCustomer($apiKey, $email, $tenant->business_name);
+        if (!$customerId) return null;
+
+        try {
+            $subscriptionIds = $tenant->subscription_id ? [$tenant->subscription_id] : [];
+            $response = Http::withToken($apiKey)
+                ->timeout(15)
+                ->post("{$baseUrl}/customers/{$customerId}/portal-sessions", [
+                    'subscription_ids' => $subscriptionIds
+                ]);
+
+            if ($response->successful()) {
+                return $response->json('data.urls.general.overview');
+            }
+        } catch (\Throwable $e) {
+            Log::warning("Paddle portal session error: " . $e->getMessage());
+        }
+
+        return null;
     }
 }
