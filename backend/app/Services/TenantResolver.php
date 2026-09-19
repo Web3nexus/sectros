@@ -73,9 +73,13 @@ class TenantResolver
 
     public static function forgetCache(string $tenantId, ?string $domain = null): void
     {
-        \Illuminate\Support\Facades\Cache::forget("tenant:{$tenantId}");
-        if ($domain) {
-            \Illuminate\Support\Facades\Cache::forget('tenant:domain:' . md5($domain));
+        try {
+            \Illuminate\Support\Facades\Cache::forget("tenant:{$tenantId}");
+            if ($domain) {
+                \Illuminate\Support\Facades\Cache::forget('tenant:domain:' . md5($domain));
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("TenantResolver::forgetCache error: " . $e->getMessage());
         }
     }
 

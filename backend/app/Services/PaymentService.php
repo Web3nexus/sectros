@@ -725,11 +725,19 @@ class PaymentService
     }
 
     /**
+     * Get Paddle API key from SaaS settings with env fallback.
+     */
+    private function getPaddleApiKey(): ?string
+    {
+        return SaaSSetting::where('key', 'paddle_api_key')->value('value') ?: env('PADDLE_API_KEY');
+    }
+
+    /**
      * Get Paddle API base URL according to the configured environment.
      */
     private function getPaddleBaseUrl(): string
     {
-        $environment = SaaSSetting::where('key', 'paddle_environment')->value('value') ?? 'sandbox';
+        $environment = SaaSSetting::where('key', 'paddle_environment')->value('value') ?: env('PADDLE_ENVIRONMENT', 'sandbox');
         return $environment === 'production' 
             ? 'https://api.paddle.com' 
             : 'https://sandbox-api.paddle.com';
@@ -784,9 +792,9 @@ class PaymentService
      */
     private function initPaddle($tenant, $plan, $amount, $currency, $interval)
     {
-        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
-            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+            throw new \Exception("Paddle API Key not configured. Please add your Paddle credentials in SaaS Settings -> Payment Gateways.");
         }
 
         $baseUrl = $this->getPaddleBaseUrl();
@@ -872,9 +880,9 @@ class PaymentService
      */
     private function initPaddleTheme($tenant, $template, $amount, $currency)
     {
-        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
-            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+            throw new \Exception("Paddle API Key not configured. Please add your Paddle credentials in SaaS Settings -> Payment Gateways.");
         }
 
         $baseUrl = $this->getPaddleBaseUrl();
@@ -937,9 +945,9 @@ class PaymentService
      */
     private function initPaddleAddon($tenant, $addon, $amount, $currency, $quantity, $isRecurring)
     {
-        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
-            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+            throw new \Exception("Paddle API Key not configured. Please add your Paddle credentials in SaaS Settings -> Payment Gateways.");
         }
 
         $baseUrl = $this->getPaddleBaseUrl();
@@ -953,7 +961,7 @@ class PaymentService
             'collection_mode' => 'automatic',
             'items' => [
                 [
-                    'quantity' => 1,
+                    'quantity' => $quantity,
                     'price' => [
                         'description' => "Add-on: {$addon->name}" . ($quantity > 1 ? " (x{$quantity})" : ''),
                         'name' => "Add-on: {$addon->name}",
@@ -974,7 +982,7 @@ class PaymentService
                 'tenant_id' => (string) $tenant->id,
                 'addon_id' => (string) $addon->id,
                 'addon_slug' => $addon->slug,
-                'quantity' => (int) $quantity,
+                'quantity' => $quantity,
             ],
         ];
 
@@ -1005,9 +1013,9 @@ class PaymentService
      */
     private function initPaddleDeposit($tenant, $reservation, $successUrl, $cancelUrl)
     {
-        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
-            throw new \Exception("Paddle API Key not configured in SaaS settings.");
+            throw new \Exception("Paddle API Key not configured. Please add your Paddle credentials in SaaS Settings -> Payment Gateways.");
         }
         $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
 
@@ -1072,7 +1080,7 @@ class PaymentService
      */
     public function createPaddlePortalSession(Tenant $tenant): ?string
     {
-        $apiKey = SaaSSetting::where('key', 'paddle_api_key')->first()?->value;
+        $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) return null;
 
         $baseUrl = $this->getPaddleBaseUrl();

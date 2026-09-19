@@ -24,7 +24,7 @@ export default function BillingView() {
   const [cancellingAddon, setCancellingAddon] = useState(null);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
-  const [country, setCountry] = useState('');
+  const [country, setCountry] = useState('US');
   const [billingCycle, setBillingCycle] = useState('monthly');
 
   const fetchData = async () => {
@@ -100,10 +100,9 @@ export default function BillingView() {
   }, []);
 
   const handleSubscribe = async (planSlug, cycle = billingCycle) => {
+    const selectedCountry = country || status?.country || 'US';
     if (!country) {
-      setError("Please select your country first to determine the best payment gateway.");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
+      setCountry(selectedCountry);
     }
 
     setSubscribing(planSlug);
@@ -112,7 +111,7 @@ export default function BillingView() {
       const res = await api.post('billing/subscribe', {
         plan_slug: planSlug,
         interval: cycle,
-        country: country
+        country: selectedCountry
       });
       
       const redirectUrl = res.data?.url || res.data?.checkout_url || res.data?.payment_url;
@@ -125,7 +124,15 @@ export default function BillingView() {
         setError("Payment initialization failed. Please contact support.");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to start payment process.");
+      console.error("Subscription upgrade error:", err);
+      const msg = err.response?.data?.message || err.message || "Failed to start payment process.";
+      setError(msg);
+      setTimeout(() => {
+        const errorEl = document.getElementById('billing-error-banner');
+        if (errorEl) {
+          errorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
     } finally {
       setSubscribing(null);
     }
@@ -372,6 +379,23 @@ export default function BillingView() {
           </div>
         </div>
         
+        {/* Inline Error Banner for Plan Selection */}
+        {error && (
+          <div id="billing-error-banner" className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 flex items-center justify-between gap-3 text-sm font-semibold animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
+              <span>{error}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setError(null)}
+              className="text-red-400 hover:text-red-600 p-1 rounded-lg cursor-pointer transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Responsive Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {(Array.isArray(plans) ? plans : []).map((plan) => {
@@ -382,6 +406,7 @@ export default function BillingView() {
             const monthlyPrice = Number(plan.monthly_price ?? plan.price ?? 0);
             const yearlyPrice = Number(plan.yearly_price && plan.yearly_price > 0 ? plan.yearly_price : (monthlyPrice * 10));
             const displayedPrice = billingCycle === 'yearly' ? yearlyPrice : monthlyPrice;
+            const isEnterprise = plan.slug === 'enterprise' || (!displayedPrice && !plan.is_free && plan.slug !== 'free');
 
             return (
               <div
@@ -405,10 +430,16 @@ export default function BillingView() {
                 <div className="mb-8">
                   <h3 className="text-xl font-black text-foreground mb-2">{plan.name}</h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-foreground">${displayedPrice}</span>
-                    <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+                    {isEnterprise ? (
+                      <span className="text-3xl font-black text-foreground">Custom</span>
+                    ) : (
+                      <>
+                        <span className="text-3xl font-black text-foreground">${displayedPrice}</span>
+                        <span className="text-muted-foreground text-sm">/{billingCycle === 'yearly' ? 'year' : 'month'}</span>
+                      </>
+                    )}
                   </div>
-                  {billingCycle === 'yearly' && displayedPrice > 0 && (
+                  {billingCycle === 'yearly' && displayedPrice > 0 && !isEnterprise && (
                     <p className="text-[11px] font-semibold text-emerald-600 mt-1">
                       Approx. ${Math.round(displayedPrice / 12)}/mo billed annually
                     </p>
@@ -442,7 +473,15 @@ export default function BillingView() {
                 </div>
 
                 <button 
-                  onClick={() => !isCurrentPlan && handleSubscribe(plan.slug, billingCycle)}
+                  type="button"
+                  onClick={() => {
+                    if (isCurrentPlan) return;
+                    if (isEnterprise) {
+                      window.location.href = `mailto:${status?.sales_email || 'sales@sectros.com'}?subject=Enterprise%20Tier%20Inquiry`;
+                      return;
+                    }
+                    handleSubscribe(plan.slug, billingCycle);
+                  }}
                   disabled={isCurrentPlan || subscribing === plan.slug}
                   className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
                     isCurrentPlan
@@ -451,12 +490,22 @@ export default function BillingView() {
                   }`}
                 >
                   {subscribing === plan.slug ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Processing...</span>
+                    </>
                   ) : isCurrentPlan ? (
                     'Current Plan'
+                  ) : isEnterprise ? (
+                    <>
+                      Contact Sales <ArrowRight className="w-4 h-4" />
+                    </>
                   ) : (
                     <>
-                      Upgrade to {plan.name} <ArrowRight className="w-4 h-4" />
+                      {status?.plan_slug && status.plan_slug !== 'free'
+                        ? `Switch to ${plan.name}`
+                        : `Upgrade to ${plan.name}`}
+                      <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>

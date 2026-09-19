@@ -228,18 +228,34 @@ class SubscriptionController extends Controller
         }
 
         if ($request->filled('country')) {
-            $currentTenant->country = strtoupper($request->country);
-            $currentTenant->save();
+            $countryCode = strtoupper((string) $request->country);
+            if ($currentTenant->country !== $countryCode) {
+                try {
+                    $currentTenant->country = $countryCode;
+                    $currentTenant->save();
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning("Could not persist tenant country: " . $e->getMessage());
+                }
+            }
         }
 
-        $plan = SubscriptionPlan::on('platform')->where('slug', $planSlug)->first();
+        $plan = SubscriptionPlan::on('platform')
+            ->where('slug', $planSlug)
+            ->orWhereRaw('LOWER(slug) = ?', [strtolower((string) $planSlug)])
+            ->orWhereRaw('LOWER(name) = ?', [strtolower((string) $planSlug)])
+            ->first();
+
+        if (!$plan && is_numeric($planSlug)) {
+            $plan = SubscriptionPlan::on('platform')->find($planSlug);
+        }
+
         if (!$plan) {
             return response()->json(['message' => 'Plan not found.'], 404);
         }
 
-        // Direct switch for free plan
+        // Direct switch for free plan or testing accounts
         $planCost = (float) ($plan->monthly_price ?? $plan->price_monthly ?? 0);
-        if ($planCost <= 0) {
+        if ($currentTenant->is_testing || $planCost <= 0) {
             $currentTenant->update([
                 'plan' => $plan->slug,
                 'subscription_status' => 'active',

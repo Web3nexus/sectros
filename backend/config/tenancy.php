@@ -15,7 +15,7 @@ return [
 
     'bootstrappers' => [
         \App\Bootstrappers\TenantDatabaseBootstrapper::class,
-        Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
+        // Stancl\Tenancy\Bootstrappers\CacheTenancyBootstrapper::class,
         Stancl\Tenancy\Bootstrappers\QueueTenancyBootstrapper::class,
     ],
 
