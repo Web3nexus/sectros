@@ -88,35 +88,85 @@ class SubscriptionController extends Controller
      */
     public function currentStatus(Request $request)
     {
-        // Get the active tenant from the tenancy context (set by domain middleware).
-        $currentTenant = tenant();
+        try {
+            // Get the active tenant from the tenancy context (set by domain middleware).
+            $currentTenant = function_exists('tenant') ? tenant() : null;
 
-        if (!$currentTenant) {
-            return response()->json(['message' => 'Could not identify tenant context.'], 422);
+            if (!$currentTenant) {
+                $user = $request->user();
+                if ($user && !empty($user->tenant_id)) {
+                    $currentTenant = Tenant::find($user->tenant_id);
+                }
+            }
+
+            if (!$currentTenant) {
+                $host = $request->getHost();
+                $currentTenant = Tenant::whereHas('domains', function ($q) use ($host) {
+                    $q->where('domain', $host);
+                })->first();
+            }
+
+            if (!$currentTenant) {
+                return response()->json([
+                    'plan_name'         => 'Free',
+                    'plan_slug'         => 'free',
+                    'status'            => 'active',
+                    'provider'          => null,
+                    'ends_at'           => null,
+                    'country'           => null,
+                    'ai_credits_limit'  => null,
+                    'ai_credits_used'   => 0,
+                    'ai_credits_topup'  => 0,
+                    'sales_email'       => 'sales@sectros.com',
+                    'is_testing'        => false,
+                    'testing_ends_at'   => null,
+                    'sms_credits'       => ['used' => 0, 'limit' => 0, 'topup' => 0],
+                ]);
+            }
+
+            $plan = SubscriptionPlan::on('platform')->where('slug', $currentTenant->plan)->first();
+
+            $salesEmail = \App\Models\SaaSSetting::on('platform')->where('key', 'sales_email')->value('value') ?? 'sales@sectros.com';
+
+            try {
+                $smsCredits = SMSService::getCreditsArray();
+            } catch (\Throwable $smsErr) {
+                $smsCredits = ['used' => 0, 'limit' => 0, 'topup' => 0];
+            }
+
+            return response()->json([
+                'plan_name'         => $plan ? $plan->name : 'Free',
+                'plan_slug'         => $currentTenant->plan ?? 'free',
+                'status'            => $currentTenant->subscription_status ?? 'active',
+                'provider'          => $currentTenant->subscription_provider ?? null,
+                'ends_at'           => $currentTenant->subscription_ends_at ?? null,
+                'country'           => $currentTenant->country ?? null,
+                'ai_credits_limit'  => $plan?->ai_credits_limit,
+                'ai_credits_used'   => $currentTenant->ai_credits_used ?? 0,
+                'ai_credits_topup'  => $currentTenant->ai_credits_topup ?? 0,
+                'sales_email'       => $salesEmail,
+                'is_testing'        => $currentTenant->is_testing ?? false,
+                'testing_ends_at'   => $currentTenant->testing_ends_at ?? null,
+                'sms_credits'       => $smsCredits,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('currentStatus error: ' . $e->getMessage());
+            return response()->json([
+                'plan_name'         => 'Free',
+                'plan_slug'         => 'free',
+                'status'            => 'active',
+                'provider'          => null,
+                'ends_at'           => null,
+                'country'           => null,
+                'ai_credits_limit'  => null,
+                'ai_credits_used'   => 0,
+                'ai_credits_topup'  => 0,
+                'sales_email'       => 'sales@sectros.com',
+                'is_testing'        => false,
+                'testing_ends_at'   => null,
+                'sms_credits'       => ['used' => 0, 'limit' => 0, 'topup' => 0],
+            ]);
         }
-
-        $plan = SubscriptionPlan::on('platform')->where('slug', $currentTenant->plan)->first();
-
-        $salesEmail = \App\Models\SaaSSetting::on('platform')->where('key', 'sales_email')->value('value') ?? 'sales@sectros.com';
-
-        return response()->json([
-            'plan_name'         => $plan ? $plan->name : 'Free',
-            'plan_slug'         => $currentTenant->plan ?? 'free',
-            'status'            => $currentTenant->subscription_status ?? 'active',
-            'provider'          => $currentTenant->subscription_provider ?? null,
-            'ends_at'           => $currentTenant->subscription_ends_at ?? null,
-            'country'           => $currentTenant->country ?? null,
-            'ai_credits_limit'  => $plan?->ai_credits_limit,
-            'ai_credits_used'   => $currentTenant->ai_credits_used ?? 0,
-            'ai_credits_topup'  => $currentTenant->ai_credits_topup ?? 0,
-            'sales_email'       => $salesEmail,
-            'is_testing'        => $currentTenant->is_testing ?? false,
-            'testing_ends_at'   => $currentTenant->testing_ends_at ?? null,
-            'sms_credits'       => (function () {
-                try { return SMSService::getCreditsArray(); }
-                catch (\Throwable $e) { return ['used' => 0, 'limit' => 0, 'topup' => 0]; }
-            })(),
-        ]);
     }
 
     /**

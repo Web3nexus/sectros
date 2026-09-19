@@ -34,9 +34,17 @@ export default function BillingView() {
     // Fetch Plans (Public)
     try {
       const plansRes = await api.get('billing/plans');
-      if (Array.isArray(plansRes.data)) {
-        setPlans(plansRes.data);
-        if (plansRes.data.length > 0) plansLoaded = true;
+      const planList = Array.isArray(plansRes.data)
+        ? plansRes.data
+        : (plansRes.data?.plans || []);
+
+      if (Array.isArray(planList) && planList.length > 0) {
+        setPlans(planList);
+        plansLoaded = true;
+      }
+
+      if (plansRes.data?.usage) {
+        setStatus(plansRes.data.usage);
       }
     } catch (err) {
       console.error("Failed to fetch plans", err);
@@ -45,8 +53,12 @@ export default function BillingView() {
     // Fetch Status (Protected)
     try {
       const statusRes = await api.get('billing/status');
-      setStatus(statusRes.data);
-      setCountry(statusRes.data.country || '');
+      if (statusRes.data) {
+        setStatus(statusRes.data);
+        if (statusRes.data.country) {
+          setCountry(statusRes.data.country);
+        }
+      }
     } catch (err) {
       console.error("Failed to fetch billing status", err);
       // Only show error if BOTH failed.
