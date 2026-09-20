@@ -470,7 +470,7 @@ export function ModernPublicLayout() {
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-slate-500">&copy; {new Date().getFullYear()} {platformName}. All rights reserved.</p>
+            <p className="text-sm text-slate-500">&copy; {new Date().getFullYear()} {platformName} by Nadvix Limited (trading as Nadvix Technology Limited). All rights reserved.</p>
             <div className="flex flex-wrap gap-6">
               <Link to="/privacy" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="text-sm text-slate-500 hover:text-slate-300 transition-colors">Terms of Service</Link>

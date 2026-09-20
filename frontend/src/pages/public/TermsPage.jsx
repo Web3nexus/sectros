@@ -116,12 +116,18 @@ export default function TermsPage() {
 
           <SectionBlock id="acceptance" number="1" title="Acceptance of Terms">
             <p>
+              These Terms of Service ("Terms") constitute a legally binding agreement between you
+              and <strong>Nadvix Limited</strong> (trading as <strong>Nadvix Technology Limited</strong>),
+              a company incorporated in England and Wales, owning and operating the software platform{' '}
+              <strong>Sectros</strong> ("Sectros", "we", "us", or "our").
+            </p>
+            <p>
               By accessing or using any part of the Sectros platform, including our web application,
               mobile applications, and APIs (collectively, the "Service"), you agree to be bound by
-              these Terms of Service ("Terms"). If you are entering into these Terms on behalf of a
-              company or other legal entity, you represent that you have the authority to bind that
-              entity and its affiliates to these Terms. If you do not have such authority, or if you
-              do not agree with these Terms, you must not access or use the Service.
+              these Terms. If you are entering into these Terms on behalf of a company or other legal
+              entity, you represent that you have the authority to bind that entity and its affiliates
+              to these Terms. If you do not have such authority, or if you do not agree with these
+              Terms, you must not access or use the Service.
             </p>
             <p>
               These Terms apply to all visitors, users, and others who access or use the Service.
@@ -198,24 +204,65 @@ export default function TermsPage() {
               required for Starter and Professional plans.
             </p>
             <p>
-              Subscriptions renew automatically at the end of each billing period unless cancelled
-              before the renewal date. You may cancel your subscription at any time from your
-              account settings. Cancellations take effect at the end of the current billing period;
-              no further charges will be made.
+              <strong>Merchant of Record:</strong> Our order process and transaction fulfillment is
+              conducted by our online reseller and Merchant of Record, <strong>Paddle.com</strong> (Paddle.com
+              Market Ltd or Paddle Payments Ltd). Paddle provides customer service inquiries and returns.
+              All orders are governed by the{' '}
+              <a
+                href="https://paddle.com/legal/buyer-terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:underline font-medium"
+              >
+                Paddle Buyer Terms
+              </a>
+              {' '}and{' '}
+              <a
+                href="https://paddle.com/legal/invoiced-consumer-terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:underline font-medium"
+              >
+                Paddle Invoiced Consumer Terms
+              </a>.
             </p>
             <p>
-              If you are not satisfied with the Service, you may request a full refund within{' '}
-              <strong>30 days</strong> of your first payment by contacting{' '}
+              Subscriptions renew automatically at the end of each billing period unless cancelled
+              before the renewal date. You may cancel your subscription at any time from your account
+              settings or via the{' '}
+              <a
+                href="https://paddle.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:underline font-medium"
+              >
+                Paddle Buyer Portal (paddle.net)
+              </a>.
+              Cancellations take effect at the end of the current billing period; no further charges will be made.
+            </p>
+            <p>
+              In accordance with Paddle's consumer terms and our{' '}
+              <a href="/refund" className="text-indigo-600 hover:underline font-medium">
+                Refund & Cancellation Policy
+              </a>
+              , buyers are entitled to a full refund within <strong>14 days</strong> of purchase without
+              qualifiers or arbitrary exceptions. To request a refund, contact{' '}
               <a href="mailto:billing@sectros.com" className="text-indigo-600 hover:underline">
                 billing@sectros.com
-              </a>
-              . Refunds are not available for subsequent billing cycles or for Enterprise plans
-              unless otherwise agreed in writing.
+              </a>{' '}
+              or visit{' '}
+              <a
+                href="https://paddle.net"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 hover:underline"
+              >
+                paddle.net
+              </a>.
             </p>
             <p>
-              Prices are exclusive of any applicable taxes. You are responsible for all taxes
-              applicable to your subscription in your jurisdiction. Sectros reserves the right to
-              change pricing with 30 days' written notice to your registered email address.
+              Prices are exclusive of applicable sales tax, VAT, or GST, which is calculated and collected
+              by Paddle as Merchant of Record at checkout based on your billing jurisdiction.
             </p>
           </SectionBlock>
 
@@ -255,8 +302,9 @@ export default function TermsPage() {
           <SectionBlock id="ip" number="6" title="Intellectual Property">
             <p>
               The Service and its original content, features, and functionality are and will remain
-              the exclusive property of Sectros Ltd and its licensors. Our trademarks, trade names,
-              logos, and service marks may not be used without our prior written consent.
+              the exclusive property of Nadvix Limited (trading as Nadvix Technology Limited) and its
+              licensors. Our trademarks, trade names, logos, and service marks may not be used without
+              our prior written consent.
             </p>
             <p>
               You retain ownership of any data, content, or materials you upload to the Service
@@ -307,16 +355,17 @@ export default function TermsPage() {
 
           <SectionBlock id="liability" number="9" title="Limitation of Liability">
             <p>
-              To the fullest extent permitted by applicable law, in no event shall Sectros Ltd, its
-              directors, employees, partners, agents, suppliers, or affiliates be liable for any
-              indirect, incidental, special, consequential, or punitive damages — including without
-              limitation loss of profits, data, goodwill, or other intangible losses — arising out
-              of or in connection with your use of or inability to use the Service.
+              To the fullest extent permitted by applicable law, in no event shall Nadvix Limited
+              (trading as Nadvix Technology Limited), its directors, employees, partners, agents,
+              suppliers, or affiliates be liable for any indirect, incidental, special, consequential,
+              or punitive damages — including without limitation loss of profits, data, goodwill, or
+              other intangible losses — arising out of or in connection with your use of or inability
+              to use the Service.
             </p>
             <p>
               Our total aggregate liability to you for any claims arising under or in connection
               with these Terms or the Service shall not exceed the greater of (a) the total fees
-              paid by you to Sectros in the three months immediately preceding the event giving rise
+              paid by you to us in the three months immediately preceding the event giving rise
               to the claim, or (b) £100 GBP.
             </p>
             <p>
@@ -360,13 +409,32 @@ export default function TermsPage() {
               If you have any questions, concerns, or requests regarding these Terms, please contact
               our legal team:
             </p>
-            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 space-y-1">
-              <p><strong>Sectros Ltd</strong></p>
-              <p>Legal Department</p>
-              <p>
-                Email:{' '}
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 space-y-1.5">
+              <p className="font-bold text-slate-900">Nadvix Limited</p>
+              <p className="text-xs text-slate-500">Trading as: <strong>Nadvix Technology Limited</strong></p>
+              <p className="text-xs text-slate-500">Platform: <strong>Sectros</strong></p>
+              <p className="text-xs text-slate-500">Jurisdiction: Incorporated in England & Wales</p>
+              <p className="pt-2">
+                Legal Department:{' '}
                 <a href="mailto:legal@sectros.com" className="text-indigo-600 hover:underline font-medium">
                   legal@sectros.com
+                </a>
+              </p>
+              <p>
+                Billing Inquiries:{' '}
+                <a href="mailto:billing@sectros.com" className="text-indigo-600 hover:underline font-medium">
+                  billing@sectros.com
+                </a>
+              </p>
+              <p>
+                Paddle Buyer Support:{' '}
+                <a
+                  href="https://paddle.net"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:underline font-medium"
+                >
+                  https://paddle.net
                 </a>
               </p>
             </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   RotateCcw, ShieldCheck, CreditCard, Clock, HelpCircle,
-  FileText, CheckCircle2, AlertCircle, Mail, ExternalLink, ChevronRight
+  FileText, CheckCircle2, Mail, ExternalLink, ChevronRight
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -13,45 +13,42 @@ const fadeUp = {
 };
 
 const SECTIONS = [
-  { id: 'overview',          label: 'Overview & Philosophy' },
-  { id: 'subscriptions',     label: 'SaaS Subscriptions' },
-  { id: '14-day-guarantee',  label: '14-Day Money-Back Guarantee' },
-  { id: 'renewals',          label: 'Renewals & Cancellations' },
-  { id: 'addons-credits',    label: 'Add-ons & Credit Packs' },
-  { id: 'website-themes',    label: 'Website Themes & Templates' },
-  { id: 'reservation-deposits', label: 'Reservation Deposits' },
+  { id: 'overview',           label: 'Company & Scope' },
   { id: 'merchant-of-record', label: 'Merchant of Record (Paddle)' },
-  { id: 'request-process',   label: 'How to Request a Refund' },
-  { id: 'chargebacks',       label: 'Disputes & Chargebacks' },
-  { id: 'contact',           label: 'Contact & Support' },
+  { id: '14-day-refund',      label: '14-Day Refund Policy' },
+  { id: 'subscriptions',      label: 'Subscriptions & Cancellations' },
+  { id: 'digital-products',   label: 'Themes & Add-ons' },
+  { id: 'request-process',    label: 'How to Request a Refund' },
+  { id: 'discretionary',      label: 'Discretionary & Consumer Rights' },
+  { id: 'contact',            label: 'Contact & Billing Details' },
 ];
 
 const HIGHLIGHTS = [
   {
     icon: ShieldCheck,
-    title: '14-Day Guarantee',
-    desc: 'New subscription accounts are eligible for a no-questions-asked full refund within 14 days of initial signup.',
+    title: '14-Day Full Refund',
+    desc: 'Full refund available within 14 days of purchase in accordance with Paddle Buyer Terms. No qualifiers or hidden hurdles.',
     color: 'text-emerald-500',
     bg: 'bg-emerald-50 border-emerald-200'
   },
   {
-    icon: Clock,
-    title: 'Prompt Processing',
-    desc: 'Approved refund requests are initiated within 3–5 business days to the original payment method.',
+    icon: CreditCard,
+    title: 'Merchant of Record',
+    desc: 'Orders are securely conducted and fulfilled by Paddle.com as authorized Merchant of Record with global tax compliance.',
     color: 'text-blue-500',
     bg: 'bg-blue-50 border-blue-200'
   },
   {
     icon: RotateCcw,
     title: 'Cancel Anytime',
-    desc: 'Subscriptions can be canceled at any time from your billing dashboard with zero cancellation fees or lock-ins.',
+    desc: 'Cancel recurring subscriptions anytime with a single click in your dashboard or directly via the Paddle Buyer Portal.',
     color: 'text-indigo-500',
     bg: 'bg-indigo-50 border-indigo-200'
   },
   {
-    icon: CreditCard,
-    title: 'Global Compliance',
-    desc: 'Our billing is backed by leading payment processors and Merchant of Record infrastructure (including Paddle).',
+    icon: Clock,
+    title: 'Prompt Disbursement',
+    desc: 'Refunds are returned to the original payment method without deduction or delay (typically 3–5 business days).',
     color: 'text-amber-500',
     bg: 'bg-amber-50 border-amber-200'
   },
@@ -97,17 +94,17 @@ export default function RefundPolicyPage() {
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-200 px-3 py-1 text-xs font-bold text-slate-700 tracking-wide">
                 <FileText className="w-3.5 h-3.5" />
-                Last updated: September 19, 2026
+                Last updated: September 20, 2026
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 px-3 py-1 text-xs font-bold tracking-wide">
-                Version 2.0 (Global MoR Compliant)
+                Paddle Merchant of Record Compliant
               </span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-slate-900 mb-4">
               Refund & Cancellation Policy
             </h1>
             <p className="text-slate-600 text-lg max-w-2xl leading-relaxed">
-              We want you to be completely confident using Sectros. This policy outlines our standards for subscription cancellations, refunds for digital services, and merchant terms.
+              This policy outlines how cancellations and refunds are handled for Sectros. All orders and billing transactions are processed in accordance with Paddle's Merchant of Record terms and consumer standards.
             </p>
           </motion.div>
         </div>
@@ -144,7 +141,7 @@ export default function RefundPolicyPage() {
             <div className="sticky top-28 space-y-4">
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 shadow-sm">
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-slate-500" /> Navigation
+                  <FileText className="w-4 h-4 text-slate-500" /> Policy Contents
                 </h4>
                 <nav className="space-y-1">
                   {SECTIONS.map((sec) => (
@@ -167,15 +164,17 @@ export default function RefundPolicyPage() {
               {/* Need Assistance Card */}
               <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-md">
                 <HelpCircle className="w-6 h-6 text-emerald-400 mb-2" />
-                <h4 className="font-bold text-sm mb-1">Billing Questions?</h4>
+                <h4 className="font-bold text-sm mb-1">Paddle Buyer Support</h4>
                 <p className="text-xs text-slate-300 leading-relaxed mb-4">
-                  Our dedicated billing team is available 24/7 to help resolve account discrepancies or process claims.
+                  Manage your subscription, retrieve invoices, or submit a refund request directly through the official Paddle Buyer Portal.
                 </p>
                 <a
-                  href="mailto:billing@sectros.com"
+                  href="https://paddle.net"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-black text-emerald-400 hover:text-emerald-300 transition-colors"
                 >
-                  <Mail className="w-3.5 h-3.5" /> Contact Billing Support
+                  <ExternalLink className="w-3.5 h-3.5" /> Visit paddle.net
                 </a>
               </div>
             </div>
@@ -183,221 +182,210 @@ export default function RefundPolicyPage() {
 
           {/* Policy Document Body */}
           <main className="lg:col-span-8">
-            <SectionBlock id="overview" number="01" title="Overview & Scope">
+            <SectionBlock id="overview" number="01" title="Company Identification & Scope">
               <p>
-                This Refund & Cancellation Policy applies to all services, software licenses, add-on features, and digital purchases provided through the <strong>Sectros</strong> platform (operated by Sectros Inc. and its affiliates, hereinafter referred to as "we", "us", or "our").
+                This Refund & Cancellation Policy applies to all services, subscription plans, add-ons, and digital goods provided through the <strong>Sectros</strong> platform.
               </p>
               <p>
-                By creating an account, subscribing to any paid plan, or completing a transaction on Sectros, you acknowledge that you have read, understood, and agreed to be bound by the terms contained herein.
+                The software platform <strong>Sectros</strong> is owned and operated by:
               </p>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm space-y-1 text-slate-800">
+                <p><strong>Registered Company Name:</strong> Nadvix Limited</p>
+                <p><strong>Trading / Operating Name:</strong> Nadvix Technology Limited</p>
+                <p><strong>Software Brand:</strong> Sectros</p>
+                <p><strong>Jurisdiction:</strong> England and Wales</p>
+              </div>
               <p>
-                Our goal is to treat our customers fairly. If you encounter any technical difficulty, service interruption, or operational discrepancy with our software, we urge you to contact our support team immediately so we can make things right.
-              </p>
-            </SectionBlock>
-
-            <SectionBlock id="subscriptions" number="02" title="SaaS Subscriptions (Monthly & Annual)">
-              <p>
-                Sectros operates on a recurring software-as-a-service (SaaS) subscription model. We offer both monthly and annual billing cycles:
-              </p>
-              <ul className="list-disc pl-5 space-y-2 text-slate-700">
-                <li>
-                  <strong>Monthly Subscriptions:</strong> Billed automatically every 30 days. Payments are non-refundable once the billing cycle is past the initial 14-day guarantee window, but cancellation takes effect at the end of the current paid billing month.
-                </li>
-                <li>
-                  <strong>Annual Subscriptions:</strong> Billed upfront for a 12-month period at a discounted rate. Annual plans carry the 14-day full money-back guarantee from the moment of activation or renewal.
-                </li>
-              </ul>
-              <p>
-                Upon cancellation, you will retain full administrative access to your dashboard and features until the conclusion of your active billing period. No further automated charges will be made.
+                In this policy, "we", "us", or "our" refers to <strong>Nadvix Limited (trading as Nadvix Technology Limited)</strong>. By subscribing to or purchasing any digital service on Sectros, you agree to the terms set forth herein.
               </p>
             </SectionBlock>
 
-            <SectionBlock id="14-day-guarantee" number="03" title="14-Day Money-Back Guarantee">
-              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 mb-4 text-emerald-900 text-sm">
+            <SectionBlock id="merchant-of-record" number="02" title="Merchant of Record (Paddle.com)">
+              <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 mb-4 text-blue-950 text-sm">
                 <p className="font-bold mb-1 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" /> No Risk Initial Trial Period
+                  <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0" /> Authorized Reseller & Merchant of Record
                 </p>
-                <p className="text-emerald-800 text-xs leading-relaxed">
-                  If you are a new customer and decide Sectros is not the right fit for your venue within 14 calendar days of your initial subscription payment, you are eligible for a 100% full refund.
+                <p className="text-blue-900 text-xs leading-relaxed">
+                  Our order process is conducted by our online reseller and Merchant of Record, <strong>Paddle.com</strong> (Paddle.com Market Ltd / Paddle Payments Ltd). Paddle is the Merchant of Record for all our orders.
                 </p>
               </div>
               <p>
-                To claim a guarantee refund, simply submit a request to our billing team within 14 days of your initial purchase date with your registered account email and transaction receipt. Refunds will be issued without penalty or deduction.
-              </p>
-              <p className="text-xs text-slate-500 italic">
-                * Note: The 14-day guarantee applies to first-time account subscriptions and does not apply to repeat accounts created by the same business entity or subsequent renewals.
-              </p>
-            </SectionBlock>
-
-            <SectionBlock id="renewals" number="04" title="Renewals, Downgrades & Cancellations">
-              <p>
-                You may cancel or downgrade your subscription at any time directly through the <strong>Dashboard &rarr; Billing</strong> page or via the Merchant Customer Portal (e.g., Paddle Buyer Portal).
+                Paddle provides customer service inquiries and handles returns and refunds. Transactions conducted via Paddle are governed by the following terms:
               </p>
               <ul className="list-disc pl-5 space-y-2 text-slate-700">
                 <li>
-                  <strong>Self-Service Cancellation:</strong> You do not need to speak to an agent to cancel. Clicking "Cancel Subscription" immediately sets your account to cancel at the end of the billing term.
+                  <a
+                    href="https://paddle.com/legal/buyer-terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1"
+                  >
+                    Paddle Buyer Terms <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
                 </li>
                 <li>
-                  <strong>Plan Downgrades:</strong> When switching from a higher tier to a lower tier, your existing privileges remain active until the end of the current billing cycle, at which point the new lower rate takes effect.
-                </li>
-                <li>
-                  <strong>Accidental Renewal Notice:</strong> If your annual subscription renews automatically and you forgot to cancel, you may request a refund within <strong>48 hours</strong> of the renewal charge, provided you have not utilized high-volume automation quotas during that window.
+                  <a
+                    href="https://paddle.com/legal/invoiced-consumer-terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1"
+                  >
+                    Paddle Invoiced Consumer Terms <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
                 </li>
               </ul>
+              <p>
+                Paddle also handles global sales tax, VAT, and GST calculation, remittance, and compliance for all digital orders.
+              </p>
             </SectionBlock>
 
-            <SectionBlock id="addons-credits" number="05" title="Add-ons & Usage Credit Packs">
+            <SectionBlock id="14-day-refund" number="03" title="14-Day Refund Policy (No Qualifiers or Exceptions)">
               <p>
-                Sectros provides optional add-on capacity including AI automation credits, SMS message bundles, and additional branch locations:
+                In strict alignment with <strong>Paddle's Refund Policy</strong>, <strong>Paddle's Buyer Terms</strong>, and applicable statutory consumer regulations, customers are entitled to cancel their purchase and receive a full refund within <strong>fourteen (14) calendar days</strong> of the transaction date.
               </p>
-              <ul className="list-disc pl-5 space-y-2 text-slate-700">
-                <li>
-                  <strong>Unused Credit Packs:</strong> One-time top-up credit packs (e.g. AI credits or SMS packs) that have remained <em>100% unconsumed</em> may be refunded within 14 days of purchase.
-                </li>
-                <li>
-                  <strong>Partially Consumed Credits:</strong> Because telecommunication carrier costs and AI compute infrastructure incur real-time fees upon usage, credits that have already been partially or fully consumed cannot be refunded.
-                </li>
-                <li>
-                  <strong>Recurring Add-ons:</strong> Recurring add-ons (such as white-label websites or additional staff packs) adhere to standard SaaS subscription terms and can be canceled at any cycle boundary.
-                </li>
-              </ul>
-            </SectionBlock>
-
-            <SectionBlock id="website-themes" number="06" title="Website Themes & Digital Blueprints">
-              <p>
-                Digital website themes and blueprints available in the Sectros Theme Store grant instant lifetime unlocks to your venue account upon purchase.
-              </p>
-              <p>
-                Because digital goods cannot be physically retrieved once installed, all theme sales are generally final. However, we will gladly issue a full refund or exchange if:
-              </p>
-              <ul className="list-disc pl-5 space-y-1.5 text-slate-700 text-sm">
-                <li>The theme has a proven reproducible defect that our technical team cannot rectify within 72 hours.</li>
-                <li>The purchase was made erroneously due to a duplicate transaction error.</li>
-              </ul>
-            </SectionBlock>
-
-            <SectionBlock id="reservation-deposits" number="07" title="Reservation Deposits & Guest Bookings">
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-4 text-xs text-slate-700 leading-relaxed">
-                <strong className="block text-slate-900 font-bold mb-1">Notice for Guests & End-Consumers:</strong>
-                Sectros provides the booking and payment infrastructure on behalf of independent venues (restaurants, cafes, salons, and hotels). Deposit refund eligibility for guest bookings is determined by each venue's cancellation policy.
+              <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-5 mb-4 text-emerald-950 text-sm">
+                <p className="font-bold mb-1 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" /> Full Refund Guarantee
+                </p>
+                <p className="text-emerald-900 text-xs leading-relaxed">
+                  We do not impose qualifiers, conditional hurdles, or arbitrary exceptions. If you submit a refund request within 14 days of your payment, your request will be honored and the amount paid will be refunded in full.
+                </p>
               </div>
               <p>
-                When you make a reservation requiring a security deposit, the venue specifies its cancellation cutoff (e.g. 24 or 48 hours before the booking time). 
-              </p>
-              <p>
-                Cancellations executed before the venue's stated cutoff are automatically refunded to the original payment card. Cancellations made after the threshold are governed by the venue operator's policy. If you believe a venue has improperly withheld a deposit, you may contact Sectros Support for mediation.
+                Refunds are issued directly to the original payment method through Paddle without penalty, deductions, or processing fees.
               </p>
             </SectionBlock>
 
-            <SectionBlock id="merchant-of-record" number="08" title="Merchant of Record & International Tax">
+            <SectionBlock id="subscriptions" number="04" title="Subscriptions, Renewals & Cancellations">
               <p>
-                Our order process is conducted by our online reseller and Merchant of Record, <strong>Paddle.com</strong> (or regional payment processors where specified). 
+                Sectros subscriptions operate on recurring monthly or annual billing terms:
+              </p>
+              <ul className="list-disc pl-5 space-y-2 text-slate-700">
+                <li>
+                  <strong>Cancel Anytime:</strong> You may cancel your subscription at any time directly through your Sectros account (<strong>Dashboard &rarr; Billing</strong>) or via the Paddle Buyer Portal at <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline">paddle.net</a>.
+                </li>
+                <li>
+                  <strong>Immediate Effect:</strong> Cancellation takes effect at the end of the current paid billing cycle. You will retain full access to the platform until that date, and no further automatic charges will occur.
+                </li>
+                <li>
+                  <strong>Refunds on Subscriptions:</strong> Any subscription payment (initial signup or renewal) requested within 14 days of the charge date is eligible for a full refund in accordance with Paddle's consumer terms.
+                </li>
+              </ul>
+            </SectionBlock>
+
+            <SectionBlock id="digital-products" number="05" title="Themes, Digital Templates & Add-ons">
+              <p>
+                All digital goods available on Sectros—including website theme blueprints, white-label unlocks, and usage add-on packs—are fulfilled and processed through Paddle.
               </p>
               <p>
-                Paddle is the Merchant of Record for our digital orders. Paddle handles customer service inquiries and returns related to order processing and ensures compliance with global VAT, GST, and sales tax regulations.
+                In accordance with Paddle's Merchant of Record terms and consumer standards, all purchases of digital goods and add-ons are covered by Paddle's standard 14-day refund window.
               </p>
               <p>
-                If your purchase was processed through Paddle, you can view your invoices, manage your payment methods, and submit refund requests directly through the <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline inline-flex items-center gap-0.5">Paddle Buyer Portal <ExternalLink className="w-3 h-3" /></a> or via our platform.
+                If you encounter any issue or are dissatisfied with a theme or add-on purchase, you may request a full refund within 14 days of the transaction date.
               </p>
             </SectionBlock>
 
-            <SectionBlock id="request-process" number="09" title="How to Request a Refund">
+            <SectionBlock id="request-process" number="06" title="How to Request a Refund">
               <p>
-                Submitting a refund request is straightforward and hassle-free. Follow these steps:
+                Requesting a refund is quick and straightforward. You have two convenient options:
               </p>
               <div className="space-y-4 my-4">
-                <div className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-8 h-8 rounded-lg bg-slate-900 text-white font-black flex items-center justify-center shrink-0 text-xs">
-                    1
+                <div className="flex gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center shrink-0 text-sm">
+                    A
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">Locate Your Transaction Identifier</h4>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Find your invoice number or transaction ID from your email receipt or from <strong>Dashboard &rarr; Billing</strong>.
+                    <h4 className="text-sm font-bold text-slate-900">Directly via Paddle Buyer Portal (Recommended)</h4>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Visit <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline inline-flex items-center gap-0.5">paddle.net <ExternalLink className="w-3 h-3" /></a>, enter the email address used during checkout, locate your transaction, and follow the simple prompts to request a refund or cancel your subscription.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-8 h-8 rounded-lg bg-slate-900 text-white font-black flex items-center justify-center shrink-0 text-xs">
-                    2
+                <div className="flex gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200">
+                  <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-black flex items-center justify-center shrink-0 text-sm">
+                    B
                   </div>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">Send an Email to Billing Support</h4>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Email <a href="mailto:billing@sectros.com" className="text-blue-600 font-semibold underline">billing@sectros.com</a> with the subject line <em>"Refund Request - [Your Venue Name]"</em>. Include a brief summary of your reason.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
-                  <div className="w-8 h-8 rounded-lg bg-slate-900 text-white font-black flex items-center justify-center shrink-0 text-xs">
-                    3
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-900">Review & Fund Disbursement</h4>
-                    <p className="text-xs text-slate-600 mt-1">
-                      Our finance team reviews requests within 1 business day. Once approved, the funds are credited back to your original payment method in 3–5 business days (bank processing times may vary).
+                    <h4 className="text-sm font-bold text-slate-900">Via Sectros / Nadvix Support</h4>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      Send an email to <a href="mailto:billing@sectros.com" className="text-blue-600 font-bold underline">billing@sectros.com</a> or <a href="mailto:support@sectros.com" className="text-blue-600 font-bold underline">support@sectros.com</a> with your transaction email or order number. Our team will promptly process your refund request through Paddle.
                     </p>
                   </div>
                 </div>
               </div>
-            </SectionBlock>
-
-            <SectionBlock id="chargebacks" number="10" title="Disputes & Chargebacks">
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-4 text-xs text-amber-900 leading-relaxed">
-                <p className="font-bold mb-1 flex items-center gap-1.5 text-amber-900">
-                  <AlertCircle className="w-4 h-4 text-amber-600" /> Notice Regarding Chargebacks
-                </p>
-                <p>
-                  Initiating a formal credit card dispute or chargeback without contacting our support team first can trigger an automated suspension of your tenant workspace and associated public booking domains by our risk mitigation engine.
-                </p>
-              </div>
-              <p>
-                We are committed to resolving any legitimate billing issue amicably and swiftly. If you do not recognize a charge with the descriptor <em>"PADDLE.NET* SECTROS"</em> or <em>"SECTROS SAAS"</em>, please reach out to us first. We will investigate and refund mistaken charges immediately.
+              <p className="text-xs text-slate-500">
+                Once approved, refunds are credited back to the original card or payment method. Bank disbursement typically takes 3–5 business days depending on your financial institution.
               </p>
             </SectionBlock>
 
-            <SectionBlock id="contact" number="11" title="Contact Information">
+            <SectionBlock id="discretionary" number="07" title="Discretionary & Statutory Consumer Rights">
               <p>
-                For all inquiries, cancellations, or questions concerning this policy, please reach out to:
+                For refund requests submitted after the initial 14-day statutory and standard window, Paddle and our team review requests on a case-by-case discretionary basis.
               </p>
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 mt-4 space-y-3 text-sm">
+              <p>
+                Nothing in this Refund & Cancellation Policy limits, excludes, or restricts any statutory consumer rights that you may be entitled to under the laws of your country of residence (including rights regarding services that are faulty or not as described).
+              </p>
+            </SectionBlock>
+
+            <SectionBlock id="contact" number="08" title="Contact & Billing Identification">
+              <p>
+                Transactions will appear on your bank or credit card statement with the descriptor <strong>"PADDLE.NET* SECTROS"</strong> or <strong>"PADDLE.NET* NADVIX"</strong>.
+              </p>
+              <p>
+                For any billing, refund, or corporate inquiries, please contact us or Paddle directly:
+              </p>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 mt-4 space-y-4 text-sm">
                 <div>
-                  <span className="font-bold text-slate-900 block">Sectros Billing & Customer Operations</span>
-                  <span className="text-slate-600">Sectros Inc. — Global Software Solutions</span>
+                  <span className="font-bold text-slate-900 block text-base">Nadvix Limited</span>
+                  <span className="text-slate-600 text-xs">Trading as <strong>Nadvix Technology Limited</strong></span>
+                  <span className="text-slate-500 block text-xs mt-0.5">SaaS Platform: Sectros</span>
+                  <span className="text-slate-500 block text-xs">Incorporated in England and Wales</span>
                 </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Email Support</span>
-                  <a href="mailto:billing@sectros.com" className="text-blue-600 font-bold hover:underline">
-                    billing@sectros.com
-                  </a>
-                </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">General Legal Inquiries</span>
-                  <a href="mailto:legal@sectros.com" className="text-blue-600 font-bold hover:underline">
-                    legal@sectros.com
-                  </a>
-                </div>
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Paddle Buyer Support</span>
-                  <a href="https://paddle.net" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1">
-                    https://paddle.net <ExternalLink className="w-3 h-3" />
-                  </a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Billing Support</span>
+                    <a href="mailto:billing@sectros.com" className="text-blue-600 font-bold hover:underline">
+                      billing@sectros.com
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Customer Support</span>
+                    <a href="mailto:support@sectros.com" className="text-blue-600 font-bold hover:underline">
+                      support@sectros.com
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Legal Department</span>
+                    <a href="mailto:legal@sectros.com" className="text-blue-600 font-bold hover:underline">
+                      legal@sectros.com
+                    </a>
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-0.5">Paddle Buyer Portal</span>
+                    <a
+                      href="https://paddle.net"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 font-bold hover:underline inline-flex items-center gap-1"
+                    >
+                      https://paddle.net <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </SectionBlock>
 
             {/* Quick Navigation Footer Links */}
             <div className="mt-16 pt-8 border-t border-slate-200 flex flex-wrap items-center justify-between gap-4 text-xs font-semibold text-slate-500">
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <Link to="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link>
                 <span>&bull;</span>
                 <Link to="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link>
                 <span>&bull;</span>
                 <Link to="/cookies" className="hover:text-slate-900 transition-colors">Cookie Policy</Link>
                 <span>&bull;</span>
-                <Link to="/gdpr" className="hover:text-slate-900 transition-colors">GDPR</Link>
+                <Link to="/gdpr" className="hover:text-slate-900 transition-colors">GDPR & Compliance</Link>
               </div>
               <Link to="/pricing" className="text-blue-600 hover:text-blue-800 font-bold">
                 View Pricing Plans &rarr;

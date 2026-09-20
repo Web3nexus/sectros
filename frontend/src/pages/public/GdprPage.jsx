@@ -285,7 +285,8 @@ export default function GdprPage() {
                   <div className="flex items-start gap-2 text-slate-700">
                     <span className="font-medium w-16 shrink-0 text-slate-400">Address</span>
                     <address className="not-italic leading-relaxed">
-                      Sectros Ltd., 1 Tech Plaza, Shoreditch<br />
+                      Nadvix Limited (trading as Nadvix Technology Limited) — Sectros<br />
+                      1 Tech Plaza, Shoreditch<br />
                       London EC2A 4NE, United Kingdom
                     </address>
                   </div>

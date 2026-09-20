@@ -311,7 +311,7 @@ export function PublicLayout() {
           
           <div className="border-t border-border/80 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {settings.platform_name} Inc. All rights reserved.
+              © {new Date().getFullYear()} {settings.platform_name || 'Sectros'} by Nadvix Limited (trading as Nadvix Technology Limited). All rights reserved.
             </p>
             <div className="flex gap-6">
               <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">Privacy Policy</Link>

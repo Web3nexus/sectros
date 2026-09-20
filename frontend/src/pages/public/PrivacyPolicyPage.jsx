@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
           </div>
           <h1 className="text-4xl md:text-6xl font-black text-foreground tracking-tight mb-6">Privacy Policy</h1>
           <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            At Sectros, we take your privacy seriously. This policy explains how we collect, use, and protect your data.
+            At Sectros (operated by Nadvix Limited, trading as Nadvix Technology Limited), we take your privacy seriously. This policy explains how we collect, use, and protect your data.
           </p>
           <p className="text-muted-foreground text-sm mt-8 font-mono uppercase tracking-widest">Last Updated: March 24, 2026</p>
         </motion.div>
@@ -93,7 +93,7 @@ export default function PrivacyPolicyPage() {
             </div>
             <div>
               <h4 className="text-foreground font-bold mb-2">3. Information We Share</h4>
-              <p>We do not share personal information with companies, organizations and individuals outside of Sectros unless one of the following circumstances applies: with your consent, for external processing, or for legal reasons.</p>
+              <p>We do not share personal information with companies, organizations and individuals outside of Nadvix Limited / Sectros unless one of the following circumstances applies: with your consent, for external payment and merchant processing (including Paddle.com as our Merchant of Record for order fulfillment and tax compliance), or for legal reasons.</p>
             </div>
             <div>
               <h4 className="text-foreground font-bold mb-2">4. Data Storage and Transfer</h4>
