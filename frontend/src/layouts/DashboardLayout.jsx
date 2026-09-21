@@ -401,6 +401,7 @@ export function DashboardLayout() {
 }
 
 function NotificationItem({ notification, onRead }) {
+  const { t } = useTranslation();
   const iconMap = {
     order: <ShoppingBag size={14} className="text-primary" />,
     reservation: <Calendar size={14} className="text-emerald-500" />,
