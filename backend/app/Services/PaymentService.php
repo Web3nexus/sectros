@@ -87,7 +87,7 @@ class PaymentService
 
         return match($gateway) {
             'paddle' => $this->initPaddle($tenant, $plan, $resolved['original'], $currency, $interval, $discount),
-            'stripe' => $this->initStripe($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
+            'stripe' => $this->initStripe($tenant, $plan, $resolved['original'], $currency, $interval, $discount),
             'paystack' => $this->initPaystack($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
             'flutterwave' => $this->initFlutterwave($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
             'dodo' => $this->initDodo($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
@@ -404,20 +404,22 @@ class PaymentService
     private function initStripe($tenant, $plan, $amount, $currency, $interval, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'stripe_secret_key')->first()?->value;
-        
-        $response = Http::withToken($secretKey)->post('https://api.stripe.com/v1/checkout/sessions', [
-            'payment_method_types' => ['card'],
-            'line_items' => [[
-                'price_data' => [
-                    'currency' => strtolower($currency),
-                    'product_data' => [
-                        'name' => "{$plan->name} - Sectros Subscription",
-                    ],
-                    'unit_amount' => $amount * 100,
-                    'recurring' => ['interval' => $interval === 'yearly' ? 'year' : 'month'],
+
+        $lineItem = [
+            'price_data' => [
+                'currency' => strtolower($currency),
+                'product_data' => [
+                    'name' => "{$plan->name} - Sectros Subscription",
                 ],
-                'quantity' => 1,
-            ]],
+                'unit_amount' => (int) round($amount * 100),
+                'recurring' => ['interval' => $interval === 'yearly' ? 'year' : 'month'],
+            ],
+            'quantity' => 1,
+        ];
+
+        $session = [
+            'payment_method_types' => ['card'],
+            'line_items' => [$lineItem],
             'mode' => 'subscription',
             'success_url' => config('app.url') . "/dashboard/billing?success=true&session_id={CHECKOUT_SESSION_ID}",
             'cancel_url' => config('app.url') . "/dashboard/billing?canceled=true",
@@ -428,7 +430,18 @@ class PaymentService
                 'tenant_id' => $tenant->id,
                 'interval'  => $interval
             ], $discount),
-        ]);
+        ];
+
+        if ($discount && $discount->code) {
+            if (empty($discount->stripe_coupon_id)) {
+                throw new \App\Exceptions\DiscountException(
+                    'This discount code is not available for checkout yet. Please try again later.'
+                );
+            }
+            $session['discounts'] = [['coupon' => $discount->stripe_coupon_id]];
+        }
+
+        $response = Http::withToken($secretKey)->post('https://api.stripe.com/v1/checkout/sessions', $session);
 
         if ($response->failed()) {
             Log::error("Stripe Initialization Failed: " . $response->body());
@@ -775,7 +788,13 @@ class PaymentService
             return;
         }
 
-        $payload['discount'] = ['code' => $discount->code];
+        if (empty($discount->paddle_id)) {
+            throw new \App\Exceptions\DiscountException(
+                'This discount code is not available for checkout yet. Please try again later.'
+            );
+        }
+
+        $payload['discount_id'] = $discount->paddle_id;
         $payload['custom_data']['discount_code'] = $discount->code;
     }
 

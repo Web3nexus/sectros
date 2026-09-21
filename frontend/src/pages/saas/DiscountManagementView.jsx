@@ -152,8 +152,9 @@ export default function DiscountManagementView() {
 
   const input = (label, key, opts = {}) => (
     <div>
-      <label className="text-xs font-semibold text-muted-foreground mb-1 block">{label}</label>
+      <label htmlFor={`discount-${key}`} className="text-xs font-semibold text-muted-foreground mb-1 block">{label}</label>
       <input
+        id={`discount-${key}`}
         type={opts.type || 'text'}
         value={form[key]}
         disabled={opts.disabled}
@@ -296,8 +297,8 @@ export default function DiscountManagementView() {
               {input('Code', 'code', { placeholder: 'e.g. SAVE20' })}
               {input('Description', 'description', { placeholder: '20% off Pro plan' })}
               <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Type</label>
-                <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
+                <label htmlFor="discount-type" className="text-xs font-semibold text-muted-foreground mb-1 block">Type</label>
+                <select id="discount-type" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
                   <option value="percentage">Percentage</option>
                   <option value="fixed">Fixed amount</option>
                 </select>

@@ -524,13 +524,17 @@ class PaymentWebhookController extends Controller
                 $this->updateTenantSubscription($tenantId, 'paddle', $subId, $planSlug);
             }
 
-            $this->recordRedemption(
-                $customData,
-                'paddle',
-                $data['id'] ?? null,
-                'subscription',
-                $tenantId
-            );
+            // Renewals, midcycle changes and one-time charges are not redemptions.
+            $origin = $data['origin'] ?? null;
+            if (!in_array($origin, ['subscription_recurring', 'subscription_update', 'subscription_charge'], true)) {
+                $this->recordRedemption(
+                    $customData,
+                    'paddle',
+                    $data['id'] ?? null,
+                    'subscription',
+                    $tenantId
+                );
+            }
         }
     }
 
