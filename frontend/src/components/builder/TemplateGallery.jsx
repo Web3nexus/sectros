@@ -16,7 +16,7 @@ export default function TemplateGallery({ onSelect, onPreview }) {
     setIsLoading(true);
     const mapBlueprint = (t) => ({ ...t, is_free: true, is_unlocked: true, preview_image_url: t.preview_image_url || t.preview });
     try {
-      const response = await api.get('website-themes');
+      const response = await api.get('website-themes', { skipTenantSessionRedirect: true });
       const data = response.data;
       
       // Filter logic: Match business_type or category
@@ -83,7 +83,7 @@ export default function TemplateGallery({ onSelect, onPreview }) {
           <Tag className="w-4 h-4 text-blue-500" />
           <input
             value={promoCode}
-            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+            onChange={(e) => setPromoCode(e.target.value.trim().toUpperCase())}
             placeholder="PROMO CODE"
             className="bg-transparent text-xs font-bold tracking-widest outline-none w-28 placeholder:text-slate-400 uppercase"
           />

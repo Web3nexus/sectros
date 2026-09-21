@@ -11,7 +11,7 @@ export default function DynamicPrivacyPolicy() {
   useEffect(() => {
     const fetchBranding = async () => {
       try {
-        const { data } = await api.get('branding');
+        const { data } = await api.get('branding', { skipTenantSessionRedirect: true });
         setBranding(data);
       } catch (error) {
         console.error("Failed to load restaurant branding for policy:", error);

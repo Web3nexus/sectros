@@ -96,8 +96,9 @@ class DiscountService
 
         if ($discount->type === 'fixed') {
             if ($discount->currency_code && strtoupper($discount->currency_code) !== $currency) {
-                // Convert using a naive 1:1 base — keep simple; Paddle/Stripe handle their own FX.
-                return (float) $discount->value;
+                throw new DiscountException(
+                    'This discount code can only be used for payments in ' . strtoupper($discount->currency_code) . '.'
+                );
             }
             return (float) $discount->value;
         }
@@ -286,19 +287,41 @@ class DiscountService
         }
 
         if (empty($discount->stripe_coupon_id)) {
-            $response = Http::asForm()->withToken($secretKey)->post('https://api.stripe.com/v1/coupons', $payload);
-            if ($response->failed()) {
-                Log::error("Stripe coupon create failed: " . $response->body());
-                throw new \RuntimeException($response->json('error.message') ?? 'Failed to create Stripe coupon.');
-            }
-            $id = $response->json('id');
+            $id = $this->createStripeCoupon($secretKey, $payload);
             $discount->stripe_coupon_id = $id;
             $discount->save();
             return $id;
         }
 
-        // Stripe coupons are immutable; only sync metadata-ish fields.
-        return $discount->stripe_coupon_id;
+        // Stripe coupons are immutable (amount, currency, duration). Detect any
+        // price-relevant change and replace the coupon so checkouts use the new
+        // terms instead of silently continuing with the stale one.
+        $existing = Http::withToken($secretKey)->get('https://api.stripe.com/v1/coupons/' . $discount->stripe_coupon_id);
+        $matches = $existing->successful()
+            && (int) ($existing->json('amount_off') ?? 0) === (int) ($payload['amount_off'] ?? 0)
+            && (float) ($existing->json('percent_off') ?? 0) === (float) ($payload['percent_off'] ?? 0)
+            && $existing->json('duration') === ($payload['duration'] ?? 'once');
+
+        if ($matches) {
+            return $discount->stripe_coupon_id;
+        }
+
+        Http::asForm()->withToken($secretKey)->delete('https://api.stripe.com/v1/coupons/' . $discount->stripe_coupon_id);
+        $discount->stripe_coupon_id = null;
+        $id = $this->createStripeCoupon($secretKey, $payload);
+        $discount->stripe_coupon_id = $id;
+        $discount->save();
+        return $id;
+    }
+
+    private function createStripeCoupon(string $secretKey, array $payload): string
+    {
+        $response = Http::asForm()->withToken($secretKey)->post('https://api.stripe.com/v1/coupons', $payload);
+        if ($response->failed()) {
+            Log::error("Stripe coupon create failed: " . $response->body());
+            throw new \RuntimeException($response->json('error.message') ?? 'Failed to create Stripe coupon.');
+        }
+        return $response->json('id');
     }
 
     /**

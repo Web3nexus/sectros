@@ -28,7 +28,7 @@ export function OrderPortal() {
 
   const fetchBranding = async () => {
     try {
-      const res = await api.get('branding');
+      const res = await api.get('branding', { skipTenantSessionRedirect: true });
       setBranding(res.data);
     } catch (e) {
       console.warn('Branding fetch failed, using defaults');
@@ -39,7 +39,7 @@ export function OrderPortal() {
 
   const fetchMenu = async () => {
     try {
-      const res = await api.get('menu');
+      const res = await api.get('menu', { skipTenantSessionRedirect: true });
       const categoriesData = res.data || [];
       const flattenedItems = (Array.isArray(categoriesData) ? categoriesData : []).flatMap(cat => 
         (Array.isArray(cat.items) ? cat.items : []).map(item => ({ ...item, category_name: cat.name }))

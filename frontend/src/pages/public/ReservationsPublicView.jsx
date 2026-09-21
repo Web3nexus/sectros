@@ -37,7 +37,7 @@ export default function ReservationsPublicView() {
 
   const fetchBranding = async () => {
     try {
-      const res = await api.get('branding');
+      const res = await api.get('branding', { skipTenantSessionRedirect: true });
       setBranding(res.data);
     } catch (e) {
       console.error("Branding fetch failed:", e);

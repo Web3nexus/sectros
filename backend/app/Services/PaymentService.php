@@ -247,7 +247,7 @@ class PaymentService
 
         $response = Http::withToken($secretKey)->post('https://api.paystack.co/transaction/initialize', [
             'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
-            'amount' => $amount * 100,
+            'amount' => (int) round($amount * 100),
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/billing?vendor=paystack",
             'metadata' => $this->injectDiscountMeta([
@@ -316,7 +316,7 @@ class PaymentService
                         'name' => "Theme: {$template->name}",
                         'description' => "Life-time unlock for Sectros Website Builder",
                     ],
-                    'unit_amount' => $amount * 100,
+                    'unit_amount' => (int) round($amount * 100),
                 ],
                 'quantity' => 1,
             ]],
@@ -349,7 +349,7 @@ class PaymentService
         
         $response = Http::withToken($secretKey)->post('https://api.paystack.co/transaction/initialize', [
             'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
-            'amount' => $amount * 100,
+            'amount' => (int) round($amount * 100),
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/website?vendor=paystack",
             'metadata' => $this->injectDiscountMeta([
@@ -438,6 +438,11 @@ class PaymentService
                     'This discount code is not available for checkout yet. Please try again later.'
                 );
             }
+            if ($discount->type === 'percentage' && $discount->max_discount !== null) {
+                throw new \App\Exceptions\DiscountException(
+                    'This discount code cannot be applied through this payment provider.'
+                );
+            }
             $session['discounts'] = [['coupon' => $discount->stripe_coupon_id]];
         }
 
@@ -461,7 +466,7 @@ class PaymentService
         
         $response = Http::withToken($secretKey)->post('https://api.paystack.co/transaction/initialize', [
             'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
-            'amount' => $amount * 100, // Paystack uses kobo
+            'amount' => (int) round($amount * 100), // Paystack uses kobo
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/billing?vendor=paystack",
             'metadata' => $this->injectDiscountMeta([
@@ -791,6 +796,15 @@ class PaymentService
         if (empty($discount->paddle_id)) {
             throw new \App\Exceptions\DiscountException(
                 'This discount code is not available for checkout yet. Please try again later.'
+            );
+        }
+
+        // Paddle computes the discount from discount_id; a max_discount cap cannot
+        // be communicated to the gateway, so reject capped percentage codes here
+        // rather than charging more than the client was told.
+        if ($discount->type === 'percentage' && $discount->max_discount !== null) {
+            throw new \App\Exceptions\DiscountException(
+                'This discount code cannot be applied through this payment provider.'
             );
         }
 

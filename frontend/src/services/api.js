@@ -114,8 +114,10 @@ api.interceptors.response.use(
       const isAdmin = url.includes('/saas/') || isCentral;
 
       // Only treat tenant-session failures this way — never auth endpoints,
-      // and never central/public reads (branding, kiosk, public APIs).
-      if (!isAuthFlow && !isAdmin && (baseURL.includes('/tenant-api/') || baseURL.includes('/local-tenant-api/'))) {
+      // never central/public reads (branding, kiosk, public APIs), and never
+      // requests that opted out via request metadata.
+      const skipSessionRedirect = error.config?.skipTenantSessionRedirect === true;
+      if (!skipSessionRedirect && !isAuthFlow && !isAdmin && (baseURL.includes('/tenant-api/') || baseURL.includes('/local-tenant-api/'))) {
         if (localStorage.getItem('token') && !redirectingToLogin && !window.location.pathname.startsWith('/login')) {
           redirectingToLogin = true;
           localStorage.removeItem('token');

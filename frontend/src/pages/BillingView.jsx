@@ -228,38 +228,40 @@ export default function BillingView() {
           <p className="text-muted-foreground mt-2 text-lg">Manage your commercial plan and payment methods.</p>
         </div>
         
-        <div className="bg-white border border-border p-4 rounded-2xl flex items-center gap-4 shadow-sm">
-          <div>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Regional Gateway</p>
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-muted-foreground" />
-              <select 
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="bg-transparent text-slate-800 font-bold text-sm outline-none cursor-pointer"
-              >
-                <option value="" disabled className="bg-white">Select Country</option>
-                {COUNTRIES.map(country => (
-                  <option key={country.code} value={country.code} className="bg-white">
-                    {country.name}
-                  </option>
-                ))}
-              </select>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="bg-white border border-border p-4 rounded-2xl flex items-center gap-4 shadow-sm">
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Regional Gateway</p>
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-muted-foreground" />
+                <select 
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="bg-transparent text-slate-800 font-bold text-sm outline-none cursor-pointer"
+                >
+                  <option value="" disabled className="bg-white">Select Country</option>
+                  {COUNTRIES.map(country => (
+                    <option key={country.code} value={country.code} className="bg-white">
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white border border-border p-4 rounded-2xl flex items-center gap-4 shadow-sm">
-          <div>
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Promo Code</p>
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-muted-foreground" />
-              <input
-                value={discountCode}
-                onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
-                placeholder="SAVE20"
-                className="bg-transparent text-slate-800 font-bold text-sm outline-none w-28 placeholder:text-slate-400"
-              />
+          <div className="bg-white border border-border p-4 rounded-2xl flex items-center gap-4 shadow-sm">
+            <div>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Promo Code</p>
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-muted-foreground" />
+                <input
+                  value={discountCode}
+                  onChange={(e) => setDiscountCode(e.target.value.trim().toUpperCase())}
+                  placeholder="SAVE20"
+                  className="bg-transparent text-slate-800 font-bold text-sm outline-none w-28 placeholder:text-slate-400"
+                />
+              </div>
             </div>
           </div>
         </div>

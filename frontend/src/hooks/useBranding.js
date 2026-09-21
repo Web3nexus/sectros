@@ -42,7 +42,7 @@ export function useBranding() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await api.get('public/branding');
+        const res = await api.get('public/branding', { skipTenantSessionRedirect: true });
         const data = res.data;
         const color = data.ui_color || 'green';
         setWithExpiry('branding_cache', data);
