@@ -38,6 +38,18 @@ class EmailTemplateSeeder extends Seeder
                 'variables' => ['reservation_id', 'customer_name', 'reservation_date', 'reservation_time', 'guest_count'],
             ],
             [
+                'slug'      => 'reservation_request_confirmation',
+                'subject'   => 'Confirm your booking request – {business_name}',
+                'content'   => "Hello {customer_name},\n\n{business_name} has received a booking request on your behalf for:\n\nDate: {reservation_date}\nTime: {reservation_time}\nGuests: {guest_count}\n\nYour reservation is confirmed once you confirm this request. Please confirm using one of the options below:\n\n1. Click this link to confirm: {confirm_link}\n2. Or present this confirmation code when you arrive: {confirmation_code}\n\nIf you did not arrange this booking, please contact the restaurant.",
+                'variables' => ['customer_name', 'business_name', 'reservation_date', 'reservation_time', 'guest_count', 'confirm_link', 'confirmation_code'],
+            ],
+            [
+                'slug'      => 'reservation_confirmed',
+                'subject'   => 'Your booking is confirmed – {business_name}',
+                'content'   => "Hello {customer_name},\n\nGreat news! Your booking at {business_name} has been confirmed.\n\nDate: {reservation_date}\nTime: {reservation_time}\nGuests: {guest_count}\n\nWe look forward to welcoming you. If you need to make changes, please contact the restaurant.",
+                'variables' => ['customer_name', 'business_name', 'reservation_date', 'reservation_time', 'guest_count'],
+            ],
+            [
                 'slug'      => 'new_order',
                 'subject'   => 'New Order Received! – {order_number}',
                 'content'   => "System Node: A new order of {total_amount} has been logged for {business_name}.\n\nItems: {items_count}\nSource: {source}\n\nPlease prepare the order for processing.",

@@ -21,13 +21,19 @@ class ReservationController extends Controller
 
     /**
      * Store a newly created reservation.
+     *
+     * Manual bookings (source: app / manual) are created as "pending" and the
+     * guest is emailed a confirmation code + link to confirm their request.
+     * Website / form bookings are also created as "pending" and require the
+     * restaurant to confirm them (unless auto_confirm_bookings is enabled),
+     * after which the guest receives a confirmation email.
      */
     public function store(Request $request)
     {
         // 1. Check Monthly Reservation Limit
         $tenant = tenant();
         $planSlug = $tenant->plan ?? 'free';
-        
+
         $plan = \Stancl\Tenancy\Facades\Tenancy::central(function () use ($planSlug) {
             return \App\Models\SubscriptionPlan::where('slug', $planSlug)->first();
         });
@@ -35,9 +41,9 @@ class ReservationController extends Controller
         if ($plan && $plan->reservation_limit !== null) {
             $monthStart = \Carbon\Carbon::now()->startOfMonth();
             $monthEnd = \Carbon\Carbon::now()->endOfMonth();
-            
+
             $count = Reservation::whereBetween('created_at', [$monthStart, $monthEnd])->count();
-            
+
             if ($count >= $plan->reservation_limit) {
                 return response()->json([
                     'error' => 'limit_reached',
@@ -61,8 +67,8 @@ class ReservationController extends Controller
 
         $validated = $request->validate([
             'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email',
-            'customer_phone' => 'required|string',
+            'customer_email' => 'nullable|email',
+            'customer_phone' => 'nullable|string',
             'reservation_time' => 'required|date|after:now',
             'end_time' => 'nullable|date|after:reservation_time',
             'duration_minutes' => 'nullable|integer|min:1',
@@ -133,6 +139,22 @@ class ReservationController extends Controller
             }
         }
 
+        $source = strtolower(trim($request->input('source', 'website')));
+        $isManual = in_array($source, ['app', 'manual', 'phone', 'walk-in', 'walkin', 'in-house', 'inhome'], true);
+
+        $validated['customer_email'] = $validated['customer_email'] ?? '';
+        $validated['customer_phone'] = $validated['customer_phone'] ?? '';
+
+        // Auto-confirm applies to self-service (website/form) bookings only.
+        $autoConfirm = \App\Models\TenantSetting::where('key', 'auto_confirm_bookings')->value('value') === 'true';
+
+        $validated['source'] = $source;
+        $validated['status'] = (!$isManual && $autoConfirm) ? 'confirmed' : 'pending';
+        $validated['confirmation_code'] = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $validated['confirmation_token'] = \Illuminate\Support\Str::random(64);
+        $validated['confirmed_at'] = $validated['status'] === 'confirmed' ? now() : null;
+        $validated['confirmed_by'] = $validated['status'] === 'confirmed' ? 'auto' : null;
+
         $reservation = $this->transaction(function () use ($validated) {
             $reservation = Reservation::create($validated);
 
@@ -147,21 +169,19 @@ class ReservationController extends Controller
             return $reservation;
         });
 
-        $template = \App\Models\EmailTemplate::where('slug', 'new_reservation')->first();
-        if ($template) {
-            try {
-                \Illuminate\Support\Facades\Mail::to($validated['customer_email'])->send(
-                    new \App\Mail\SystemMail($template->subject, $template->content, [
-                        'reservation_id' => $reservation->id,
-                        'customer_name' => $reservation->customer_name,
-                        'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
-                        'reservation_time' => $reservation->reservation_time->format('H:i'),
-                        'guest_count' => $reservation->party_size,
-                    ])
-                );
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Failed to send reservation email: " . $e->getMessage());
+        try {
+            if ($isManual) {
+                // Guest booked on their behalf — they must confirm the request.
+                $this->sendGuestRequestConfirmation($reservation);
+            } else {
+                // Restaurant-side alert for self-service bookings.
+                $this->sendRestaurantNewBookingAlert($reservation);
+                if ($reservation->status === 'confirmed') {
+                    $this->sendGuestConfirmedEmail($reservation, 'auto');
+                }
             }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Failed to send reservation emails: " . $e->getMessage());
         }
 
         return response()->json($reservation, 201);
@@ -173,12 +193,20 @@ class ReservationController extends Controller
     public function updateStatus(Request $request, Reservation $reservation)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,confirmed,cancelled,completed',
+            'status' => 'required|in:pending,confirmed,cancelled,completed,seated',
+            'confirmed_by' => 'nullable|string|max:50',
         ]);
+
+        $status = $validated['status'];
+
+        if ($status === 'confirmed') {
+            $validated['confirmed_at'] = now();
+            $validated['confirmed_by'] = $validated['confirmed_by'] ?? 'staff';
+        }
 
         $reservation->update($validated);
 
-        if ($validated['status'] === 'confirmed') {
+        if ($status === 'confirmed') {
             NotificationController::dispatch(
                 'reservation',
                 'Reservation Confirmed',
@@ -186,7 +214,13 @@ class ReservationController extends Controller
                 'check-circle',
                 $reservation->id
             );
-        } elseif ($validated['status'] === 'cancelled') {
+
+            try {
+                $this->sendGuestConfirmedEmail($reservation, $validated['confirmed_by'] ?? 'staff');
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send reservation confirmation email: " . $e->getMessage());
+            }
+        } elseif ($status === 'cancelled') {
             NotificationController::dispatch(
                 'reservation',
                 'Reservation Cancelled',
@@ -197,5 +231,128 @@ class ReservationController extends Controller
         }
 
         return response()->json($reservation);
+    }
+
+    /**
+     * Email a guest who did not book for themselves with a confirmation
+     * link + code so they can confirm the request in person.
+     */
+    protected function sendGuestRequestConfirmation(Reservation $reservation): void
+    {
+        $businessName = tenant('name') ?? 'The Business';
+
+        if (!empty($reservation->customer_email)) {
+            $template = \App\Models\EmailTemplate::where('slug', 'reservation_request_confirmation')->first();
+            if ($template) {
+                \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
+                    new \App\Mail\SystemMail($template->subject, $template->content, [
+                        'customer_name' => $reservation->customer_name,
+                        'business_name' => $businessName,
+                        'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                        'reservation_time' => $reservation->reservation_time->format('H:i'),
+                        'guest_count' => $reservation->party_size,
+                        'confirmation_code' => $reservation->confirmation_code,
+                        'confirm_link' => $this->guestConfirmUrl($reservation),
+                    ])
+                );
+            }
+        }
+
+        // SMS with the confirmation code so attendance can verify in-house.
+        $this->sendSms($reservation, sprintf(
+            "Hello %s, %s received your booking on %s at %s for %s guests. Confirm with code %s or show it on arrival.",
+            $reservation->customer_name,
+            $businessName,
+            $reservation->reservation_time->format('M d, H:i'),
+            $reservation->reservation_time->format('H:i'),
+            $reservation->party_size,
+            $reservation->confirmation_code
+        ));
+    }
+
+    /**
+     * Alert the restaurant to a new self-service booking awaiting confirmation.
+     */
+    protected function sendRestaurantNewBookingAlert(Reservation $reservation): void
+    {
+        $template = \App\Models\EmailTemplate::where('slug', 'new_reservation')->first();
+        if (!$template) {
+            return;
+        }
+
+        $ownerEmail = tenant('owner_email');
+        if (!$ownerEmail) {
+            return;
+        }
+
+        \Illuminate\Support\Facades\Mail::to($ownerEmail)->send(
+            new \App\Mail\SystemMail($template->subject, $template->content, [
+                'reservation_id' => $reservation->id,
+                'customer_name' => $reservation->customer_name,
+                'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                'reservation_time' => $reservation->reservation_time->format('H:i'),
+                'guest_count' => $reservation->party_size,
+            ])
+        );
+    }
+
+    /**
+     * Notify the guest their booking has been confirmed.
+     */
+    protected function sendGuestConfirmedEmail(Reservation $reservation, string $by): void
+    {
+        $businessName = tenant('name') ?? 'The Business';
+
+        if (!empty($reservation->customer_email)) {
+            $template = \App\Models\EmailTemplate::where('slug', 'reservation_confirmed')->first();
+            if ($template) {
+                \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
+                    new \App\Mail\SystemMail($template->subject, $template->content, [
+                        'customer_name' => $reservation->customer_name,
+                        'business_name' => $businessName,
+                        'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                        'reservation_time' => $reservation->reservation_time->format('H:i'),
+                        'guest_count' => $reservation->party_size,
+                    ])
+                );
+            }
+        }
+
+        $this->sendSms($reservation, sprintf(
+            "Hello %s, your booking at %s for %s at %s (%s guests) is confirmed. We look forward to welcoming you!",
+            $reservation->customer_name,
+            $businessName,
+            $reservation->reservation_time->format('M d'),
+            $reservation->reservation_time->format('H:i'),
+            $reservation->party_size
+        ));
+    }
+
+    protected function sendSms(Reservation $reservation, string $message): void
+    {
+        $smsEnabled = \App\Models\TenantSetting::where('key', 'notifications_sms_enabled')->value('value');
+        if ($smsEnabled && !empty($reservation->customer_phone)) {
+            try {
+                \App\Services\SMSService::send($reservation->customer_phone, $message);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to send reservation SMS: " . $e->getMessage());
+            }
+        }
+    }
+
+    public function guestConfirmUrl(Reservation $reservation): string
+    {
+        return $this->tenantBaseUrl() . '/tenant-api/public/reservations/confirm/' . $reservation->confirmation_token;
+    }
+
+    public function tenantBaseUrl(): string
+    {
+        $appUrl = config('app.url', 'https://sectros.com');
+        $scheme = parse_url((string) $appUrl, PHP_URL_SCHEME) ?: 'https';
+        $tenant = tenant();
+        $domain = $tenant ? ($tenant->domains()->first()?->domain ?? $tenant->id) : null;
+        $domain = $domain ?: trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
+
+        return $scheme . '://' . $domain;
     }
 }

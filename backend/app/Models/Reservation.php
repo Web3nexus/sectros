@@ -31,7 +31,11 @@ class Reservation extends Model
         'special_requests',
         'dynamic_fields',
         'source',
-        'branch_id'
+        'branch_id',
+        'confirmation_code',
+        'confirmation_token',
+        'confirmed_by',
+        'confirmed_at'
     ];
 
     protected $casts = [
@@ -40,6 +44,7 @@ class Reservation extends Model
         'deposit_amount' => 'decimal:2',
         'dynamic_fields' => 'json',
         'tenant_id' => 'string',
+        'confirmed_at' => 'datetime',
     ];
 
     public function branch(): BelongsTo

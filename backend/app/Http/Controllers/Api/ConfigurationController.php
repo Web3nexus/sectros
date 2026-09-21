@@ -116,6 +116,27 @@ class ConfigurationController extends Controller
         return response()->json(['message' => 'Settings saved successfully.']);
     }
 
+    /**
+     * Shareable public booking link for a tenant's website.
+     */
+    public function bookingLink()
+    {
+        $tenant = tenant();
+        $appUrl = config('app.url', 'https://sectros.com');
+        $scheme = parse_url((string) $appUrl, PHP_URL_SCHEME) ?: 'https';
+        $domain = $tenant ? ($tenant->domains()->first()?->domain ?? $tenant->id) : null;
+        $domain = $domain ?: trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
+
+        $homepageUrl = $scheme . '://' . $domain;
+        $hasBookingPage = $tenant ? \App\Models\BuilderPage::where('slug', 'book')->where('is_published', true)->exists() : false;
+
+        return response()->json([
+            'booking_url' => $hasBookingPage ? $homepageUrl . '/book' : $homepageUrl,
+            'homepage_url' => $homepageUrl,
+            'mode' => $hasBookingPage ? 'page' : 'homepage',
+        ]);
+    }
+
     public function bookingForm()
     {
         $type = tenant('business_type') ?? 'restaurant';

@@ -196,6 +196,7 @@ Route::middleware(['api'])->group(function () {
 
         // Public endpoints (no auth required)
         Route::post('/public/reservations', [\App\Http\Controllers\PublicReservationController::class, 'store'])->middleware('throttle:10,1');
+        Route::match(['get', 'post'], '/public/reservations/confirm/{token}', [\App\Http\Controllers\PublicReservationController::class, 'confirm'])->middleware('throttle:30,1');
         Route::get('/public/translations/{locale}', [\App\Http\Controllers\Api\SuperAdmin\TranslationController::class, 'fetch']);
 
         // Payments (Deposits)
@@ -319,6 +320,7 @@ Route::middleware(['api'])->group(function () {
             Route::get('/configuration/schema', [\App\Http\Controllers\Api\ConfigurationController::class, 'schema']);
             Route::get('/configuration/booking-form', [\App\Http\Controllers\Api\ConfigurationController::class, 'bookingForm']);
             Route::post('/configuration/booking-form', [\App\Http\Controllers\Api\ConfigurationController::class, 'saveBookingForm']);
+            Route::get('/configuration/booking-link', [\App\Http\Controllers\Api\ConfigurationController::class, 'bookingLink']);
 
             Route::apiResource('/orders', OrderController::class);
             Route::apiResource('/reservations', ReservationController::class);
