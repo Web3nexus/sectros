@@ -73,7 +73,7 @@ class PaymentService
     /**
      * Initialize a checkout/subscription session.
      */
-    public function initializePayment(Tenant $tenant, SubscriptionPlan $plan, string $interval = 'monthly')
+    public function initializePayment(Tenant $tenant, SubscriptionPlan $plan, string $interval = 'monthly', ?\App\Models\Discount $discount = null)
     {
         $gateway = self::getGateway($tenant->country);
         $amount = $interval === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
@@ -83,12 +83,14 @@ class PaymentService
             throw new \Exception("No payment gateway available for this region.");
         }
 
+        $resolved = $this->resolveDiscountForCheckout($discount, 'subscription', $amount, $currency, $tenant, ['plan_slug' => $plan->slug]);
+
         return match($gateway) {
-            'paddle' => $this->initPaddle($tenant, $plan, $amount, $currency, $interval),
-            'stripe' => $this->initStripe($tenant, $plan, $amount, $currency, $interval),
-            'paystack' => $this->initPaystack($tenant, $plan, $amount, $currency, $interval),
-            'flutterwave' => $this->initFlutterwave($tenant, $plan, $amount, $currency, $interval),
-            'dodo' => $this->initDodo($tenant, $plan, $amount, $currency, $interval),
+            'paddle' => $this->initPaddle($tenant, $plan, $resolved['original'], $currency, $interval, $discount),
+            'stripe' => $this->initStripe($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
+            'paystack' => $this->initPaystack($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
+            'flutterwave' => $this->initFlutterwave($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
+            'dodo' => $this->initDodo($tenant, $plan, $resolved['final'], $currency, $interval, $discount),
             default => throw new \Exception("Unsupported gateway."),
         };
     }
@@ -117,7 +119,7 @@ class PaymentService
     /**
      * Initialize a one-time payment session for a Website Theme.
      */
-    public function initializeThemePurchase(Tenant $tenant, WebsiteTemplate $template)
+    public function initializeThemePurchase(Tenant $tenant, WebsiteTemplate $template, ?\App\Models\Discount $discount = null)
     {
         $gateway = self::getGateway($tenant->country);
         $amount = $template->price;
@@ -127,12 +129,14 @@ class PaymentService
             throw new \Exception("No payment gateway available for this region.");
         }
 
+        $resolved = $this->resolveDiscountForCheckout($discount, 'theme', $amount, $currency, $tenant, ['template_id' => (string) $template->id]);
+
         return match($gateway) {
-            'paddle' => $this->initPaddleTheme($tenant, $template, $amount, $currency),
-            'stripe' => $this->initStripeTheme($tenant, $template, $amount, $currency),
-            'paystack' => $this->initPaystackTheme($tenant, $template, $amount, $currency),
-            'flutterwave' => $this->initFlutterwaveTheme($tenant, $template, $amount, $currency),
-            'dodo' => $this->initDodoTheme($tenant, $template, $amount, $currency),
+            'paddle' => $this->initPaddleTheme($tenant, $template, $resolved['original'], $currency, $discount),
+            'stripe' => $this->initStripeTheme($tenant, $template, $resolved['final'], $currency, $discount),
+            'paystack' => $this->initPaystackTheme($tenant, $template, $resolved['final'], $currency, $discount),
+            'flutterwave' => $this->initFlutterwaveTheme($tenant, $template, $resolved['final'], $currency, $discount),
+            'dodo' => $this->initDodoTheme($tenant, $template, $resolved['final'], $currency, $discount),
             default => throw new \Exception("Unsupported gateway for theme purchase."),
         };
     }
@@ -140,7 +144,7 @@ class PaymentService
     /**
      * Initialize a one-time or recurring payment for an Add-on.
      */
-    public function initializeAddonPurchase(Tenant $tenant, Addon $addon, int $quantity, float $total, string $country)
+    public function initializeAddonPurchase(Tenant $tenant, Addon $addon, int $quantity, float $total, string $country, ?\App\Models\Discount $discount = null)
     {
         $gateway = self::getGateway($country);
         $currency = SaaSSetting::where('key', 'default_currency')->first()?->value ?? 'USD';
@@ -150,18 +154,46 @@ class PaymentService
         }
 
         $isRecurring = $addon->billing_type === 'recurring';
+        $resolved = $this->resolveDiscountForCheckout($discount, 'addon', $total, $currency, $tenant, ['addon_id' => (string) $addon->id]);
 
         return match($gateway) {
-            'paddle' => $this->initPaddleAddon($tenant, $addon, $total, $currency, $quantity, $isRecurring),
-            'stripe' => $this->initStripeAddon($tenant, $addon, $total, $currency, $quantity, $isRecurring),
-            'paystack' => $this->initPaystackAddon($tenant, $addon, $total, $currency, $quantity),
-            'flutterwave' => $this->initFlutterwaveAddon($tenant, $addon, $total, $currency, $quantity),
-            'dodo' => $this->initDodoAddon($tenant, $addon, $total, $currency, $quantity),
+            'paddle' => $this->initPaddleAddon($tenant, $addon, $resolved['original'], $currency, $quantity, $isRecurring, $discount),
+            'stripe' => $this->initStripeAddon($tenant, $addon, $resolved['final'], $currency, $quantity, $isRecurring, $discount),
+            'paystack' => $this->initPaystackAddon($tenant, $addon, $resolved['final'], $currency, $quantity, $discount),
+            'flutterwave' => $this->initFlutterwaveAddon($tenant, $addon, $resolved['final'], $currency, $quantity, $discount),
+            'dodo' => $this->initDodoAddon($tenant, $addon, $resolved['final'], $currency, $quantity, $discount),
             default => throw new \Exception("Unsupported gateway for add-on purchase."),
         };
     }
 
-    private function initStripeAddon($tenant, $addon, $amount, $currency, $quantity, $isRecurring)
+    /**
+     * Compute the discounted amount for a checkout.
+     */
+    private function resolveDiscountForCheckout($discount, string $scope, float $amount, string $currency, ?Tenant $tenant, array $entity = []): array
+    {
+        if (!$discount || empty($discount->code)) {
+            return ['original' => (float) $amount, 'final' => (float) $amount];
+        }
+
+        try {
+            $resolved = app(\App\Services\DiscountService::class)->resolve(
+                $discount->code,
+                $scope,
+                (float) $amount,
+                $currency,
+                $tenant,
+                $entity
+            );
+            return [
+                'original' => (float) $resolved['original_amount'],
+                'final' => (float) $resolved['final_amount'],
+            ];
+        } catch (\App\Exceptions\DiscountException $e) {
+            throw $e;
+        }
+    }
+
+    private function initStripeAddon($tenant, $addon, $amount, $currency, $quantity, $isRecurring, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'stripe_secret_key')->first()?->value;
 
@@ -189,13 +221,13 @@ class PaymentService
             'cancel_url' => config('app.url') . "/dashboard/billing?canceled=true",
             'client_reference_id' => $tenant->id,
             'customer_email' => $tenant->data['email'] ?? null,
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'addon_purchase',
                 'addon_id' => $addon->id,
                 'addon_slug' => $addon->slug,
                 'tenant_id' => $tenant->id,
                 'quantity' => $quantity,
-            ],
+            ], $discount),
         ]);
 
         if ($response->failed()) {
@@ -209,7 +241,7 @@ class PaymentService
         ];
     }
 
-    private function initPaystackAddon($tenant, $addon, $amount, $currency, $quantity)
+    private function initPaystackAddon($tenant, $addon, $amount, $currency, $quantity, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'paystack_secret_key')->first()?->value;
 
@@ -218,13 +250,13 @@ class PaymentService
             'amount' => $amount * 100,
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/billing?vendor=paystack",
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'addon_purchase',
                 'tenant_id' => $tenant->id,
                 'addon_id' => $addon->id,
                 'addon_slug' => $addon->slug,
                 'quantity' => $quantity,
-            ]
+            ], $discount)
         ]);
 
         if ($response->failed()) throw new \Exception("Paystack error: " . ($response->json('message') ?? 'Unknown error'));
@@ -236,7 +268,7 @@ class PaymentService
         ];
     }
 
-    private function initFlutterwaveAddon($tenant, $addon, $amount, $currency, $quantity)
+    private function initFlutterwaveAddon($tenant, $addon, $amount, $currency, $quantity, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'flutterwave_secret_key')->first()?->value;
 
@@ -249,13 +281,13 @@ class PaymentService
                 'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
                 'name' => $tenant->business_name,
             ],
-            'meta' => [
+            'meta' => $this->injectDiscountMeta([
                 'type' => 'addon_purchase',
                 'tenant_id' => $tenant->id,
                 'addon_id' => $addon->id,
                 'addon_slug' => $addon->slug,
                 'quantity' => $quantity,
-            ],
+            ], $discount),
             'customizations' => [
                 'title' => 'Sectros Add-on',
                 'description' => $addon->name,
@@ -271,7 +303,7 @@ class PaymentService
         ];
     }
 
-    private function initStripeTheme($tenant, $template, $amount, $currency)
+    private function initStripeTheme($tenant, $template, $amount, $currency, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'stripe_secret_key')->first()?->value;
         
@@ -293,11 +325,11 @@ class PaymentService
             'cancel_url' => config('app.url') . "/dashboard/website?canceled=true",
             'client_reference_id' => $tenant->id,
             'customer_email' => $tenant->data['email'] ?? null,
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'theme_purchase',
                 'template_id' => $template->id,
                 'tenant_id' => $tenant->id,
-            ],
+            ], $discount),
         ]);
 
         if ($response->failed()) {
@@ -311,7 +343,7 @@ class PaymentService
         ];
     }
 
-    private function initPaystackTheme($tenant, $template, $amount, $currency)
+    private function initPaystackTheme($tenant, $template, $amount, $currency, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'paystack_secret_key')->first()?->value;
         
@@ -320,11 +352,11 @@ class PaymentService
             'amount' => $amount * 100,
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/website?vendor=paystack",
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'theme_purchase',
                 'tenant_id' => $tenant->id,
                 'template_id' => $template->id,
-            ]
+            ], $discount)
         ]);
 
         if ($response->failed()) throw new \Exception("Paystack error: " . ($response->json('message') ?? 'Unknown error'));
@@ -336,7 +368,7 @@ class PaymentService
         ];
     }
 
-    private function initFlutterwaveTheme($tenant, $template, $amount, $currency)
+    private function initFlutterwaveTheme($tenant, $template, $amount, $currency, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'flutterwave_secret_key')->first()?->value;
         
@@ -349,11 +381,11 @@ class PaymentService
                 'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
                 'name' => $tenant->business_name,
             ],
-            'meta' => [
+            'meta' => $this->injectDiscountMeta([
                 'type' => 'theme_purchase',
                 'tenant_id' => $tenant->id,
                 'template_id' => $template->id,
-            ],
+            ], $discount),
             'customizations' => [
                 'title' => 'Sectros Theme Store',
                 'description' => $template->name . " Theme Unlock",
@@ -369,7 +401,7 @@ class PaymentService
         ];
     }
 
-    private function initStripe($tenant, $plan, $amount, $currency, $interval)
+    private function initStripe($tenant, $plan, $amount, $currency, $interval, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'stripe_secret_key')->first()?->value;
         
@@ -391,11 +423,11 @@ class PaymentService
             'cancel_url' => config('app.url') . "/dashboard/billing?canceled=true",
             'client_reference_id' => $tenant->id,
             'customer_email' => $tenant->data['email'] ?? null,
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'plan_slug' => $plan->slug,
                 'tenant_id' => $tenant->id,
                 'interval'  => $interval
-            ],
+            ], $discount),
         ]);
 
         if ($response->failed()) {
@@ -410,7 +442,7 @@ class PaymentService
         ];
     }
 
-    private function initPaystack($tenant, $plan, $amount, $currency, $interval)
+    private function initPaystack($tenant, $plan, $amount, $currency, $interval, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'paystack_secret_key')->first()?->value;
         
@@ -419,12 +451,12 @@ class PaymentService
             'amount' => $amount * 100, // Paystack uses kobo
             'currency' => $currency,
             'callback_url' => config('app.url') . "/dashboard/billing?vendor=paystack",
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'subscription',
                 'tenant_id' => $tenant->id,
                 'plan_slug' => $plan->slug,
                 'interval' => $interval
-            ]
+            ], $discount)
         ]);
 
         if ($response->failed()) {
@@ -438,7 +470,7 @@ class PaymentService
         ];
     }
 
-    private function initFlutterwave($tenant, $plan, $amount, $currency, $interval)
+    private function initFlutterwave($tenant, $plan, $amount, $currency, $interval, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'flutterwave_secret_key')->first()?->value;
         
@@ -452,12 +484,12 @@ class PaymentService
                 'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
                 'name' => $tenant->business_name,
             ],
-            'meta' => [
+            'meta' => $this->injectDiscountMeta([
                 'type' => 'subscription',
                 'tenant_id' => $tenant->id,
                 'plan_slug' => $plan->slug,
                 'interval' => $interval
-            ],
+            ], $discount),
             'customizations' => [
                 'title' => 'Sectros Subscription',
                 'description' => $plan->name . " Plan",
@@ -475,7 +507,7 @@ class PaymentService
         ];
     }
 
-    private function initDodo($tenant, $plan, $amount, $currency, $interval)
+    private function initDodo($tenant, $plan, $amount, $currency, $interval, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
         if (!$secretKey) throw new \Exception("Dodo not configured.");
@@ -490,12 +522,12 @@ class PaymentService
                 'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
                 'name' => $tenant->business_name,
             ],
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'subscription',
                 'tenant_id' => $tenant->id,
                 'plan_slug' => $plan->slug,
                 'interval' => $interval,
-            ],
+            ], $discount),
         ]);
 
         if ($response->failed()) {
@@ -510,7 +542,7 @@ class PaymentService
         ];
     }
 
-    private function initDodoTheme($tenant, $template, $amount, $currency)
+    private function initDodoTheme($tenant, $template, $amount, $currency, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
         if (!$secretKey) throw new \Exception("Dodo not configured.");
@@ -525,11 +557,11 @@ class PaymentService
                 'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
                 'name' => $tenant->business_name,
             ],
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'theme_purchase',
                 'tenant_id' => $tenant->id,
                 'template_id' => $template->id,
-            ],
+            ], $discount),
         ]);
 
         if ($response->failed()) {
@@ -544,7 +576,7 @@ class PaymentService
         ];
     }
 
-    private function initDodoAddon($tenant, $addon, $amount, $currency, $quantity)
+    private function initDodoAddon($tenant, $addon, $amount, $currency, $quantity, $discount = null)
     {
         $secretKey = SaaSSetting::where('key', 'dodo_secret_key')->first()?->value;
         if (!$secretKey) throw new \Exception("Dodo not configured.");
@@ -559,13 +591,13 @@ class PaymentService
                 'email' => $tenant->data['email'] ?? 'billing@' . $tenant->id . '.com',
                 'name' => $tenant->business_name,
             ],
-            'metadata' => [
+            'metadata' => $this->injectDiscountMeta([
                 'type' => 'addon_purchase',
                 'tenant_id' => $tenant->id,
                 'addon_id' => $addon->id,
                 'addon_slug' => $addon->slug,
                 'quantity' => $quantity,
-            ],
+            ], $discount),
         ]);
 
         if ($response->failed()) {
@@ -733,6 +765,33 @@ class PaymentService
     }
 
     /**
+     * Apply an admin-created discount code to a Paddle transaction payload.
+     * Paddle validates and computes the discount server-side; the unit price passed
+     * to Paddle stays at full price so the discount is not double-counted.
+     */
+    private function applyDiscountToPayload(array &$payload, $discount = null): void
+    {
+        if (!$discount || empty($discount->code)) {
+            return;
+        }
+
+        $payload['discount'] = ['code' => $discount->code];
+        $payload['custom_data']['discount_code'] = $discount->code;
+    }
+
+    /**
+     * Attach a discount code to a gateway metadata payload so webhook
+     * fulfillment can record redemptions for any gateway.
+     */
+    private function injectDiscountMeta(array $meta, $discount = null): array
+    {
+        if ($discount && !empty($discount->code)) {
+            $meta['discount_code'] = $discount->code;
+        }
+        return $meta;
+    }
+
+    /**
      * Get Paddle API base URL according to the configured environment.
      */
     private function getPaddleBaseUrl(): string
@@ -790,7 +849,7 @@ class PaymentService
     /**
      * Initialize Paddle subscription checkout transaction.
      */
-    private function initPaddle($tenant, $plan, $amount, $currency, $interval)
+    private function initPaddle($tenant, $plan, $amount, $currency, $interval, $discount = null)
     {
         $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
@@ -849,6 +908,8 @@ class PaymentService
             ],
         ];
 
+        $this->applyDiscountToPayload($payload, $discount);
+
         if ($customerId) {
             $payload['customer_id'] = $customerId;
         }
@@ -878,7 +939,7 @@ class PaymentService
     /**
      * Initialize Paddle website theme purchase.
      */
-    private function initPaddleTheme($tenant, $template, $amount, $currency)
+    private function initPaddleTheme($tenant, $template, $amount, $currency, $discount = null)
     {
         $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
@@ -918,6 +979,8 @@ class PaymentService
             ],
         ];
 
+        $this->applyDiscountToPayload($payload, $discount);
+
         if ($customerId) {
             $payload['customer_id'] = $customerId;
         }
@@ -943,7 +1006,7 @@ class PaymentService
     /**
      * Initialize Paddle add-on purchase (one-time or recurring).
      */
-    private function initPaddleAddon($tenant, $addon, $amount, $currency, $quantity, $isRecurring)
+    private function initPaddleAddon($tenant, $addon, $amount, $currency, $quantity, $isRecurring, $discount = null)
     {
         $apiKey = $this->getPaddleApiKey();
         if (!$apiKey) {
@@ -985,6 +1048,8 @@ class PaymentService
                 'quantity' => $quantity,
             ],
         ];
+
+        $this->applyDiscountToPayload($payload, $discount);
 
         if ($customerId) {
             $payload['customer_id'] = $customerId;

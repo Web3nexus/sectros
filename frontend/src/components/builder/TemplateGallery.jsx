@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {Check, Eye, Lock, ShoppingCart, RefreshCw, Briefcase, Layout, Box, ChevronRight} from 'lucide-react';
+import {Check, Eye, Lock, ShoppingCart, RefreshCw, Briefcase, Layout, Box, ChevronRight, Tag} from 'lucide-react';
 import api from '../../services/api';
 import { FALLBACK_BLUEPRINTS } from './BlueprintData';
 import { useBusinessConfig } from '../../hooks/useBusinessConfig';
@@ -10,6 +10,7 @@ export default function TemplateGallery({ onSelect, onPreview }) {
   const [isLoading, setIsLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState(null);
   const [purchasingId, setPurchasingId] = useState(null);
+  const [promoCode, setPromoCode] = useState('');
 
   const fetchThemes = async () => {
     setIsLoading(true);
@@ -51,7 +52,9 @@ export default function TemplateGallery({ onSelect, onPreview }) {
     }
     setPurchasingId(theme.id);
     try {
-      const response = await api.post(`website-themes/${theme.id}/purchase`);
+      const response = await api.post(`website-themes/${theme.id}/purchase`, {
+        discount_code: promoCode || null
+      });
       if (response.data.unlocked) {
         await fetchThemes();
       } else if (response.data.url) {
@@ -74,7 +77,19 @@ export default function TemplateGallery({ onSelect, onPreview }) {
   }
 
   return (
-    <div id="template-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 scroll-mt-24">
+    <>
+      <div className="flex items-center justify-end gap-2 mb-6">
+        <div className="flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2">
+          <Tag className="w-4 h-4 text-blue-500" />
+          <input
+            value={promoCode}
+            onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+            placeholder="PROMO CODE"
+            className="bg-transparent text-xs font-bold tracking-widest outline-none w-28 placeholder:text-slate-400 uppercase"
+          />
+        </div>
+      </div>
+      <div id="template-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 scroll-mt-24">
       {themes.map((theme) => {
         const isHovered = hoveredId === theme.id;
         const isUnlocked = theme.is_unlocked;
@@ -167,5 +182,6 @@ export default function TemplateGallery({ onSelect, onPreview }) {
         );
       })}
     </div>
+    </>
   );
 }

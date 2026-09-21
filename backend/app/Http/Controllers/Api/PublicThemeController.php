@@ -90,8 +90,30 @@ class PublicThemeController extends Controller
         }
 
         try {
-            $paymentInfo = $paymentService->initializeThemePurchase($tenant, $template);
+            $discount = null;
+            if ($request->filled('discount_code')) {
+                $resolved = app(\App\Services\DiscountService::class)->resolve(
+                    $request->input('discount_code'),
+                    'theme',
+                    (float) ($template->price ?? 0),
+                    \App\Models\SaaSSetting::where('key', 'default_currency')->value('value') ?? 'USD',
+                    $tenant,
+                    ['template_id' => (string) $template->id]
+                );
+                $discount = $resolved['discount'];
+            }
+
+            $paymentInfo = $paymentService->initializeThemePurchase($tenant, $template, $discount);
+            if ($discount) {
+                $paymentInfo['discount'] = [
+                    'code' => $discount->code,
+                    'discount_amount' => $resolved['discount_amount'] ?? 0,
+                    'final_amount' => $resolved['final_amount'] ?? 0,
+                ];
+            }
             return response()->json($paymentInfo);
+        } catch (\App\Exceptions\DiscountException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }

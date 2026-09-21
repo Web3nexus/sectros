@@ -91,6 +91,14 @@ Route::middleware(['auth:sanctum', 'throttle:120,1'])->prefix('saas')->group(fun
 
     // Add-ons Management
     Route::get('/addons', [\App\Http\Controllers\Api\SuperAdmin\SaaSAddonController::class, 'index']);
+
+    // Discounts / Coupons (gateway-aware)
+    Route::get('/discounts', [\App\Http\Controllers\Api\SuperAdmin\DiscountController::class, 'index']);
+    Route::post('/discounts', [\App\Http\Controllers\Api\SuperAdmin\DiscountController::class, 'store']);
+    Route::put('/discounts/{id}', [\App\Http\Controllers\Api\SuperAdmin\DiscountController::class, 'update']);
+    Route::delete('/discounts/{id}', [\App\Http\Controllers\Api\SuperAdmin\DiscountController::class, 'destroy']);
+    Route::post('/discounts/{id}/sync', [\App\Http\Controllers\Api\SuperAdmin\DiscountController::class, 'sync']);
+    Route::get('/discounts/{id}/redemptions', [\App\Http\Controllers\Api\SuperAdmin\DiscountController::class, 'redemptions']);
     Route::post('/addons', [\App\Http\Controllers\Api\SuperAdmin\SaaSAddonController::class, 'store']);
     Route::put('/addons/{id}', [\App\Http\Controllers\Api\SuperAdmin\SaaSAddonController::class, 'update']);
     Route::delete('/addons/{id}', [\App\Http\Controllers\Api\SuperAdmin\SaaSAddonController::class, 'destroy']);

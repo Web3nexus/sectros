@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap, Phone, Radio, Smartphone, ChevronDown, Headphones} from 'lucide-react';
+import {LayoutGrid, LayoutDashboard, Building2, CreditCard, PackageOpen, MessageSquare, Mail, Shield, Globe, Settings, Users, LogOut, Bell, AlertTriangle, CheckCircle, Menu, X, Palette, PlugZap, Phone, Radio, Smartphone, ChevronDown, Headphones, Ticket} from 'lucide-react';
 import { useInactivityLogout } from '../hooks/useInactivityLogout';
 import { useBranding } from '../hooks/useBranding';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -74,6 +74,7 @@ export function SaaSAdminLayout() {
     { name: 'Overview', path: '/securegate/dashboard', icon: LayoutDashboard },
     { name: 'Tenants', path: '/securegate/tenants', icon: Building2 },
     { name: 'Subscriptions', path: '/securegate/subscriptions', icon: CreditCard },
+    { name: 'Discount Codes', path: '/securegate/discounts', icon: Ticket },
     { name: 'Support', path: '/securegate/tickets', icon: MessageSquare },
     { name: 'Email Hub', path: '/securegate/email-templates', icon: Mail },
   ];

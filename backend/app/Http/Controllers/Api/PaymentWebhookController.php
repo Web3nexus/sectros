@@ -65,6 +65,8 @@ class PaymentWebhookController extends Controller
                         $this->updateTenantSubscription($tenantId, 'stripe', $subscriptionId, $planSlug);
                     }
                 }
+
+                $this->recordRedemption((array) ($session->metadata ?? []), 'stripe', $session->id ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
             }
 
             return response()->json(['status' => 'success']);
@@ -120,6 +122,8 @@ class PaymentWebhookController extends Controller
                     $this->updateTenantSubscription($tenantId, 'paystack', $reference, $planSlug);
                 }
             }
+
+            $this->recordRedemption((array) ($data['metadata'] ?? []), 'paystack', $data['reference'] ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
         }
 
         return response()->json(['status' => 'success']);
@@ -163,6 +167,8 @@ class PaymentWebhookController extends Controller
                     $this->updateTenantSubscription($tenantId, 'flutterwave', $txRef, $planSlug);
                 }
             }
+
+            $this->recordRedemption((array) ($data['meta'] ?? []), 'flutterwave', $txRef ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
         }
 
         return response()->json(['status' => 'success']);
@@ -226,6 +232,8 @@ class PaymentWebhookController extends Controller
                     $this->updateTenantSubscription($tenantId, 'dodo', $paymentId, $planSlug);
                 }
             }
+
+            $this->recordRedemption((array) $metadata, 'dodo', $data['payment_id'] ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
         }
 
         return response()->json(['status' => 'success']);
@@ -480,12 +488,14 @@ class PaymentWebhookController extends Controller
             $total = isset($data['details']['totals']['total']) ? ((float) $data['details']['totals']['total']) / 100 : 0;
             if ($tenantId && $templateId) {
                 $this->fulfillThemePurchase($tenantId, $templateId, $total);
+                $this->recordRedemption($customData, 'paddle', $data['id'] ?? null, 'theme', $tenantId);
             }
         } elseif ($type === 'addon_purchase') {
             $addonId = $customData['addon_id'] ?? null;
             $quantity = (int) ($customData['quantity'] ?? 1);
             if ($tenantId && $addonId) {
                 $this->fulfillAddonPurchase($tenantId, $addonId, $quantity);
+                $this->recordRedemption($customData, 'paddle', $data['id'] ?? null, 'addon', $tenantId);
             }
         } elseif ($type === 'reservation_deposit') {
             $reservationId = $customData['reservation_id'] ?? null;
@@ -512,6 +522,32 @@ class PaymentWebhookController extends Controller
             if ($tenantId && $planSlug) {
                 $this->updateTenantSubscription($tenantId, 'paddle', $subId, $planSlug);
             }
+
+            $this->recordRedemption(
+                $customData,
+                'paddle',
+                $data['id'] ?? null,
+                'subscription',
+                $tenantId
+            );
+        }
+    }
+
+    private function recordRedemption(array $customData, string $gateway, ?string $transactionId, string $scope, ?string $tenantId = null): void
+    {
+        try {
+            $code = $customData['discount_code'] ?? $customData['coupon'] ?? $customData['promo_code'] ?? null;
+            if (empty($code) || empty($tenantId)) return;
+
+            app(\App\Services\DiscountService::class)->recordRedemption(
+                (string) $code,
+                (string) $tenantId,
+                $scope,
+                $gateway,
+                $transactionId
+            );
+        } catch (\Throwable $e) {
+            Log::warning("Discount redemption recording failed: " . $e->getMessage());
         }
     }
 

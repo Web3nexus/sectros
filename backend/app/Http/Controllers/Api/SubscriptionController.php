@@ -273,12 +273,35 @@ class SubscriptionController extends Controller
         if ($interval === 'year') $interval = 'yearly';
 
         try {
-            $paymentInfo = $paymentService->initializePayment($currentTenant, $plan, $interval);
+            $discount = null;
+            if ($request->filled('discount_code')) {
+                $resolved = app(\App\Services\DiscountService::class)->resolve(
+                    $request->input('discount_code'),
+                    'subscription',
+                    $interval === 'yearly' ? (float) ($plan->yearly_price ?? 0) : (float) ($plan->monthly_price ?? 0),
+                    \App\Models\SaaSSetting::where('key', 'default_currency')->value('value') ?? 'USD',
+                    $currentTenant,
+                    ['plan_slug' => $plan->slug]
+                );
+                $discount = $resolved['discount'];
+            }
+
+            $paymentInfo = $paymentService->initializePayment($currentTenant, $plan, $interval, $discount);
             $url = $paymentInfo['checkout_url'] ?? $paymentInfo['payment_url'] ?? $paymentInfo['url'] ?? null;
-            return response()->json(array_merge($paymentInfo, [
+            $payload = array_merge($paymentInfo, [
                 'checkout_url' => $url,
                 'url'          => $url,
-            ]));
+            ]);
+            if ($discount) {
+                $payload['discount'] = [
+                    'code' => $discount->code,
+                    'discount_amount' => $resolved['discount_amount'] ?? 0,
+                    'final_amount' => $resolved['final_amount'] ?? 0,
+                ];
+            }
+            return response()->json($payload);
+        } catch (\App\Exceptions\DiscountException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
         } catch (\Exception $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }

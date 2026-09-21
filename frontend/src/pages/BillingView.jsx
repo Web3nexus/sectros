@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X, ExternalLink} from 'lucide-react';
+import {CreditCard, CheckCircle, Zap, Shield, Globe, ArrowRight, Loader2, AlertCircle, Smartphone, Users, Globe as GlobeIcon, ShoppingCart, X, ExternalLink, Tag} from 'lucide-react';
 import api from '../services/api';
 import { COUNTRIES } from '../utils/countries';
 
@@ -26,6 +26,7 @@ export default function BillingView() {
   const [successMsg, setSuccessMsg] = useState(null);
   const [country, setCountry] = useState('US');
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [discountCode, setDiscountCode] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -111,7 +112,8 @@ export default function BillingView() {
       const res = await api.post('billing/subscribe', {
         plan_slug: planSlug,
         interval: cycle,
-        country: selectedCountry
+        country: selectedCountry,
+        discount_code: discountCode || null
       });
       
       const redirectUrl = res.data?.url || res.data?.checkout_url || res.data?.payment_url;
@@ -243,6 +245,21 @@ export default function BillingView() {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-border p-4 rounded-2xl flex items-center gap-4 shadow-sm">
+          <div>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Promo Code</p>
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4 text-muted-foreground" />
+              <input
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value.toUpperCase())}
+                placeholder="SAVE20"
+                className="bg-transparent text-slate-800 font-bold text-sm outline-none w-28 placeholder:text-slate-400"
+              />
             </div>
           </div>
         </div>

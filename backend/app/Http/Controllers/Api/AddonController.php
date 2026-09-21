@@ -94,8 +94,33 @@ class AddonController extends Controller
 
             $paymentService = new PaymentService();
             $country = $request->input('country', 'US');
-            $result = $paymentService->initializeAddonPurchase($tenant, $addon, $quantity, $total, $country);
 
+            $discount = null;
+            if ($request->filled('discount_code')) {
+                $resolved = app(\App\Services\DiscountService::class)->resolve(
+                    $request->input('discount_code'),
+                    'addon',
+                    (float) $total,
+                    \App\Models\SaaSSetting::where('key', 'default_currency')->value('value') ?? 'USD',
+                    $tenant,
+                    ['addon_id' => (string) $addon->id]
+                );
+                $discount = $resolved['discount'];
+            }
+
+            try {
+                $result = $paymentService->initializeAddonPurchase($tenant, $addon, $quantity, $total, $country, $discount);
+            } catch (\App\Exceptions\DiscountException $e) {
+                return response()->json(['message' => $e->getMessage()], 422);
+            }
+
+            if ($discount) {
+                $result['discount'] = [
+                    'code' => $discount->code,
+                    'discount_amount' => $resolved['discount_amount'] ?? 0,
+                    'final_amount' => $resolved['final_amount'] ?? 0,
+                ];
+            }
             return response()->json($result);
         });
     }

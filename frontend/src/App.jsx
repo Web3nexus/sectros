@@ -10,6 +10,7 @@ import { SaaSAdminLayout } from './layouts/SaaSAdminLayout'
 import SaaSDashboard from './pages/saas/SaaSDashboard'
 import TenantManagementView from './pages/saas/TenantManagementView'
 import SaaSSubscriptionsView from './pages/saas/SaaSSubscriptionsView'
+import DiscountManagementView from './pages/saas/DiscountManagementView'
 import PlanManagementView from './pages/saas/PlanManagementView'
 import SupportTicketsView from './pages/saas/SupportTicketsView'
 import EmailManagementView from './pages/saas/EmailManagementView'
@@ -206,6 +207,7 @@ function AppContent() {
             <Route path="dashboard" element={<SaaSDashboard />} />
             <Route path="tenants" element={<TenantManagementView />} />
             <Route path="subscriptions" element={<SaaSSubscriptionsView />} />
+            <Route path="discounts" element={<DiscountManagementView />} />
             <Route path="plans" element={<PlanManagementView />} />
             <Route path="tickets" element={<SupportTicketsView />} />
             <Route path="email-templates" element={<EmailManagementView />} />
