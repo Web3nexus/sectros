@@ -97,4 +97,35 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Session guard: a 401 from the tenant API means the stored token is
+// expired/invalid. Instead of silently blanking every dashboard list or
+// showing "Failed to save" for what is really an auth failure, drop the
+// stale session and bounce to the login page once.
+let redirectingToLogin = false;
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 && typeof window !== 'undefined') {
+      const url = error.config?.url || '';
+      const baseURL = error.config?.baseURL || '';
+      const isAuthFlow = /login|register|forgot|logout|verify|resend|confirm/.test(url);
+      const isCentral = baseURL.includes('/central-api/');
+      const isAdmin = url.includes('/saas/') || isCentral;
+
+      // Only treat tenant-session failures this way — never auth endpoints,
+      // and never central/public reads (branding, kiosk, public APIs).
+      if (!isAuthFlow && !isAdmin && (baseURL.includes('/tenant-api/') || baseURL.includes('/local-tenant-api/'))) {
+        if (localStorage.getItem('token') && !redirectingToLogin && !window.location.pathname.startsWith('/login')) {
+          redirectingToLogin = true;
+          localStorage.removeItem('token');
+          localStorage.removeItem('tenant_domain');
+          window.location.href = `/login?expired=1`;
+        }
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
