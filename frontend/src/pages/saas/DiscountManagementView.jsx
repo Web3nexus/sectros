@@ -303,7 +303,7 @@ export default function DiscountManagementView() {
                 </select>
               </div>
               {input(form.type === 'fixed' ? 'Value (in minor units)' : 'Value (%)', 'value', { placeholder: form.type === 'fixed' ? 'e.g. 500' : 'e.g. 20' })}
-              {form.type === 'fixed' && input('Currency', 'currency_code', { placeholder: 'USD', disabled: form.currency_code })}
+              {form.type === 'fixed' && input('Currency', 'currency_code', { placeholder: 'USD', disabled: Boolean(editing?.currency_code) })}
               {input('Min Subtotal', 'min_subtotal', { type: 'number' })}
               {input('Max Discount', 'max_discount', { type: 'number' })}
               {input('Usage Limit', 'usage_limit', { type: 'number' })}

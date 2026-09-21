@@ -174,7 +174,7 @@ class DiscountController extends Controller
             'code' => 'required|string|max:32|regex:/^[a-zA-Z0-9]+$/',
             'description' => 'nullable|string|max:500',
             'type' => 'required|in:percentage,fixed',
-            'value' => 'required|numeric|min:0.01|max:100000',
+            'value' => ['required', 'numeric', 'min:0.01', $request->input('type') === 'percentage' ? 'max:100' : 'max:100000'],
             'currency_code' => 'nullable|string|max:3',
             'min_subtotal' => 'nullable|numeric|min:0',
             'max_discount' => 'nullable|numeric|min:0',
@@ -201,13 +201,19 @@ class DiscountController extends Controller
             throw ValidationException::withMessages(['currency_code' => 'Currency code is required for fixed-amount discounts.']);
         }
 
-        $defaults = [
+        if (isset($data['restrict_to'])) {
+            $data['restrict_to'] = array_filter($data['restrict_to']);
+        }
+
+        if ($existing) {
+            return $data;
+        }
+
+        return array_merge([
             'is_active' => true,
             'is_recurring' => false,
-            'restrict_to' => isset($data['restrict_to']) ? array_filter($data['restrict_to']) : null,
+            'restrict_to' => null,
             'usage_count' => 0,
-        ];
-
-        return array_merge($defaults, $data);
+        ], $data);
     }
 }

@@ -66,7 +66,7 @@ class PaymentWebhookController extends Controller
                     }
                 }
 
-                $this->recordRedemption((array) ($session->metadata ?? []), 'stripe', $session->id ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
+                $this->recordRedemption(isset($session->metadata) ? $session->metadata->toArray() : [], 'stripe', $session->id ?? null, $this->redemptionScope($type), $tenantId);
             }
 
             return response()->json(['status' => 'success']);
@@ -123,7 +123,7 @@ class PaymentWebhookController extends Controller
                 }
             }
 
-            $this->recordRedemption((array) ($data['metadata'] ?? []), 'paystack', $data['reference'] ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
+            $this->recordRedemption((array) ($data['metadata'] ?? []), 'paystack', $data['reference'] ?? null, $this->redemptionScope($type), $tenantId);
         }
 
         return response()->json(['status' => 'success']);
@@ -168,7 +168,8 @@ class PaymentWebhookController extends Controller
                 }
             }
 
-            $this->recordRedemption((array) ($data['meta'] ?? []), 'flutterwave', $txRef ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
+            $reference = $data['tx_ref'] ?? $data['id'] ?? null;
+            $this->recordRedemption((array) ($data['meta'] ?? []), 'flutterwave', $reference ? (string) $reference : null, $this->redemptionScope($type), $tenantId);
         }
 
         return response()->json(['status' => 'success']);
@@ -233,7 +234,7 @@ class PaymentWebhookController extends Controller
                 }
             }
 
-            $this->recordRedemption((array) $metadata, 'dodo', $data['payment_id'] ?? null, $type === 'subscription' ? 'subscription' : $type, $tenantId);
+            $this->recordRedemption((array) $metadata, 'dodo', $data['payment_id'] ?? null, $this->redemptionScope($type), $tenantId);
         }
 
         return response()->json(['status' => 'success']);
@@ -533,11 +534,20 @@ class PaymentWebhookController extends Controller
         }
     }
 
+    private function redemptionScope(?string $type): string
+    {
+        return match ($type) {
+            'theme_purchase' => 'theme',
+            'addon_purchase' => 'addon',
+            default => 'subscription',
+        };
+    }
+
     private function recordRedemption(array $customData, string $gateway, ?string $transactionId, string $scope, ?string $tenantId = null): void
     {
         try {
             $code = $customData['discount_code'] ?? $customData['coupon'] ?? $customData['promo_code'] ?? null;
-            if (empty($code) || empty($tenantId)) return;
+            if (empty($code) || empty($tenantId) || empty($transactionId)) return;
 
             app(\App\Services\DiscountService::class)->recordRedemption(
                 (string) $code,
