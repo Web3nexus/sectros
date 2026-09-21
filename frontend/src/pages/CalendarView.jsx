@@ -33,7 +33,8 @@ export function CalendarView() {
     setLoading(true);
     try {
       const res = await api.get('reservations');
-      setReservations(res.data || []);
+      const payload = res.data;
+      setReservations(Array.isArray(payload) ? payload : (payload?.data || []));
     } catch (err) {
       console.error('Calendar Sync Failed:', err);
     } finally {

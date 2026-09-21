@@ -79,11 +79,10 @@ export function ReservationsView() {
     setLoading(true);
     try {
       const res = await api.get('reservations');
-      const reservationData = res.data || [];
+      const reservationData = Array.isArray(res.data) ? res.data : (res.data?.data || []);
       setReservations(reservationData);
-      
-      const resList = Array.isArray(reservationData) ? reservationData : [];
-      const counts = resList.reduce((acc, r) => {
+
+      const counts = reservationData.reduce((acc, r) => {
         if (r.status) {
           acc[r.status] = (acc[r.status] || 0) + 1;
         }
