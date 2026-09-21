@@ -26,6 +26,17 @@ class BrandingController extends Controller
         $saaSSettings = $this->cacheSaaSSettings();
         $settings['platform_site_domain'] = $saaSSettings['platform_site_domain'] ?? '';
 
+        // Resolved public website domain for this tenant: verified custom or
+        // registered domain first, platform subdomain as fallback.
+        $tenant = tenant();
+        $publicDomain = $tenant ? $tenant->publicWebsiteDomain() : null;
+        if (!$publicDomain && $settings['platform_site_domain']) {
+            $platformHost = trim(preg_replace('/^https?:\/\//i', '', (string) $settings['platform_site_domain']), '.');
+            $publicDomain = $platformHost ? ($tenant->id . '.' . $platformHost) : '';
+        }
+        $settings['public_domain'] = $publicDomain ?? '';
+        $settings['public_domain'] = trim((string) $settings['public_domain'], '.');
+
         $settings['business_type'] = tenant('business_type') ?? 'restaurant';
         $settings['rating'] ??= null;
         $settings['delivery_time'] ??= '25-35 min';

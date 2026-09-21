@@ -63,6 +63,31 @@ class Tenant extends BaseTenant implements TenantWithDatabase
         'subscription_ends_at' => 'datetime',
     ];
 
+    /**
+     * The tenant's public-facing website domain, preferring a verified
+     * business-owned domain (custom or NameSilo-registered) over the
+     * platform subdomain created at registration. Returns null when the
+     * tenant has no attached domains.
+     */
+    public function publicWebsiteDomain(): ?string
+    {
+        // Business-owned domain that the tenant has verified ownership of.
+        $business = $this->domains()
+            ->whereIn('type', ['custom', 'registered'])
+            ->where('is_verified', true)
+            ->orderBy('id')
+            ->first();
+
+        if ($business) {
+            return rtrim((string) $business->domain, '.');
+        }
+
+        // Primary platform subdomain (created at registration).
+        $primary = $this->domains()->orderBy('id')->first();
+
+        return $primary ? rtrim((string) $primary->domain, '.') : null;
+    }
+
     public function paddleSubscriptions()
     {
         return $this->hasMany(PaddleSubscription::class, 'tenant_id', 'id');

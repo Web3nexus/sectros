@@ -109,6 +109,11 @@ export default function WebsiteDashboardView() {
           tenantId = storedDomain.split('.')[0];
       }
 
+      if (branding.public_domain && branding.public_domain.trim() !== '' && branding.public_domain !== 'no-domain') {
+          const publicDomain = branding.public_domain.trim().replace(/^https?:\/\//, '');
+          return `${protocol}//${publicDomain}${path}`;
+      }
+
       if (branding.platform_site_domain && branding.platform_site_domain.trim() !== '') {
           const siteDomain = branding.platform_site_domain.trim().replace(/^https?:\/\//, '');
           return `${protocol}//${tenantId}.${siteDomain}${path}`;

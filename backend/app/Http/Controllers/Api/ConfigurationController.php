@@ -118,22 +118,25 @@ class ConfigurationController extends Controller
 
     /**
      * Shareable public booking link for a tenant's website.
+     *
+     * Routing to the tenant's own domain (verified custom or registered
+     * domain first, platform subdomain as fallback) so the link stays
+     * business- and booking-specific wherever the tenant's website lives.
      */
     public function bookingLink()
     {
         $tenant = tenant();
         $appUrl = config('app.url', 'https://sectros.com');
         $scheme = parse_url((string) $appUrl, PHP_URL_SCHEME) ?: 'https';
-        $domain = $tenant ? ($tenant->domains()->first()?->domain ?? $tenant->id) : null;
-        $domain = $domain ?: trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
+        $centralHost = trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
 
-        $homepageUrl = $scheme . '://' . $domain;
-        $hasBookingPage = $tenant ? \App\Models\BuilderPage::where('slug', 'book')->where('is_published', true)->exists() : false;
+        $domain = $tenant ? $tenant->publicWebsiteDomain() : null;
+        $domain ??= $tenant ? ($tenant->id . '.' . $centralHost) : $centralHost;
 
         return response()->json([
-            'booking_url' => $hasBookingPage ? $homepageUrl . '/book' : $homepageUrl,
-            'homepage_url' => $homepageUrl,
-            'mode' => $hasBookingPage ? 'page' : 'homepage',
+            'booking_url' => $scheme . '://' . $domain . '/book',
+            'homepage_url' => $scheme . '://' . $domain,
+            'mode' => 'booking',
         ]);
     }
 

@@ -349,9 +349,11 @@ class ReservationController extends Controller
     {
         $appUrl = config('app.url', 'https://sectros.com');
         $scheme = parse_url((string) $appUrl, PHP_URL_SCHEME) ?: 'https';
+        $centralHost = trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
         $tenant = tenant();
-        $domain = $tenant ? ($tenant->domains()->first()?->domain ?? $tenant->id) : null;
-        $domain = $domain ?: trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
+
+        $domain = $tenant ? $tenant->publicWebsiteDomain() : null;
+        $domain ??= $tenant ? ($tenant->id . '.' . $centralHost) : $centralHost;
 
         return $scheme . '://' . $domain;
     }
