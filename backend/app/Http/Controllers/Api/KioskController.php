@@ -43,6 +43,7 @@ class KioskController extends Controller
                     ->allTenants()
                     ->where('tenant_id', $cat->tenant_id)
                     ->where('is_available', true)
+                    ->where('is_kiosk_available', true)
                     ->orderBy('sort_order')
                     ->with(['addons' => function ($q) {
                         $q->allTenants()->where('tenant_id', $cat->tenant_id);
@@ -124,6 +125,7 @@ class KioskController extends Controller
                     ->where('tenant_id', $tenantId)
                     ->where('id', $itemData['menu_item_id'])
                     ->where('is_available', true)
+                    ->where('is_kiosk_available', true)
                     ->first();
 
                 if (!$menuItem) {

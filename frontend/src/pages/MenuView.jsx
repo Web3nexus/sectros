@@ -22,7 +22,7 @@ export function MenuView() {
   const [showItemModal, setShowItemModal] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
   const [itemForm, setItemForm] = useState({
-    menu_category_id: '', name: '', description: '', image_url: '', price: '0.00', is_available: true
+    menu_category_id: '', name: '', description: '', image_url: '', price: '0.00', is_available: true, is_kiosk_available: true
   })
 
   useEffect(() => {
@@ -85,8 +85,9 @@ export function MenuView() {
       description: item.description || '',
       image_url: item.image_url || '',
       price: item.price,
-      is_available: item.is_available ?? true
-    } : { menu_category_id: '', name: '', description: '', image_url: '', price: '0.00', is_available: true })
+      is_available: item.is_available ?? true,
+      is_kiosk_available: item.is_kiosk_available ?? true
+    } : { menu_category_id: '', name: '', description: '', image_url: '', price: '0.00', is_available: true, is_kiosk_available: true })
     setShowItemModal(true)
   }
 
@@ -404,11 +405,16 @@ export function MenuView() {
                     placeholder="https://..." />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-6">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={itemForm.is_available} onChange={e => setItemForm({...itemForm, is_available: e.target.checked})}
                     className="rounded border-border text-primary focus:ring-primary/20" />
                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={itemForm.is_kiosk_available} onChange={e => setItemForm({...itemForm, is_kiosk_available: e.target.checked})}
+                    className="rounded border-border text-primary focus:ring-primary/20" />
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available for Kiosk / Online Orders</span>
                 </label>
               </div>
               <div className="flex gap-2 justify-end pt-2">

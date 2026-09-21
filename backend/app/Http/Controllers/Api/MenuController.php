@@ -60,6 +60,7 @@ class MenuController extends Controller
             'price' => 'required|numeric|min:0',
             'image_url' => 'nullable|string|max:2048',
             'is_available' => 'boolean',
+            'is_kiosk_available' => 'boolean',
             'sort_order' => 'integer',
         ]);
 
@@ -104,6 +105,7 @@ class MenuController extends Controller
             'price' => 'numeric|min:0',
             'image_url' => 'nullable|string|max:2048',
             'is_available' => 'boolean',
+            'is_kiosk_available' => 'boolean',
             'sort_order' => 'integer',
         ]);
 

@@ -20,7 +20,13 @@ class MenuItem extends Model
         'price', 
         'image_url', 
         'is_available', 
+        'is_kiosk_available', 
         'sort_order'
+    ];
+
+    protected $casts = [
+        'is_available' => 'boolean',
+        'is_kiosk_available' => 'boolean',
     ];
 
     public function category(): BelongsTo

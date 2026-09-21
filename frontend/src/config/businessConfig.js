@@ -87,7 +87,7 @@ export const businessConfig = {
       'table_settings', 'menu_settings', 'reservation_rules', 'order_settings', 'delivery_settings', 'pickup_settings', 'tax_and_service_charge', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'tables', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'kiosk_menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'tables', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Total Revenue', icon: 'DollarSign' },
@@ -184,7 +184,7 @@ export const businessConfig = {
       'menu_settings', 'pickup_settings', 'reservation_settings', 'loyalty_settings', 'stock_settings', 'tax_settings', 'staff_roles', 'notification_settings'
     ],
     sidebar: [
-      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
+      'insights', 'calendar', 'reservations', 'messages', 'pos', 'menu', 'kiosk_menu', 'website', 'branches', 'franchises', 'waitlist', 'integrations', 'staff', 'financials', 'billing', 'automation', 'online_ordering', 'inventory', 'voice_agent', 'voice_overview', 'voice_setup', 'voice_phone', 'voice_knowledge', 'voice_calls', 'voice_usage', 'voice_settings', 'reviews', 'gallery', 'blog', 'team', 'settings'
     ],
     kpis: [
       { id: 'total_revenue', label: 'Total Sales', icon: 'DollarSign' },

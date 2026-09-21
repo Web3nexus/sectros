@@ -66,7 +66,7 @@ export function DashboardLayout() {
   const isAllowed = (item) => {
     // Strictly enforce business-type configuration even for admins/impersonators
     // This ensures that when an admin is impersonating a Salon, they see the Salon UI
-    return config.sidebar.includes(item) || ['cash_register', 'procurement', 'kiosk_menu'].includes(item);
+    return config.sidebar.includes(item) || ['cash_register', 'procurement'].includes(item);
   };
 
   // Helper to get dynamic icon
@@ -86,7 +86,7 @@ export function DashboardLayout() {
         { key: 'tables', path: '/dashboard/tables', label: b.floorPlan || 'Floor Plan', alwaysOn: false, roleCheck: false, feature: 'booking.floor_plan' },
         { key: 'waitlist', path: '/dashboard/waitlist', label: 'Waitlist Pro', alwaysOn: false, roleCheck: true, feature: 'waitlist_automation' },
         { key: 'menu', path: '/dashboard/menu', label: b.menu || 'Menu Builder', alwaysOn: false, roleCheck: false, feature: 'menu_builder' },
-        { key: 'kiosk_menu', path: '/dashboard/kiosk-menu', label: 'Kiosk Menu (86s)', alwaysOn: false, roleCheck: true, feature: 'kiosk.menu_manager' },
+        { key: 'kiosk_menu', path: '/dashboard/kiosk-menu', label: 'Kiosk Menu (86s)', alwaysOn: false, roleCheck: false, feature: null },
         { key: 'online_ordering', path: '/dashboard/online-ordering', label: b.onlineOrdering || t('dashboard.onlineOrdering'), alwaysOn: false, roleCheck: true, feature: 'kiosk.takeout_orders' },
         { key: 'pos', path: '/dashboard/pos', label: b.pos || t('dashboard.posTerminal'), alwaysOn: false, roleCheck: true, feature: 'pos_terminal' },
         { key: 'inventory', path: '/dashboard/inventory', label: b.inventory || t('dashboard.inventoryTracking'), alwaysOn: false, roleCheck: true, feature: 'inventory_tracking' },
