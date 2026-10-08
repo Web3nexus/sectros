@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {Briefcase, ArrowRight, ArrowLeft, Building2, Mail, Lock, User, Globe, Loader2, CheckCircle2, Zap, Crown, Sparkles} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -9,22 +9,39 @@ import centralApi from '../services/centralApi';
 import { COUNTRIES } from '../utils/countries';
 import { Turnstile } from '@marsidev/react-turnstile';
 
-const PLAN_ICONS = { free: Zap, pro: Sparkles, enterprise: Crown };
+const PLAN_ICONS = { free: Zap, pro: Sparkles, starter: Zap, professional: Sparkles, enterprise: Crown };
 
 export default function Register() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const urlPlan = searchParams.get('plan');
   const settings = useBranding();
   const [trialSettings, setTrialSettings] = useState({});
   const [plans, setPlans] = useState([]);
   const [plansError, setPlansError] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState(urlPlan || '');
   const [isResending, setIsResending] = useState(false);
 
   const fetchPlans = () => {
     setPlansError(false);
     centralApi.get('saas/plans').then(res => {
-      if (res.data?.plans) setPlans(res.data.plans);
+      const arr = Array.isArray(res.data) ? res.data : (res.data?.plans || res.data?.data || []);
+      if (arr.length > 0) {
+        setPlans(arr);
+        if (urlPlan) {
+          const matched = arr.find(p => p.slug === urlPlan || String(p.id) === urlPlan || p.name?.toLowerCase() === urlPlan.toLowerCase());
+          if (matched) {
+            setSelectedPlan(matched.slug);
+          } else {
+            const fallback = arr.find(p => p.is_popular) || arr[0];
+            if (fallback) setSelectedPlan(fallback.slug);
+          }
+        } else if (!selectedPlan) {
+          const defaultP = arr.find(p => p.is_popular) || arr[0];
+          if (defaultP) setSelectedPlan(defaultP.slug);
+        }
+      }
     }).catch(() => setPlansError(true));
   };
 

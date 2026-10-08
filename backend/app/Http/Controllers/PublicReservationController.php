@@ -47,12 +47,30 @@ class PublicReservationController extends Controller
             ]);
 
             // Handle SMS Notification
-            $smsEnabled = \App\Models\TenantSetting::where('key', 'notifications_sms_enabled')->value('value');
-            if ($smsEnabled) {
-                $businessName = tenant('name') ?? 'The Business';
-                $message = "Hello {$validated['customer_name']}, your reservation at {$businessName} for {$combinedDateTime->format('M d, H:i')} has been received. " .
-                          ($depositRequired ? "Please complete your deposit to confirm." : "We will confirm your booking shortly.");
-                \App\Services\SMSService::send($validated['customer_phone'], $message);
+            try {
+                $smsEnabled = \App\Models\TenantSetting::where('key', 'notifications_sms_enabled')->value('value');
+                if ($smsEnabled) {
+                    $businessName = tenant('name') ?? 'The Business';
+                    $message = "Hello {$validated['customer_name']}, your reservation at {$businessName} for {$combinedDateTime->format('M d, H:i')} has been received. " .
+                              ($depositRequired ? "Please complete your deposit to confirm." : "We will confirm your booking shortly.");
+                    \App\Services\SMSService::send($validated['customer_phone'], $message);
+                }
+            } catch (\Throwable $e) {
+                \Log::warning("Failed to send reservation SMS for #{$reservation->id}: " . $e->getMessage());
+            }
+
+            // Email the guest a confirmation request (customer-link booking).
+            try {
+                $this->sendGuestRequestConfirmation($reservation);
+            } catch (\Throwable $e) {
+                \Log::warning("Failed to send guest request confirmation email for #{$reservation->id}: " . $e->getMessage());
+            }
+
+            // Alert the business owner of the new external booking.
+            try {
+                $this->sendBusinessNewBookingAlert($reservation);
+            } catch (\Throwable $e) {
+                \Log::warning("Failed to send business new booking alert for #{$reservation->id}: " . $e->getMessage());
             }
 
             return response()->json([
@@ -100,6 +118,19 @@ class PublicReservationController extends Controller
             return $this->confirmPage('This booking has been cancelled.', false);
         }
 
+        // Gate confirmation on required deposit payment
+        if ($reservation->deposit_amount > 0 && $reservation->payment_status !== 'paid') {
+            if ($request->isMethod('post')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A deposit payment is required before this booking can be confirmed.',
+                    'payment_required' => true,
+                    'confirmed' => false
+                ], 422);
+            }
+            return $this->confirmPage('A deposit payment is required before this booking can be confirmed. Please complete your deposit first.', false);
+        }
+
         $reservation->status = 'confirmed';
         $reservation->confirmed_by = 'email-link';
         $reservation->confirmed_at = now();
@@ -132,12 +163,15 @@ class PublicReservationController extends Controller
         return $this->confirmPage('Your booking has been confirmed. We look forward to welcoming you!', true);
     }
 
-    protected function sendConfirmationEmails(Reservation $reservation): void
+    /**
+     * Email the guest a booking-request confirmation for a customer-link booking.
+     */
+    protected function sendGuestRequestConfirmation(Reservation $reservation): void
     {
         $businessName = tenant('name') ?? 'The Business';
 
         if (!empty($reservation->customer_email)) {
-            $template = \App\Models\EmailTemplate::where('slug', 'reservation_confirmed')->first();
+            $template = \App\Models\EmailTemplate::where('slug', 'reservation_request_confirmation')->first();
             if ($template) {
                 \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
                     new \App\Mail\SystemMail($template->subject, $template->content, [
@@ -146,6 +180,70 @@ class PublicReservationController extends Controller
                         'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
                         'reservation_time' => $reservation->reservation_time->format('H:i'),
                         'guest_count' => $reservation->party_size,
+                        'confirmation_code' => $reservation->confirmation_code,
+                        'confirm_link' => url('/tenant-api/public/reservations/confirm/' . $reservation->confirmation_token),
+                    ])
+                );
+            }
+        }
+    }
+
+    /**
+     * Alert the business owner of a new customer-link booking.
+     */
+    protected function sendBusinessNewBookingAlert(Reservation $reservation): void
+    {
+        $template = \App\Models\EmailTemplate::where('slug', 'new_reservation')->first();
+        if (!$template) {
+            return;
+        }
+
+        $ownerEmail = tenant('owner_email');
+        if (!$ownerEmail) {
+            return;
+        }
+
+        $sourceLabel = 'Booking Link';
+        $phoneRow = !empty($reservation->customer_phone)
+            ? "<div class='row'><span class='label'>Phone</span><span class='value'>" . e($reservation->customer_phone) . "</span></div>"
+            : '';
+
+        \Illuminate\Support\Facades\Mail::to($ownerEmail)->send(
+            new \App\Mail\SystemMail($template->subject, $template->content, [
+                'reservation_id' => $reservation->id,
+                'customer_name' => $reservation->customer_name,
+                'business_name' => tenant('name') ?? 'The Business',
+                'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                'reservation_time' => $reservation->reservation_time->format('H:i'),
+                'guest_count' => $reservation->party_size,
+                'source' => 'website',
+                'source_label' => $sourceLabel,
+                'added_by' => 'Booking Link',
+                'customer_phone' => $reservation->customer_phone ?? '',
+                'customer_phone_row' => $phoneRow,
+            ])
+        );
+    }
+
+    protected function sendConfirmationEmails(Reservation $reservation): void
+    {
+        $businessName = tenant('name') ?? 'The Business';
+
+        if (!empty($reservation->customer_email)) {
+            $template = \App\Models\EmailTemplate::where('slug', 'reservation_confirmed')->first();
+            if ($template) {
+                $codeBlock = !empty($reservation->confirmation_code)
+                    ? "<div class='center'><span class='code'>{$reservation->confirmation_code}</span></div>"
+                    : '';
+                \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
+                    new \App\Mail\SystemMail($template->subject, $template->content, [
+                        'customer_name' => $reservation->customer_name,
+                        'business_name' => $businessName,
+                        'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                        'reservation_time' => $reservation->reservation_time->format('H:i'),
+                        'guest_count' => $reservation->party_size,
+                        'confirmation_code' => $reservation->confirmation_code,
+                        'code_block' => $codeBlock,
                     ])
                 );
             }

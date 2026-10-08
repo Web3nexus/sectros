@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, Globe, ChevronDown, Coffee, Music, Scissors, Building, PartyPopper, ChevronRight, Code2, Award, Handshake, Mail} from 'lucide-react';
+import {Menu, X, ArrowRight, Briefcase, Book, FileText, HelpCircle, MessageCircle, Calendar, LayoutGrid, Users, Bot, BarChart3, Puzzle, Globe, ChevronDown, Coffee, Music, Scissors, Building, PartyPopper, ChevronRight, Award, Handshake, Mail} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../../context/AuthContext';
 import { useBranding } from '../../../hooks/useBranding';
@@ -63,7 +63,6 @@ export function ModernPublicLayout() {
     { label: 'Help Center', to: '/help', icon: HelpCircle, description: 'Knowledge base, FAQs & support' },
     { label: 'Case Studies', to: '/case-studies', icon: Award, description: 'Success stories from real operators' },
     { label: 'Guides & Playbooks', to: '/guides', icon: FileText, description: 'Step-by-step hospitality setup tutorials' },
-    { label: 'Developer API Docs', to: '/api-docs', icon: Code2, description: 'REST endpoints, auth & webhooks' },
   ];
 
   const companyItems = [
@@ -204,7 +203,7 @@ export function ModernPublicLayout() {
               >
                 <button
                   className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                    ['/blog', '/help', '/case-studies', '/guides', '/api-docs'].includes(location.pathname)
+                    ['/blog', '/help', '/case-studies', '/guides'].includes(location.pathname)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
@@ -448,7 +447,6 @@ export function ModernPublicLayout() {
                   { label: 'Help Center', to: '/help' },
                   { label: 'Case Studies', to: '/case-studies' },
                   { label: 'Guides', to: '/guides' },
-                  { label: 'API Docs', to: '/api-docs' },
                 ].map(item => (
                   <li key={item.label}><Link to={item.to} className="text-sm text-slate-400 hover:text-white transition-colors">{item.label}</Link></li>
                 ))}

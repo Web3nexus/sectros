@@ -8,6 +8,13 @@ Route::get('/robots.txt', [\App\Http\Controllers\Api\SEOController::class, 'robo
 Route::get('/sitemap.xml', [\App\Http\Controllers\Api\SEOController::class, 'sitemap']);
 Route::get('/schema.json', [\App\Http\Controllers\Api\SEOController::class, 'jsonLdSchema']);
 
+Route::get('/api-docs', function () {
+    return redirect('/');
+});
+Route::get('/api-docs/{any}', function () {
+    return redirect('/');
+})->where('any', '.*');
+
 // Fallback named login route to prevent RouteNotFoundException
 Route::get('/login', function () {
     return Response::make(

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer, Eye, EyeOff, Headphones} from 'lucide-react';
+import {Settings, Save, Globe, Shield, Mail, Database, Loader2, Bot, Layout, FileText, CreditCard, CheckCircle, CircleX as XCircle, MessageSquare, Copy, ExternalLink, Briefcase, PenSquare, Trash2, Timer, Eye, EyeOff, Headphones, Sparkles} from 'lucide-react';
 import axios from 'axios';
 import api from '../../services/centralApi';
 import StatusModal from '../../components/common/StatusModal';
@@ -79,7 +79,7 @@ export default function SaaSSettingsView() {
     sales_email: '',
     trial_days: 14,
     require_card_for_trial: false,
-    website_theme: 'modern-business-os',
+    website_theme: 'sectros-premium',
     ui_color: 'green',
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -1820,26 +1820,31 @@ export default function SaaSSettingsView() {
                 <h3 className="text-lg font-medium text-foreground mb-4">Website Theme</h3>
                 <p className="text-sm text-muted-foreground mb-6">Choose the visual theme for the public-facing website. Changes take effect immediately after saving.</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Classic AI Theme */}
-                  <label className={`relative flex flex-col p-6 rounded-2xl border-2 cursor-pointer transition-all ${
-                    settings.website_theme === 'classic-ai'
-                      ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                      : 'border-border bg-card hover:border-primary/30 hover:bg-muted/50'
-                  }`}>
+                  <label
+                    htmlFor="theme-classic-ai"
+                    onClick={() => setSettings(prev => ({ ...prev, website_theme: 'classic-ai' }))}
+                    className={`relative flex flex-col p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+                      settings.website_theme === 'classic-ai'
+                        ? 'border-primary bg-primary/5 shadow-md shadow-primary/10 ring-2 ring-primary/20'
+                        : 'border-border bg-card hover:border-primary/30 hover:bg-muted/50'
+                    }`}
+                  >
                     <input
+                      id="theme-classic-ai"
                       type="radio"
                       name="website_theme"
                       value="classic-ai"
                       checked={settings.website_theme === 'classic-ai'}
-                      onChange={e => setSettings({...settings, website_theme: e.target.value})}
+                      onChange={e => setSettings(prev => ({ ...prev, website_theme: e.target.value }))}
                       className="sr-only"
                     />
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
                         <Bot className="w-6 h-6 text-white" />
                       </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                         settings.website_theme === 'classic-ai' ? 'border-primary bg-primary' : 'border-muted-foreground'
                       }`}>
                         {settings.website_theme === 'classic-ai' && <CheckCircle className="w-4 h-4 text-white" />}
@@ -1857,24 +1862,29 @@ export default function SaaSSettingsView() {
                   </label>
 
                   {/* Modern Business OS Theme */}
-                  <label className={`relative flex flex-col p-6 rounded-2xl border-2 cursor-pointer transition-all ${
-                    settings.website_theme === 'modern-business-os'
-                      ? 'border-primary bg-primary/5 shadow-md shadow-primary/10'
-                      : 'border-border bg-card hover:border-primary/30 hover:bg-muted/50'
-                  }`}>
+                  <label
+                    htmlFor="theme-modern-business-os"
+                    onClick={() => setSettings(prev => ({ ...prev, website_theme: 'modern-business-os' }))}
+                    className={`relative flex flex-col p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+                      settings.website_theme === 'modern-business-os'
+                        ? 'border-primary bg-primary/5 shadow-md shadow-primary/10 ring-2 ring-primary/20'
+                        : 'border-border bg-card hover:border-primary/30 hover:bg-muted/50'
+                    }`}
+                  >
                     <input
+                      id="theme-modern-business-os"
                       type="radio"
                       name="website_theme"
                       value="modern-business-os"
                       checked={settings.website_theme === 'modern-business-os'}
-                      onChange={e => setSettings({...settings, website_theme: e.target.value})}
+                      onChange={e => setSettings(prev => ({ ...prev, website_theme: e.target.value }))}
                       className="sr-only"
                     />
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg">
                         <Layout className="w-6 h-6 text-white" />
                       </div>
-                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                         settings.website_theme === 'modern-business-os' ? 'border-primary bg-primary' : 'border-muted-foreground'
                       }`}>
                         {settings.website_theme === 'modern-business-os' && <CheckCircle className="w-4 h-4 text-white" />}
@@ -1890,6 +1900,81 @@ export default function SaaSSettingsView() {
                       <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">Conversion</span>
                     </div>
                   </label>
+
+                  {/* Sectros Premium Theme (3rd UI Option) */}
+                  <label
+                    htmlFor="theme-sectros-premium"
+                    onClick={() => setSettings(prev => ({ ...prev, website_theme: 'sectros-premium' }))}
+                    className={`relative flex flex-col p-6 rounded-2xl border-2 cursor-pointer transition-all ${
+                      settings.website_theme === 'sectros-premium'
+                        ? 'border-emerald-600 bg-emerald-500/5 shadow-md shadow-emerald-600/10 ring-2 ring-emerald-600/20'
+                        : 'border-border bg-card hover:border-emerald-600/30 hover:bg-muted/50'
+                    }`}
+                  >
+                    <input
+                      id="theme-sectros-premium"
+                      type="radio"
+                      name="website_theme"
+                      value="sectros-premium"
+                      checked={settings.website_theme === 'sectros-premium'}
+                      onChange={e => setSettings(prev => ({ ...prev, website_theme: e.target.value }))}
+                      className="sr-only"
+                    />
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-700 to-teal-500 flex items-center justify-center shadow-lg">
+                        <Sparkles className="w-6 h-6 text-white" />
+                      </div>
+                      <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                        settings.website_theme === 'sectros-premium' ? 'border-emerald-600 bg-emerald-600' : 'border-muted-foreground'
+                      }`}>
+                        {settings.website_theme === 'sectros-premium' && <CheckCircle className="w-4 h-4 text-white" />}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <h4 className="text-sm font-bold text-foreground">Sectros Premium</h4>
+                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">Active Option</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Cloaked-grade editorial design system with Newsreader & Inter typography, generous whitespace, warm paper palette, subtle borders, and Sectros green accents.
+                    </p>
+                    <div className="mt-4 flex gap-1.5 flex-wrap">
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-1 rounded-md">Editorial</span>
+                      <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">Sectros Green</span>
+                      <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-1 rounded-md">High Polish</span>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Quick Save & Live Preview Toolbar */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-muted/40 border border-border">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Selected Theme:</span>
+                      <span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                        {settings.website_theme === 'sectros-premium' ? 'Sectros Premium' : settings.website_theme === 'modern-business-os' ? 'Modern Business OS' : 'Classic AI'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">Changes take effect immediately globally after clicking Save Theme.</p>
+                  </div>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <a
+                      href={`/?theme=${settings.website_theme}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-bold text-foreground transition-all shadow-xs"
+                    >
+                      <Eye className="w-4 h-4" /> Preview Live
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={isSaving}
+                      className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50"
+                    >
+                      {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {isSaving ? 'Saving Theme...' : 'Save Theme'}
+                    </button>
+                  </div>
                 </div>
 
                 {/* ── Brand Accent Color (Green vs Blue) ── */}

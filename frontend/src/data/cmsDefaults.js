@@ -135,33 +135,33 @@ export const CMS_DEFAULTS = {
   pricing: {
     hero: {
       badge: 'Pricing',
-      heading: 'Simple, transparent pricing for growing hospitality teams.',
-      paragraph: 'Choose the plan that fits your venue today and scale when you\'re ready.',
+      heading: 'Choose the right plan for your venue.',
+      paragraph: 'Start with the essentials and upgrade as your venue grows. Every plan includes the booking core you need to open your books the same day.',
     },
     toggle: {
       monthly: 'Monthly',
-      yearly: 'Yearly',
-      badge: 'Save up to 20%',
+      yearly: 'Annual',
+      badge: 'Save ~20%',
     },
     addons: {
-      heading: 'Add-ons',
-      paragraph: 'Enhance your plan with additional capabilities.',
+      heading: 'Extend your plan',
+      paragraph: 'Top up what you need, when you need it.',
     },
     compare: {
-      heading: 'Compare plans side by side',
+      heading: 'Compare plans',
     },
     customCta: {
-      heading: 'Need a custom plan for your group?',
-      paragraph: 'Contact our sales team for a personalized quote.',
+      heading: 'One platform. Every location.',
+      paragraph: 'From a growing group to a national chain — centralize menu, staff and reservations across every outlet, with group-wide reporting and dedicated support.',
       button: 'Talk to Sales',
     },
     faq: {
-      heading: 'Frequently asked questions',
+      heading: 'Frequently asked questions.',
     },
     finalCta: {
-      heading: 'Ready to transform your hospitality business?',
-      paragraph: 'Join thousands of venues already using Sectros.',
-      button: 'Start your free trial',
+      heading: 'Ready to run hospitality differently?',
+      paragraph: 'Start with a free 14-day trial, no credit card required.',
+      button: 'Get Started',
     },
   },
 

@@ -213,12 +213,22 @@ class AutomationController extends Controller
                 $ownerEmail = tenant('owner_email');
                 if ($ownerEmail) {
                     try {
+                        $phoneRow = !empty($reservation->customer_phone)
+                            ? "<div class='row'><span class='label'>Phone</span><span class='value'>{$reservation->customer_phone}</span></div>"
+                            : '';
+
                         \Illuminate\Support\Facades\Mail::to($ownerEmail)->send(new \App\Mail\SystemMail($template->subject, $template->content, [
                             'reservation_id' => $reservation->id,
                             'customer_name' => $reservation->customer_name . " (via AI)",
+                            'business_name' => tenant('name') ?? 'The Business',
                             'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
                             'reservation_time' => $reservation->reservation_time->format('H:i'),
-                            'guest_count' => $reservation->party_size
+                            'guest_count' => $reservation->party_size,
+                            'source' => $platform,
+                            'source_label' => $platform,
+                            'added_by' => 'AI Assistant',
+                            'customer_phone' => $reservation->customer_phone ?? '',
+                            'customer_phone_row' => $phoneRow,
                         ]));
                     } catch (\Exception $e) {
                         \Illuminate\Support\Facades\Log::error("Failed to send AI reservation email: " . $e->getMessage());

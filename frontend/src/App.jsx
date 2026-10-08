@@ -1,5 +1,5 @@
 import React from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { SEOHead } from './components/SEOHead'
 import AppLockScreen from './components/common/AppLockScreen'
 
@@ -114,12 +114,23 @@ import ModernFeatures from './components/themes/modern-business-os/ModernFeature
 import ModernSolutions from './components/themes/modern-business-os/ModernSolutions'
 import ModernIntegrations from './components/themes/modern-business-os/ModernIntegrations'
 import ModernAbout from './components/themes/modern-business-os/ModernAbout'
+import PremiumAbout from './components/themes/sectros-premium/PremiumAbout'
+import PremiumPricing from './components/themes/sectros-premium/PremiumPricing'
 import ModernContact from './components/themes/modern-business-os/ModernContact'
 import ModernBlog from './components/themes/modern-business-os/ModernBlog'
+import PremiumBlog from './components/themes/sectros-premium/PremiumBlog'
 
-function ThemedPage({ classic, modern }) {
-  const { isModernBusinessOS, loading } = useWebsiteTheme();
+import { PremiumPublicLayout } from './components/themes/sectros-premium/PremiumPublicLayout'
+import PremiumHome from './components/themes/sectros-premium/PremiumHome'
+import PremiumFeatures from './components/themes/sectros-premium/PremiumFeatures'
+import PremiumTrust from './components/themes/sectros-premium/PremiumTrust'
+import PremiumPrivacyPolicy from './components/themes/sectros-premium/PremiumPrivacyPolicy'
+import PremiumContact from './components/themes/sectros-premium/PremiumContact'
+
+function ThemedPage({ classic, modern, premium }) {
+  const { isModernBusinessOS, isPremium, loading } = useWebsiteTheme();
   if (loading) return null;
+  if (isPremium) return premium || modern || classic;
   return isModernBusinessOS ? (modern || classic) : classic;
 }
 
@@ -133,8 +144,9 @@ function SEO({ title, description, path, children }) {
 }
 
 function ThemeAwarePublicLayout() {
-  const { isModernBusinessOS, loading } = useWebsiteTheme();
+  const { isModernBusinessOS, isPremium, loading } = useWebsiteTheme();
   if (loading) return null;
+  if (isPremium) return <PremiumPublicLayout />;
   return isModernBusinessOS ? <ModernPublicLayout /> : <PublicLayout />;
 }
 
@@ -145,28 +157,31 @@ function AppContent() {
       <Routes>
         {/* Public Website */}
         <Route element={<ThemeAwarePublicLayout />}>
-          <Route path="/" element={<SEO path="/"><ThemedPage classic={<LandingPage />} modern={<ModernHome />} /></SEO>} />
-          <Route path="/pricing" element={<SEO title="Pricing" path="/pricing"><ThemedPage classic={<PricingPage />} modern={<ModernPricing />} /></SEO>} />
-          <Route path="/features" element={<SEO title="Features" path="/features"><ThemedPage classic={<FeaturesPage />} modern={<ModernFeatures />} /></SEO>} />
-          <Route path="/blog" element={<SEO title="Blog" path="/blog"><ThemedPage classic={<BlogPage />} modern={<ModernBlog />} /></SEO>} />
+          <Route path="/" element={<SEO path="/"><ThemedPage classic={<LandingPage />} modern={<ModernHome />} premium={<PremiumHome />} /></SEO>} />
+          <Route path="/pricing" element={<SEO title="Pricing" path="/pricing"><ThemedPage classic={<PricingPage />} modern={<ModernPricing />} premium={<PremiumPricing />} /></SEO>} />
+          <Route path="/features" element={<SEO title="Features" path="/features"><ThemedPage classic={<FeaturesPage />} modern={<ModernFeatures />} premium={<PremiumFeatures />} /></SEO>} />
+          <Route path="/blog" element={<SEO title="Blog" path="/blog"><ThemedPage classic={<BlogPage />} modern={<ModernBlog />} premium={<PremiumBlog />} /></SEO>} />
           <Route path="/blog/:slug" element={<SEO title="Blog" path="/blog"><BlogDetailPage /></SEO>} />
           <Route path="/customers" element={<SEO title="Customer Stories" path="/customers"><CustomerStoriesPage /></SEO>} />
           <Route path="/customers/:slug" element={<SEO title="Customer Stories" path="/customers"><CustomerStoryDetailPage /></SEO>} />
           <Route path="/docs" element={<SEO title="Documentation" path="/docs"><DocumentationPage /></SEO>} />
           <Route path="/help" element={<SEO title="Help Center" path="/help"><HelpCenterPage /></SEO>} />
-          <Route path="/about" element={<SEO title="About Us" path="/about"><ThemedPage classic={<AboutUsPage />} modern={<ModernAbout />} /></SEO>} />
+          <Route path="/about" element={<SEO title="About Us" path="/about"><ThemedPage classic={<AboutUsPage />} modern={<ModernAbout />} premium={<PremiumAbout />} /></SEO>} />
+          <Route path="/security" element={<SEO title="Security &amp; Trust" path="/security"><ThemedPage classic={<PremiumTrust />} modern={<PremiumTrust />} premium={<PremiumTrust />} /></SEO>} />
+          <Route path="/trust" element={<SEO title="Security &amp; Trust" path="/trust"><ThemedPage classic={<PremiumTrust />} modern={<PremiumTrust />} premium={<PremiumTrust />} /></SEO>} />
           <Route path="/community" element={<SEO title="Community" path="/community"><CommunityPage /></SEO>} />
-          <Route path="/privacy" element={<SEO title="Privacy Policy" path="/privacy"><DynamicPrivacyPolicy /></SEO>} />
+          <Route path="/privacy" element={<SEO title="Privacy Policy" path="/privacy"><ThemedPage classic={<DynamicPrivacyPolicy />} modern={<DynamicPrivacyPolicy />} premium={<PremiumPrivacyPolicy />} /></SEO>} />
           <Route path="/book" element={<SEO title="Reservations" path="/book"><ReservationsPublicView /></SEO>} />
           <Route path="/solutions" element={<SEO title="Solutions" path="/solutions"><ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} /></SEO>} />
           <Route path="/solutions/:slug" element={<SEO title="Solutions" path="/solutions"><ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} /></SEO>} />
           <Route path="/integrations" element={<SEO title="Integrations" path="/integrations"><ThemedPage classic={<IntegrationsPage />} modern={<ModernIntegrations />} /></SEO>} />
           <Route path="/directory" element={<SEO title="Business Directory" path="/directory"><DirectoryPage /></SEO>} />
           <Route path="/directory/:slug" element={<SEO title="Business Directory" path="/directory"><DirectoryDetailPage /></SEO>} />
-          <Route path="/contact" element={<SEO title="Contact Us" path="/contact"><ThemedPage classic={null} modern={<ModernContact />} /></SEO>} />
+          <Route path="/contact" element={<SEO title="Contact Us" path="/contact"><ThemedPage classic={null} modern={<ModernContact />} premium={<PremiumContact />} /></SEO>} />
           <Route path="/case-studies" element={<SEO title="Case Studies" path="/case-studies"><CaseStudiesPage /></SEO>} />
           <Route path="/guides" element={<SEO title="Guides" path="/guides"><GuidesPage /></SEO>} />
-          <Route path="/api-docs" element={<SEO title="API Documentation" path="/api-docs"><ApiDocsPage /></SEO>} />
+          {/* API docs intentionally disabled */}
+          <Route path="/api-docs/*" element={<Navigate to="/" replace />} />
           <Route path="/terms" element={<SEO title="Terms of Service" path="/terms"><TermsPage /></SEO>} />
           <Route path="/careers" element={<SEO title="Careers" path="/careers"><CareersPage /></SEO>} />
           <Route path="/partners" element={<SEO title="Partners" path="/partners"><PartnersPage /></SEO>} />

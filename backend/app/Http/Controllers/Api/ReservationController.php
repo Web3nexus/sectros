@@ -140,7 +140,7 @@ class ReservationController extends Controller
         }
 
         $source = strtolower(trim($request->input('source', 'website')));
-        $isManual = in_array($source, ['app', 'manual', 'phone', 'walk-in', 'walkin', 'in-house', 'inhome'], true);
+        $isManual = in_array($source, ['app', 'manual', 'phone', 'walk-in', 'walkin', 'in-house', 'inhome', 'direct'], true);
 
         $validated['customer_email'] = $validated['customer_email'] ?? '';
         $validated['customer_phone'] = $validated['customer_phone'] ?? '';
@@ -169,19 +169,39 @@ class ReservationController extends Controller
             return $reservation;
         });
 
-        try {
-            if ($isManual) {
-                // Guest booked on their behalf — they must confirm the request.
-                $this->sendGuestRequestConfirmation($reservation);
-            } else {
-                // Restaurant-side alert for self-service bookings.
-                $this->sendRestaurantNewBookingAlert($reservation);
+        $sourceLabel = $this->sourceLabel($source);
+        $addedBy = $request->user()?->name ?: 'A member of the team';
+
+        if ($isManual) {
+            // Business-created booking (added by owner/staff from the dashboard).
+            try {
+                $this->sendRestaurantNewBookingAlert($reservation, $source, $sourceLabel, $addedBy);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to send restaurant alert for manual reservation #{$reservation->id}: " . $e->getMessage());
+            }
+
+            try {
+                $this->sendGuestArrangedEmail($reservation);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to send guest arranged email for manual reservation #{$reservation->id}: " . $e->getMessage());
+            }
+        } else {
+            // Customer-link / self-service booking.
+            try {
+                $this->sendRestaurantNewBookingAlert($reservation, $source, $sourceLabel, 'via ' . $sourceLabel);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to send restaurant alert for reservation #{$reservation->id}: " . $e->getMessage());
+            }
+
+            try {
                 if ($reservation->status === 'confirmed') {
                     $this->sendGuestConfirmedEmail($reservation, 'auto');
+                } else {
+                    $this->sendGuestRequestConfirmation($reservation);
                 }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to send guest confirmation email for reservation #{$reservation->id}: " . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Failed to send reservation emails: " . $e->getMessage());
         }
 
         return response()->json($reservation, 201);
@@ -234,6 +254,31 @@ class ReservationController extends Controller
     }
 
     /**
+     * Human-readable label for a booking source.
+     */
+    protected function sourceLabel(string $source): string
+    {
+        $labels = [
+            'app'          => 'Mobile App',
+            'manual'       => 'Manual Entry',
+            'phone'        => 'Phone Call',
+            'walk-in'      => 'Walk-in',
+            'walkin'       => 'Walk-in',
+            'in-house'     => 'In-house',
+            'inhome'       => 'In-house',
+            'direct'       => 'Direct / Calendar',
+            'website'      => 'Booking Link',
+            'direct_link'  => 'Booking Link',
+            'whatsapp'     => 'WhatsApp',
+            'instagram'    => 'Instagram',
+            'facebook'     => 'Facebook',
+            'google'       => 'Google / Maps',
+        ];
+
+        return $labels[$source] ?? ucfirst($source);
+    }
+
+    /**
      * Email a guest who did not book for themselves with a confirmation
      * link + code so they can confirm the request in person.
      */
@@ -271,9 +316,45 @@ class ReservationController extends Controller
     }
 
     /**
-     * Alert the restaurant to a new self-service booking awaiting confirmation.
+     * Email a guest for whom the business arranged a booking on their behalf.
      */
-    protected function sendRestaurantNewBookingAlert(Reservation $reservation): void
+    protected function sendGuestArrangedEmail(Reservation $reservation): void
+    {
+        $businessName = tenant('name') ?? 'The Business';
+
+        if (!empty($reservation->customer_email)) {
+            $template = \App\Models\EmailTemplate::where('slug', 'reservation_arranged')->first()
+                ?? \App\Models\EmailTemplate::where('slug', 'reservation_request_confirmation')->first();
+            if ($template) {
+                \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
+                    new \App\Mail\SystemMail($template->subject, $template->content, [
+                        'customer_name' => $reservation->customer_name,
+                        'business_name' => $businessName,
+                        'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
+                        'reservation_time' => $reservation->reservation_time->format('H:i'),
+                        'guest_count' => $reservation->party_size,
+                        'confirmation_code' => $reservation->confirmation_code,
+                        'confirm_link' => $this->guestConfirmUrl($reservation),
+                    ])
+                );
+            }
+        }
+
+        $this->sendSms($reservation, sprintf(
+            "Hello %s, %s has arranged a booking for you on %s at %s for %s guests. Confirm with code %s or show it on arrival.",
+            $reservation->customer_name,
+            $businessName,
+            $reservation->reservation_time->format('M d, H:i'),
+            $reservation->reservation_time->format('H:i'),
+            $reservation->party_size,
+            $reservation->confirmation_code
+        ));
+    }
+
+    /**
+     * Alert the restaurant to a new booking (manual entry or self-service).
+     */
+    protected function sendRestaurantNewBookingAlert(Reservation $reservation, string $source, string $sourceLabel, string $addedBy): void
     {
         $template = \App\Models\EmailTemplate::where('slug', 'new_reservation')->first();
         if (!$template) {
@@ -285,13 +366,23 @@ class ReservationController extends Controller
             return;
         }
 
+        $phoneRow = !empty($reservation->customer_phone)
+            ? "<div class='row'><span class='label'>Phone</span><span class='value'>" . e($reservation->customer_phone) . "</span></div>"
+            : '';
+
         \Illuminate\Support\Facades\Mail::to($ownerEmail)->send(
             new \App\Mail\SystemMail($template->subject, $template->content, [
                 'reservation_id' => $reservation->id,
                 'customer_name' => $reservation->customer_name,
+                'business_name' => tenant('name') ?? 'The Business',
                 'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
                 'reservation_time' => $reservation->reservation_time->format('H:i'),
                 'guest_count' => $reservation->party_size,
+                'source' => $source,
+                'source_label' => $sourceLabel,
+                'added_by' => $addedBy,
+                'customer_phone' => $reservation->customer_phone ?? '',
+                'customer_phone_row' => $phoneRow,
             ])
         );
     }
@@ -306,6 +397,9 @@ class ReservationController extends Controller
         if (!empty($reservation->customer_email)) {
             $template = \App\Models\EmailTemplate::where('slug', 'reservation_confirmed')->first();
             if ($template) {
+                $codeBlock = !empty($reservation->confirmation_code)
+                    ? "<div class='center'><span class='code'>{$reservation->confirmation_code}</span></div>"
+                    : '';
                 \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
                     new \App\Mail\SystemMail($template->subject, $template->content, [
                         'customer_name' => $reservation->customer_name,
@@ -313,6 +407,8 @@ class ReservationController extends Controller
                         'reservation_date' => $reservation->reservation_time->format('Y-m-d'),
                         'reservation_time' => $reservation->reservation_time->format('H:i'),
                         'guest_count' => $reservation->party_size,
+                        'confirmation_code' => $reservation->confirmation_code,
+                        'code_block' => $codeBlock,
                     ])
                 );
             }
