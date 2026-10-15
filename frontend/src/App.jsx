@@ -75,6 +75,8 @@ import BlogDetailPage from './pages/public/BlogDetailPage'
 import CustomerStoryDetailPage from './pages/public/CustomerStoryDetailPage'
 import DynamicPrivacyPolicy from './pages/public/DynamicPrivacyPolicy'
 import ReservationsPublicView from './pages/public/ReservationsPublicView'
+import ReviewPublicView from './pages/public/ReviewPublicView'
+import OrderPayPublicView from './pages/public/OrderPayPublicView'
 import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -172,7 +174,11 @@ function AppContent() {
           <Route path="/community" element={<SEO title="Community" path="/community"><CommunityPage /></SEO>} />
           <Route path="/privacy" element={<SEO title="Privacy Policy" path="/privacy"><ThemedPage classic={<DynamicPrivacyPolicy />} modern={<DynamicPrivacyPolicy />} premium={<PremiumPrivacyPolicy />} /></SEO>} />
           <Route path="/book" element={<SEO title="Reservations" path="/book"><ReservationsPublicView /></SEO>} />
-          <Route path="/solutions" element={<SEO title="Solutions" path="/solutions"><ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} /></SEO>} />
+          <Route path="/book/:tenantId" element={<SEO title="Reservations" path="/book"><ReservationsPublicView /></SEO>} />
+          <Route path="/review" element={<SEO title="Leave a Review" path="/review"><ReviewPublicView /></SEO>} />
+          <Route path="/review/:tenantId" element={<SEO title="Leave a Review" path="/review"><ReviewPublicView /></SEO>} />
+          <Route path="/order-pay/:orderId" element={<SEO title="Pay Order" path="/order-pay"><OrderPayPublicView /></SEO>} />
+          <Route path="/pay/:orderId" element={<SEO title="Pay Order" path="/order-pay"><OrderPayPublicView /></SEO>} />
           <Route path="/solutions/:slug" element={<SEO title="Solutions" path="/solutions"><ThemedPage classic={<SolutionPage />} modern={<ModernSolutions />} /></SEO>} />
           <Route path="/integrations" element={<SEO title="Integrations" path="/integrations"><ThemedPage classic={<IntegrationsPage />} modern={<ModernIntegrations />} /></SEO>} />
           <Route path="/directory" element={<SEO title="Business Directory" path="/directory"><DirectoryPage /></SEO>} />

@@ -62,6 +62,14 @@ class FinanceController extends Controller
             ->orderBy('total', 'desc')
             ->get();
 
+        $tipsQuery = \App\Models\TipRecord::query();
+        if ($dateFrom) {
+            $tipsQuery->where('created_at', '>=', $dateFrom);
+        }
+        $totalTips = (float) (clone $tipsQuery)->where('payout_status', '!=', 'revoked')->sum('amount');
+        $pendingTips = (float) (clone $tipsQuery)->where('payout_status', 'pending')->sum('amount');
+        $disbursedTips = (float) (clone $tipsQuery)->where('payout_status', 'disbursed')->sum('amount');
+
         return response()->json([
             'balance' => $latestSettlement ? (float) $latestSettlement->closing_balance : 0,
             'total_revenue' => $totalRevenue,
@@ -70,6 +78,9 @@ class FinanceController extends Controller
             'order_count' => $orderCount,
             'aov' => $orderCount > 0 ? round($totalRevenue / $orderCount, 2) : 0,
             'profit_margin' => $totalRevenue > 0 ? round(($netProfit / $totalRevenue) * 100, 1) : 0,
+            'total_tips' => $totalTips,
+            'pending_tips' => $pendingTips,
+            'disbursed_tips' => $disbursedTips,
             'category_breakdown' => $categoryBreakdown,
             'latest_settlement' => $latestSettlement,
         ]);

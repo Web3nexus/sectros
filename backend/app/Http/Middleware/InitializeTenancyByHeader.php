@@ -13,8 +13,11 @@ class InitializeTenancyByHeader
 {
     public function handle(Request $request, Closure $next)
     {
-        // 1. Try resolving via X-Tenant-Domain / X-Tenant header
-        $tenantDomain = $request->header('X-Tenant-Domain') ?: $request->header('X-Tenant');
+        // 1. Try resolving via X-Tenant-Domain / X-Tenant header or query param
+        $tenantDomain = $request->header('X-Tenant-Domain') 
+            ?: $request->header('X-Tenant') 
+            ?: $request->input('tenant') 
+            ?: $request->input('tenant_id');
 
         if ($tenantDomain && !TenantResolver::resolve()) {
             $cleaned = preg_replace('#^https?://#', '', trim($tenantDomain));

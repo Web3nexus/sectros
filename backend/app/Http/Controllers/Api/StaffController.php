@@ -11,95 +11,58 @@ class StaffController extends Controller
     public function index()
     {
         $tenant = tenant();
-        if (!$tenant) {
-            return response()->json(['error' => 'Tenant context not found'], 400);
+        if (!$tenant && auth()->check() && auth()->user()->tenant_id) {
+            $tenant = \App\Models\Tenant::find(auth()->user()->tenant_id);
+            if ($tenant) {
+                \App\Services\TenantResolver::set($tenant);
+                try {
+                    tenancy()->initialize($tenant);
+                } catch (\Throwable $e) {}
+            }
         }
 
-        // Use direct DB query to ensure we see exactly what is in the tenant users table
-        // This bypasses any Eloquent global scopes that might be filtering results unexpectedly
-        $users = \Illuminate\Support\Facades\DB::table('users')->get();
-        $profiles = \Illuminate\Support\Facades\DB::table('staff_profiles')->get();
+        if (!$tenant) {
+            return response()->json(['message' => 'Tenant context not found'], 400);
+        }
 
-        // --- Auto-Healing: Ensure all staff_profiles have a corresponding User record ---
-        // This fixes legacy records (like waitstaff) created before the users-table unification
+        // Query scoped to the active tenant
+        $users = \App\Models\User::on('tenant')
+            ->where('tenant_id', $tenant->id)
+            ->get();
+        $profiles = StaffProfile::on('tenant')
+            ->where('tenant_id', $tenant->id)
+            ->get();
+
         $usersByEmail = $users->keyBy(fn($u) => strtolower($u->email));
         $usersById = $users->keyBy('id');
-        $newUsersAdded = false;
-
-        foreach ($profiles as $profile) {
-            $hasUser = false;
-            if ($profile->user_id && $usersById->has($profile->user_id)) {
-                $hasUser = true;
-            } elseif ($profile->email && $usersByEmail->has(strtolower($profile->email))) {
-                $hasUser = true;
-                // Fix missing linkage if needed
-                if (!$profile->user_id) {
-                    \Illuminate\Support\Facades\DB::table('staff_profiles')
-                        ->where('id', $profile->id)
-                        ->update(['user_id' => $usersByEmail[strtolower($profile->email)]->id]);
-                }
-            }
-
-            if (!$hasUser) {
-                // Auto-create missing user for this staff profile
-                $email = $profile->email ?: 'staff_' . $profile->id . '@' . ($tenant->id ?? 'tenant') . '.local';
-                
-                $userId = \Illuminate\Support\Facades\DB::table('users')->insertGetId([
-                    'name' => $profile->name ?? 'Unknown Staff',
-                    'email' => $email,
-                    'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(12)),
-                    'role' => $profile->role ?? 'waiter',
-                    'tenant_id' => $tenant->id ?? null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                \Illuminate\Support\Facades\DB::table('staff_profiles')
-                    ->where('id', $profile->id)
-                    ->update([
-                        'user_id' => $userId,
-                        'email' => $email
-                    ]);
-
-                // Try to assign correct role
-                try {
-                    $userModel = \App\Models\User::find($userId);
-                    if ($userModel) {
-                        $roleName = $profile->role ?? 'waiter';
-                        $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $roleName, 'guard_name' => 'web']);
-                        $userModel->syncRoles([$roleRecord]);
-                    }
-                } catch (\Exception $e) {}
-
-                $newUsersAdded = true;
-            }
-        }
-
-        if ($newUsersAdded) {
-            $users = \Illuminate\Support\Facades\DB::table('users')->get();
-            $profiles = \Illuminate\Support\Facades\DB::table('staff_profiles')->get();
-        }
-        // -------------------------------------------------------------------------
-
-        $profilesByEmail = $profiles->keyBy('email');
         $profilesByUserId = $profiles->keyBy('user_id');
+        $profilesByEmail = $profiles->keyBy(fn($p) => strtolower($p->email ?? ''));
 
-        $staff = $users->map(function($user) use ($tenant, $profilesByEmail, $profilesByUserId) {
+        // Ensure every profile has a user_id link
+        foreach ($profiles as $profile) {
+            if (!$profile->user_id && $profile->email && $usersByEmail->has(strtolower($profile->email))) {
+                $linkedUser = $usersByEmail[strtolower($profile->email)];
+                $profile->update(['user_id' => $linkedUser->id]);
+                $profilesByUserId->put($linkedUser->id, $profile);
+            }
+        }
+
+        // Build staff list combining users and profiles
+        $staff = $users->map(function ($user) use ($tenant, $profilesByEmail, $profilesByUserId) {
             $isOwner = strtolower($user->email) === strtolower($tenant->owner_email ?? '');
-            
-            // Try to find profile by user_id first, then fallback to email
-            $profile = $profilesByUserId->get($user->id) ?? $profilesByEmail->get($user->email);
+            $profile = $profilesByUserId->get($user->id) ?? $profilesByEmail->get(strtolower($user->email));
 
-            // Handle role: use column if exists, otherwise fallback
-            $role = $user->role ?? 'staff';
+            $role = $user->role ?? ($profile->role ?? 'waiter');
             if ($isOwner) $role = 'owner';
 
             return [
-                'id' => $user->id,
+                'id' => $profile?->id ?? $user->id,
+                'user_id' => $user->id,
+                'profile_id' => $profile?->id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $role,
-                'is_active' => $profile ? (bool)$profile->is_active : true,
+                'is_active' => $profile ? (bool) $profile->is_active : true,
                 'two_factor_enabled' => ($user->two_factor_method ?? 'none') !== 'none',
                 'phone' => $profile->phone ?? null,
                 'avatar_url' => $profile->avatar_url ?? null,
@@ -108,7 +71,28 @@ class StaffController extends Controller
             ];
         });
 
-        return response()->json($staff);
+        // Also include any profiles without a user record yet
+        foreach ($profiles as $profile) {
+            if ($profile->user_id && $usersById->has($profile->user_id)) continue;
+            if ($profile->email && $usersByEmail->has(strtolower($profile->email))) continue;
+
+            $staff->push([
+                'id' => $profile->id,
+                'user_id' => null,
+                'profile_id' => $profile->id,
+                'name' => $profile->name,
+                'email' => $profile->email,
+                'role' => $profile->role ?? 'waiter',
+                'is_active' => (bool) $profile->is_active,
+                'two_factor_enabled' => false,
+                'phone' => $profile->phone,
+                'avatar_url' => $profile->avatar_url,
+                'is_owner' => false,
+                'created_at' => $profile->created_at,
+            ]);
+        }
+
+        return response()->json($staff->values());
     }
 
     public function toggle2FA(Request $request, $id)
@@ -131,21 +115,47 @@ class StaffController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'email|unique:staff_profiles,email,' . $id,
-            'role' => 'in:manager,waiter,chef,cashier,accountant,owner',
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email',
+            'role' => 'nullable|in:manager,waiter,chef,cashier,accountant,owner',
             'phone' => 'nullable|string|max:20',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
             'avatar_url' => 'nullable|string|max:2048',
         ]);
 
-        $profile = StaffProfile::findOrFail($id);
-        $profile->update($validated);
+        $profile = StaffProfile::where('id', $id)->orWhere('user_id', $id)->first();
+        if (!$profile) {
+            $user = \App\Models\User::find($id);
+            if ($user) {
+                $profile = StaffProfile::create([
+                    'user_id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role ?? 'waiter',
+                    'tenant_id' => $user->tenant_id ?? tenant('id'),
+                ]);
+            }
+        }
 
-        $user = \App\Models\User::find($profile->user_id);
-        if ($user && isset($validated['role'])) {
-            $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
-            $user->syncRoles([$roleRecord]);
+        if (!$profile) {
+            return response()->json(['message' => 'Staff profile not found'], 404);
+        }
+
+        $profile->update(array_filter($validated, fn($v) => !is_null($v)));
+
+        if ($profile->user_id) {
+            $user = \App\Models\User::find($profile->user_id);
+            if ($user) {
+                if (isset($validated['name'])) $user->name = $validated['name'];
+                if (isset($validated['role'])) {
+                    $user->role = $validated['role'];
+                    try {
+                        $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
+                        $user->syncRoles([$roleRecord]);
+                    } catch (\Throwable $e) {}
+                }
+                $user->save();
+            }
         }
 
         return response()->json(['message' => 'Staff updated successfully', 'staff' => $profile]);
@@ -153,18 +163,36 @@ class StaffController extends Controller
 
     public function destroy($id)
     {
-        $profile = StaffProfile::findOrFail($id);
-        if ($profile->user_id) {
-            \App\Models\User::find($profile->user_id)?->delete();
+        $profile = StaffProfile::where('id', $id)->orWhere('user_id', $id)->first();
+        if ($profile) {
+            if ($profile->user_id) {
+                \App\Models\User::find($profile->user_id)?->delete();
+            }
+            $profile->delete();
+        } else {
+            \App\Models\User::find($id)?->delete();
         }
-        $profile->delete();
         return response()->json(['message' => 'Staff deleted']);
     }
 
     public function store(Request $request)
     {
-        // 1. Check Max Staff Limit
         $tenant = tenant();
+        if (!$tenant && auth()->check() && auth()->user()->tenant_id) {
+            $tenant = \App\Models\Tenant::find(auth()->user()->tenant_id);
+            if ($tenant) {
+                \App\Services\TenantResolver::set($tenant);
+                try {
+                    tenancy()->initialize($tenant);
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        if (!$tenant) {
+            return response()->json(['message' => 'Tenant context not found'], 400);
+        }
+
+        // 1. Check Max Staff Limit
         $planSlug = $tenant->plan ?? 'free';
 
         $plan = \Stancl\Tenancy\Facades\Tenancy::central(function () use ($planSlug) {
@@ -172,7 +200,7 @@ class StaffController extends Controller
         });
 
         if ($plan && $plan->max_staff !== null) {
-            $count = StaffProfile::count();
+            $count = StaffProfile::where('tenant_id', $tenant->id)->count();
             
             if ($count >= $plan->max_staff) {
                 return response()->json([
@@ -185,23 +213,32 @@ class StaffController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:staff_profiles|unique:users,email',
+            'email' => 'required|email',
             'role' => 'required|in:manager,waiter,chef,cashier,accountant',
+            'phone' => 'nullable|string|max:20',
             'is_active' => 'boolean',
         ]);
 
-        [$staff, $user, $plainPassword] = $this->transaction(function () use ($validated) {
-            $staff = StaffProfile::create($validated);
+        [$staff, $user, $plainPassword] = $this->transaction(function () use ($validated, $tenant) {
+            $staff = StaffProfile::create(array_merge($validated, [
+                'tenant_id' => $tenant->id,
+            ]));
 
             $plainPassword = \Illuminate\Support\Str::random(12);
             $user = \App\Models\User::create([
                 'email' => $validated['email'],
                 'name' => $validated['name'],
                 'password' => \Illuminate\Support\Facades\Hash::make($plainPassword),
+                'tenant_id' => $tenant->id,
+                'role' => $validated['role'],
             ]);
 
-            $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
-            $user->syncRoles([$roleRecord]);
+            $staff->update(['user_id' => $user->id]);
+
+            try {
+                $roleRecord = \Spatie\Permission\Models\Role::firstOrCreate(['name' => $validated['role'], 'guard_name' => 'web']);
+                $user->syncRoles([$roleRecord]);
+            } catch (\Throwable $e) {}
 
             return [$staff, $user, $plainPassword];
         });

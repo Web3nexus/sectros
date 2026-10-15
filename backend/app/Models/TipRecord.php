@@ -16,6 +16,7 @@ class TipRecord extends Model
         'tenant_id',
         'staff_profile_id',
         'shift_id',
+        'order_id',
         'date',
         'amount',
         'payout_status',
@@ -36,6 +37,11 @@ class TipRecord extends Model
     public function shift()
     {
         return $this->belongsTo(Shift::class, 'shift_id');
+    }
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id');
     }
 }
 

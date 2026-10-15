@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, useParams } from 'react-router-dom';
 import {Loader2, Calendar, Clock, Users, CheckCircle2, AlertCircle, ArrowLeft, MapPin, Phone, Mail, Star, Shield} from 'lucide-react';
 import api from '../../services/api';
 import { useBusinessConfig } from '../../hooks/useBusinessConfig';
@@ -18,6 +19,10 @@ const BUSINESS_ICONS = {
 };
 
 export default function ReservationsPublicView() {
+  const [searchParams] = useSearchParams();
+  const { tenantId: routeTenantId } = useParams();
+  const tenantParam = routeTenantId || searchParams.get('tenant') || searchParams.get('business');
+
   const [branding, setBranding] = useState(null);
   const [formConfig, setFormConfig] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,12 +37,27 @@ export default function ReservationsPublicView() {
   const logoUrl = branding?.logo_url;
 
   useEffect(() => {
+    if (tenantParam) {
+      localStorage.setItem('tenant_domain', tenantParam);
+    }
     Promise.all([fetchBranding(), fetchFormConfig()]);
-  }, []);
+  }, [tenantParam]);
+
+  const getHeaders = () => {
+    const headers = {};
+    if (tenantParam) {
+      headers['X-Tenant'] = tenantParam;
+      headers['X-Tenant-Domain'] = tenantParam;
+    }
+    return headers;
+  };
 
   const fetchBranding = async () => {
     try {
-      const res = await api.get('branding', { skipTenantSessionRedirect: true });
+      const res = await api.get('branding', {
+        headers: getHeaders(),
+        skipTenantSessionRedirect: true,
+      });
       setBranding(res.data);
     } catch (e) {
       console.error("Branding fetch failed:", e);
@@ -46,7 +66,9 @@ export default function ReservationsPublicView() {
 
   const fetchFormConfig = async () => {
     try {
-      const res = await api.get('configuration/booking-form');
+      const res = await api.get('configuration/booking-form', {
+        headers: getHeaders(),
+      });
       setFormConfig(res.data);
     } catch (e) {
       console.warn("Form config fetch failed:", e);
@@ -67,6 +89,7 @@ export default function ReservationsPublicView() {
     try {
       const payload = {
         ...formData,
+        tenant_id: tenantParam || undefined,
         customer_name: formData.customer_name || formData.name,
         customer_email: formData.customer_email || formData.email,
         customer_phone: formData.customer_phone || formData.phone,
@@ -77,7 +100,12 @@ export default function ReservationsPublicView() {
         source: 'website',
       };
 
-      await api.post('reservations', payload);
+      try {
+        await api.post('public/reservations', payload, { headers: getHeaders() });
+      } catch (publicErr) {
+        // Fallback to /reservations if public endpoint fails
+        await api.post('reservations', payload, { headers: getHeaders() });
+      }
       setStatus('success');
     } catch (err) {
       setStatus('error');

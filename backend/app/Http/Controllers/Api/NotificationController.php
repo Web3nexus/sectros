@@ -46,9 +46,11 @@ class NotificationController extends Controller
         return response()->json(['status' => 'ok', 'unread_count' => 0]);
     }
 
-    public static function dispatch(string $type, string $title, string $message, string $icon = 'bell', ?int $referenceId = null): void
+    public static function dispatch(string $type, string $title, string $message, string $icon = 'bell', ?int $referenceId = null, ?string $tenantId = null): void
     {
+        $resolvedTenantId = $tenantId ?: (tenant('id') ?? null);
         TenantNotification::create([
+            'tenant_id'    => $resolvedTenantId,
             'type'         => $type,
             'title'        => $title,
             'message'      => $message,

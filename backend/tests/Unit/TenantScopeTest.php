@@ -55,9 +55,10 @@ class TenantScopeTest extends TestCase
     public function test_tenant_scope_is_registered()
     {
         $scopes = (new User())->getGlobalScopes();
-        $this->assertArrayHasKey(TenantScope::class, $scopes);
-        $this->assertInstanceOf(TenantScope::class, $scopes[TenantScope::class]);
+        $this->assertArrayHasKey(\App\Scopes\StrictTenantScope::class, $scopes);
+        $this->assertInstanceOf(\App\Scopes\StrictTenantScope::class, $scopes[\App\Scopes\StrictTenantScope::class]);
     }
+
 
     public function test_model_connections()
     {

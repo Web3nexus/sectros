@@ -123,19 +123,45 @@ class ConfigurationController extends Controller
      * domain first, platform subdomain as fallback) so the link stays
      * business- and booking-specific wherever the tenant's website lives.
      */
-    public function bookingLink()
+    public function bookingLink(Request $request)
     {
         $tenant = tenant();
+        if (!$tenant && auth()->check() && auth()->user()->tenant_id) {
+            $tenant = \App\Models\Tenant::find(auth()->user()->tenant_id);
+            if ($tenant) {
+                \App\Services\TenantResolver::set($tenant);
+                try {
+                    tenancy()->initialize($tenant);
+                } catch (\Throwable $e) {}
+            }
+        }
+
         $appUrl = config('app.url', 'https://sectros.com');
         $scheme = parse_url((string) $appUrl, PHP_URL_SCHEME) ?: 'https';
         $centralHost = trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
 
-        $domain = $tenant ? $tenant->publicWebsiteDomain() : null;
-        $domain ??= $tenant ? ($tenant->id . '.' . $centralHost) : $centralHost;
+        $customDomain = $tenant?->domains()
+            ->whereIn('type', ['custom', 'registered'])
+            ->where('is_verified', true)
+            ->value('domain');
+
+        if ($customDomain) {
+            $bookingUrl = $scheme . '://' . rtrim($customDomain, '.') . '/book';
+            $homepageUrl = $scheme . '://' . rtrim($customDomain, '.');
+        } elseif ($tenant) {
+            $subdomain = $tenant->domains()->orderBy('id')->value('domain');
+            $subdomain ??= $tenant->id . '.' . $centralHost;
+            $bookingUrl = $scheme . '://' . rtrim($subdomain, '.') . '/book?tenant=' . $tenant->id;
+            $homepageUrl = $scheme . '://' . rtrim($subdomain, '.');
+        } else {
+            $bookingUrl = $scheme . '://' . $centralHost . '/book';
+            $homepageUrl = $scheme . '://' . $centralHost;
+        }
 
         return response()->json([
-            'booking_url' => $scheme . '://' . $domain . '/book',
-            'homepage_url' => $scheme . '://' . $domain,
+            'booking_url' => $bookingUrl,
+            'homepage_url' => $homepageUrl,
+            'tenant_id' => $tenant?->id,
             'mode' => 'booking',
         ]);
     }

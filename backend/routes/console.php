@@ -13,3 +13,10 @@ Schedule::command('queue:work', ['--stop-when-empty', '--tries=3', '--timeout=12
     ->everyMinute()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Check served orders unpaid after 24h, alert admin and notify waiter
+Schedule::command('orders:check-unpaid')
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground();
+

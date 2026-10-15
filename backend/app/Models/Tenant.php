@@ -122,5 +122,30 @@ class Tenant extends BaseTenant implements TenantWithDatabase
 
         return in_array($this->subscription_status, ['active', 'trialing']);
     }
+
+    /**
+     * Check if the tenant's subscription or trial is expired.
+     */
+    public function isSubscriptionExpired(): bool
+    {
+        // Free tier is not expired unless explicitly suspended
+        if (($this->plan === 'free' || empty($this->plan)) && empty($this->subscription_ends_at)) {
+            return false;
+        }
+
+        if ($this->hasPaidAccess()) {
+            return false;
+        }
+
+        if ($this->subscription_ends_at && $this->subscription_ends_at->isPast()) {
+            return true;
+        }
+
+        if (in_array($this->subscription_status, ['expired', 'past_due', 'canceled'])) {
+            return true;
+        }
+
+        return false;
+    }
 }
 

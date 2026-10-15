@@ -240,6 +240,28 @@ class ReservationController extends Controller
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Failed to send reservation confirmation email: " . $e->getMessage());
             }
+        } elseif ($status === 'seated') {
+            NotificationController::dispatch(
+                'reservation',
+                'Guest Seated',
+                'Guest ' . $reservation->customer_name . ' has been seated.',
+                'users',
+                $reservation->id
+            );
+        } elseif ($status === 'completed') {
+            NotificationController::dispatch(
+                'reservation',
+                'Reservation Completed',
+                'Booking for ' . $reservation->customer_name . ' marked as completed.',
+                'check-circle',
+                $reservation->id
+            );
+
+            try {
+                $this->sendGuestReviewInvite($reservation);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Failed to send review invite: " . $e->getMessage());
+            }
         } elseif ($status === 'cancelled') {
             NotificationController::dispatch(
                 'reservation',
@@ -452,5 +474,48 @@ class ReservationController extends Controller
         $domain ??= $tenant ? ($tenant->id . '.' . $centralHost) : $centralHost;
 
         return $scheme . '://' . $domain;
+    }
+
+    public function sendGuestReviewInvite(Reservation $reservation): void
+    {
+        $tenant = tenant();
+        $appUrl = config('app.url', 'https://sectros.com');
+        $scheme = parse_url((string) $appUrl, PHP_URL_SCHEME) ?: 'https';
+        $centralHost = trim((string) (parse_url((string) $appUrl, PHP_URL_HOST) ?: ''), '.');
+
+        $domain = $tenant ? $tenant->publicWebsiteDomain() : null;
+        $domain ??= $tenant ? ($tenant->id . '.' . $centralHost) : $centralHost;
+
+        $reviewLink = $scheme . '://' . $domain . '/review?res=' . $reservation->id . '&code=' . ($reservation->confirmation_code ?? '') . '&tenant=' . ($tenant->id ?? $reservation->tenant_id);
+        $businessName = tenant('business_name') ?? 'The Business';
+
+        // 1. Send Email
+        if (!empty($reservation->customer_email)) {
+            $template = \App\Models\EmailTemplate::where('slug', 'guest_review_request')->first();
+            $subject = $template ? $template->subject : 'How was your experience at {business_name}?';
+            $content = $template ? $template->content : "<p>Thank you for visiting {business_name}!</p><p><a href='{review_link}'>Click here to leave a review</a></p>";
+
+            try {
+                \Illuminate\Support\Facades\Mail::to($reservation->customer_email)->send(
+                    new \App\Mail\SystemMail($subject, $content, [
+                        'customer_name' => $reservation->customer_name,
+                        'business_name' => $businessName,
+                        'review_link'   => $reviewLink,
+                    ])
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Review invite email failed: " . $e->getMessage());
+            }
+        }
+
+        // 2. Send SMS if phone is available
+        if (!empty($reservation->customer_phone)) {
+            try {
+                $smsText = "Hi {$reservation->customer_name}, thank you for visiting {$businessName}! We'd love your feedback: {$reviewLink}";
+                \App\Services\SMSService::send($reservation->customer_phone, $smsText, $reservation->tenant_id ?? tenant('id'));
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Review invite SMS failed: " . $e->getMessage());
+            }
+        }
     }
 }

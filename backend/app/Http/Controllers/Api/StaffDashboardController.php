@@ -53,6 +53,11 @@ class StaffDashboardController extends Controller
             ->whereBetween('period_start', [$thisMonth, $thisMonth->copy()->addMonth()])
             ->sum('total_payout');
 
+        $tipsQuery = \App\Models\TipRecord::where('staff_profile_id', $profile->id);
+        $totalTips = (float) (clone $tipsQuery)->where('payout_status', '!=', 'revoked')->sum('amount');
+        $pendingTips = (float) (clone $tipsQuery)->where('payout_status', 'pending')->sum('amount');
+        $disbursedTips = (float) (clone $tipsQuery)->where('payout_status', 'disbursed')->sum('amount');
+
         $nextShift = $upcomingShifts->first();
 
         return response()->json([
@@ -73,6 +78,9 @@ class StaffDashboardController extends Controller
                 'weekly_hours' => round((float) $weeklyHours, 2),
                 'monthly_hours' => round((float) $monthlyHours, 2),
                 'monthly_payout' => round((float) $monthlyPayout, 2),
+                'total_tips' => round($totalTips, 2),
+                'pending_tips' => round($pendingTips, 2),
+                'disbursed_tips' => round($disbursedTips, 2),
             ],
             'upcoming_shifts' => $upcomingShifts->map(fn($s) => [
                 'id' => $s->id,

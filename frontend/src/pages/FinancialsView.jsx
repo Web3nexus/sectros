@@ -218,6 +218,48 @@ export function FinancialsView() {
         </div>
       </div>
 
+      {/* Staff Tips & Gratuities Transparency Banner */}
+      <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-xs relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-500/10 text-amber-600 rounded-xl">
+              <Banknote size={22} />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                Staff Tips &amp; Gratuities
+                <span className="text-[10px] uppercase font-black tracking-widest bg-amber-500/20 text-amber-700 px-2 py-0.5 rounded-full">
+                  Staff Trust Account
+                </span>
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Tips collected via QR code or card deposit into the business account, but belong to staff. Separated from operating revenue and normal wages.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-amber-500/15">
+          <div className="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-amber-500/10 shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Tips Collected</div>
+            <div className="text-2xl font-black text-slate-900 mt-1">{formatCurrency(overview?.total_tips || 0)}</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">Gross staff tips accrued</div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-orange-500/20 shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600">Pending Payout (Owed to Staff)</div>
+            <div className="text-2xl font-black text-orange-600 mt-1">{formatCurrency(overview?.pending_tips || 0)}</div>
+            <div className="text-[10px] text-orange-600/80 mt-0.5">Undisbursed to waitstaff &amp; crew</div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-xs p-4 rounded-xl border border-emerald-500/20 shadow-xs">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-600">Disbursed (Paid to Staff)</div>
+            <div className="text-2xl font-black text-emerald-600 mt-1">{formatCurrency(overview?.disbursed_tips || 0)}</div>
+            <div className="text-[10px] text-emerald-600/80 mt-0.5">Settled via cash or payroll</div>
+          </div>
+        </div>
+      </div>
+
       {/* Revenue Trend + Expense Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-2xl border border-border shadow-sm overflow-hidden">

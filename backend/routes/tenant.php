@@ -203,6 +203,13 @@ Route::middleware(['api'])->group(function () {
         Route::post('/public/payments/create-checkout', [\App\Http\Controllers\Api\TenantPaymentController::class, 'createCheckoutSession']);
         Route::get('/public/payments/verify', [\App\Http\Controllers\Api\TenantPaymentController::class, 'verifyPayment']);
 
+        // Public Review submission (External review + Internal staff feedback)
+        Route::post('/public/reviews', [\App\Http\Controllers\Api\PublicReviewController::class, 'store'])->middleware('throttle:30,1');
+
+        // Public Mobile Order Pay & Tips via Table QR
+        Route::get('/public/orders/{id}', [OrderController::class, 'publicShow'])->middleware('throttle:60,1');
+        Route::post('/public/orders/{id}/pay', [OrderController::class, 'publicPay'])->middleware('throttle:30,1');
+
         Route::middleware('throttle:login')->group(function () {
             Route::post('/login', [AuthController::class, 'login']);
             Route::post('/login/verify-2fa', [AuthController::class, 'verify2FA']);
@@ -268,12 +275,23 @@ Route::middleware(['api'])->group(function () {
 
                 $mergedFeatures = array_merge($planFeatures, $tenantFeatures, $userFeatures);
 
+                $isExpired = $tenant ? $tenant->isSubscriptionExpired() : false;
+                $appUrl = config('app.url', 'https://sectros.com');
+                $tenantDomain = $tenant ? $tenant->publicWebsiteDomain() : null;
+                $webBillingUrl = $tenantDomain 
+                    ? "https://{$tenantDomain}/billing" 
+                    : "{$appUrl}/dashboard/billing";
+
                 return array_merge($user->toArray(), [
-                    'role'          => $normalizedRole,
-                    'plan'          => $tenant->plan ?? 'free',
-                    'business_type' => $tenant->business_type ?? 'restaurant',
-                    'features'      => array_keys(array_filter($mergedFeatures)),
-                    'platform_name' => $platformName,
+                    'role'                   => $normalizedRole,
+                    'plan'                   => $tenant->plan ?? 'free',
+                    'business_type'          => $tenant->business_type ?? 'restaurant',
+                    'features'               => array_keys(array_filter($mergedFeatures)),
+                    'platform_name'          => $platformName,
+                    'is_subscription_expired'=> $isExpired,
+                    'subscription_status'    => $tenant->subscription_status ?? ($isExpired ? 'expired' : 'active'),
+                    'subscription_ends_at'   => $tenant->subscription_ends_at?->toIso8601String(),
+                    'web_billing_url'        => $webBillingUrl,
                 ]);
             });
 
@@ -323,6 +341,19 @@ Route::middleware(['api'])->group(function () {
             Route::get('/configuration/booking-link', [\App\Http\Controllers\Api\ConfigurationController::class, 'bookingLink']);
 
             Route::apiResource('/orders', OrderController::class);
+            Route::post('/orders/{id}/remit-cash', [OrderController::class, 'remitCash']);
+            Route::post('/orders/remit-all-cash', [OrderController::class, 'remitAllCash']);
+            Route::get('/orders/unremitted-cash', [OrderController::class, 'unremittedCash']);
+
+            // Tips & Gratuities Management & Transparency
+            Route::prefix('tips')->group(function () {
+                Route::get('/stats', [\App\Http\Controllers\Api\TipController::class, 'stats']);
+                Route::post('/{id}/disburse', [\App\Http\Controllers\Api\TipController::class, 'disburse']);
+                Route::post('/{id}/revoke', [\App\Http\Controllers\Api\TipController::class, 'revoke']);
+                Route::post('/disburse-batch', [\App\Http\Controllers\Api\TipController::class, 'disburseBatch']);
+            });
+            Route::get('/staff/me/tips', [\App\Http\Controllers\Api\TipController::class, 'myTips']);
+
             Route::apiResource('/reservations', ReservationController::class);
             Route::patch('/reservations/{reservation}/status', [ReservationController::class, 'updateStatus']);
             Route::get('/customers', [\App\Http\Controllers\Api\CustomerController::class, 'index']);

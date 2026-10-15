@@ -114,7 +114,13 @@ class EmailTemplateSeeder extends Seeder
                 'subject'   => 'Last Day of Your {platform_name} Trial – Don\'t Miss Out!',
                 'content'   => "<p class='lead'>Hi {name},</p><p>This is your last day to try {platform_name} for free! Your trial ends today (<strong>{trial_end_date}</strong>).</p><p>Don't lose access to your venue's data and settings. Upgrade now to keep everything running smoothly.</p><h2>Here's what you get with a paid plan</h2><div class='card' style='padding:12px 24px'><p style='margin:8px 0'>• Unlimited reservations</p><p style='margin:8px 0'>• Staff management</p><p style='margin:8px 0'>• Advanced analytics and reporting</p><p style='margin:8px 0'>• Priority support</p></div><div class='center'><a class='btn' href='{pricing_url}'>Subscribe Now</a></div><p class='note'>If you have any questions or need help choosing a plan, just reply to this email.</p><p>Thank you for trying {platform_name}!</p><p><strong>The {platform_name} Team</strong></p>",
                 'variables' => ['name', 'platform_name', 'trial_end_date', 'pricing_url'],
-            ]
+            ],
+            [
+                'slug'      => 'guest_review_request',
+                'subject'   => 'How was your experience at {business_name}?',
+                'content'   => "<p class='lead'>Hello {customer_name},</p><p>Thank you for visiting <strong>{business_name}</strong>! We hope you had a great experience.</p><p>Could you take a moment to share your feedback with us?</p><div class='center'><a class='btn' href='{review_link}'>Leave a Review</a></div><p class='note'>Or copy and paste this link in your browser:<br><span style='font-size:13px;color:#6b7280'>{review_link}</span></p><p class='note'>Thank you from the team at {business_name}!</p>",
+                'variables' => ['customer_name', 'business_name', 'review_link'],
+            ],
         ];
 
         foreach ($templates as $data) {

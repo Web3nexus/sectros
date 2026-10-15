@@ -88,10 +88,11 @@ api.interceptors.request.use((config) => {
     config.headers['X-CSRF-TOKEN'] = csrfToken;
   }
 
-  // Pass custom header for the local Vite proxy to rewrite the Host header
+  // Pass custom headers for tenant identification
   const tenantDomain = localStorage.getItem('tenant_domain');
   if (tenantDomain && tenantDomain !== 'no-domain') {
-     config.headers['x-tenant-domain'] = tenantDomain;
+     config.headers['x-tenant-domain'] = config.headers['x-tenant-domain'] || tenantDomain;
+     config.headers['X-Tenant'] = config.headers['X-Tenant'] || tenantDomain;
   }
   
   return config;
